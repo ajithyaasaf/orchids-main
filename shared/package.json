@@ -1,0 +1,18 @@
+{
+  "name": "@tntrends/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared TypeScript types for TNtrends e-commerce platform",
+  "main": "index.ts",
+  "types": "index.ts",
+  "keywords": [
+    "typescript",
+    "types",
+    "shared"
+  ],
+  "author": "TNtrends",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

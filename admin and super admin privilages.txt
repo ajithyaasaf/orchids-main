@@ -1,0 +1,51 @@
+Both Roles Share Access To:
+✅ Admin Dashboard (/admin)
+✅ View all orders
+✅ Update order status
+✅ Update existing products (edit product details)
+✅ Update stock levels (manage inventory)
+✅ Upload product images (Cloudinary integration)
+
+Superadmin Exclusive Permissions:
+🔐 Critical Operations:
+Create New Products (
+products.ts:126-149
+)
+POST /api/admin/products
+Only superadmins can add new products to the catalog
+Delete Products (
+products.ts:177-208
+)
+DELETE /api/admin/products/:id
+Including automatic cleanup of associated Cloudinary images
+Prevents accidental data loss by regular admins
+Modify Global Settings (
+settings.ts:28-52
+)
+PUT /api/settings
+Control site-wide configurations (shipping fees, tax rates, etc.)
+Permission Matrix:
+Operation	Admin	Superadmin
+View Products	✅	✅
+Create Product	❌	✅
+Update Product	✅	✅
+Delete Product	❌	✅
+Update Stock	✅	✅
+Upload Images	✅	✅
+View Orders	✅	✅
+Update Order Status	✅	✅
+Modify Global Settings	❌	✅
+Architecture Notes:
+Backend enforcement: All permissions are enforced at the API level via [
+roleCheck.ts
+](file:///d:/personal/Projects/Riyas/TNtrends%20Ecommerce/Site2/backend/src/middleware/roleCheck.ts) middleware
+requireAdmin = allows both admin + superadmin
+requireSuperAdmin = allows only superadmin
+Unified UI: Both roles use the same dashboard with the same navigation (features are hidden/disabled based on role in the frontend)
+Use Case Scenario:
+Admins: Day-to-day operations like updating stock, processing orders, editing product info
+Superadmins: Strategic control - adding new product lines, removing discontinued items, configuring pricing rules
+This setup prevents regular admins from making destructive changes (deletions) or structural changes (new products/settings) while still allowing them to handle daily operations efficiently. 🎯
+
+
+

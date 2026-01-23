@@ -1,0 +1,143 @@
+TNtrends Ecommerce Project Structure
+
+root/
+├── backend/
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── cloudinary.ts
+│   │   │   ├── firebase.ts
+│   │   │   └── razorpay.ts
+│   │   ├── middleware/
+│   │   │   ├── auth.ts
+│   │   │   ├── errorHandler.ts
+│   │   │   ├── roleCheck.ts
+│   │   │   └── validation.ts
+│   │   ├── routes/
+│   │   │   ├── combos.ts
+│   │   │   ├── orders.ts
+│   │   │   ├── payment.ts
+│   │   │   ├── products.ts
+│   │   │   ├── settings.ts
+│   │   │   └── upload.ts
+│   │   ├── services/
+│   │   │   ├── comboAnalyticsService.ts
+│   │   │   ├── comboPricingService.ts
+│   │   │   ├── comboService.ts
+│   │   │   ├── emailService.ts
+│   │   │   ├── imageService.ts
+│   │   │   ├── orderService.ts
+│   │   │   ├── paymentService.ts
+│   │   │   ├── productService.ts
+│   │   │   ├── settingsService.ts
+│   │   │   └── userService.ts
+│   │   └── index.ts
+│   ├── scripts/
+│   │   └── seedProducts.ts
+│   ├── .env
+│   ├── .gitignore
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── tsconfig.json
+│   └── node_modules/ (generated, excluded)
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── admin/
+│   │   │   │   ├── combos/
+│   │   │   │   │   ├── [id]/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── new/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── layout.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── auth/
+│   │   │   │   ├── login/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── register/
+│   │   │   │       └── page.tsx
+│   │   │   ├── cart/
+│   │   │   │   └── page.tsx
+│   │   │   ├── category/
+│   │   │   │   └── [slug]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── checkout/
+│   │   │   │   └── page.tsx
+│   │   │   ├── order-success/
+│   │   │   │   └── page.tsx
+│   │   │   ├── product/
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── profile/
+│   │   │   │   └── page.tsx
+│   │   │   ├── search/
+│   │   │   │   └── page.tsx
+│   │   │   ├── globals.css
+│   │   │   ├── layout.tsx
+│   │   │   �li   ├── page.tsx
+│   │   │   ├── robots.ts
+│   │   │   └── sitemap.ts
+│   │   ├── components/
+│   │   │   ├── admin/
+│   │   │   │   └── ComboForm.tsx
+│   │   │   ├── category/
+│   │   │   │   └── CategoryPageClient.tsx
+│   │   │   ├── layout/
+│   │   │   │   ├── ConditionalLayout.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   └── Header.tsx
+│   │   │   ├── pages/
+│   │   │   │   ├── HomePageClient.tsx
+│   │   │   │   └── SearchPageClient.tsx
+│   │   │   ├── products/
+│   │   │   │   ├── ComboBadge.tsx
+│   │   │   │   ├── ProductCard.tsx
+│   │   │   │   └── ProductDetailClient.tsx
+│   │   │   ├── providers/
+│   │   │   │   └── AuthProvider.tsx
+│   │   │   └── ui/
+│   │   │       ├── Button.tsx
+│   │   │       ├── Card.tsx
+│   │   │       ├── Input.tsx
+│   │   │       └── LoadingSpinner.tsx
+│   │   ├── lib/
+│   │   │   ├── api.ts
+│   │   │   ├── firebase.ts
+│   │   │   └── utils.ts
+│   │   └── store/
+│   │       ├── authStore.ts
+│   │       └── cartStore.ts
+│   ├── public/
+│   │   └── images/
+│   │       └── logo.png
+│   ├── .env
+│   ├── .gitignore
+│   ├── .next/ (generated, excluded)
+│   ├── next-env.d.ts
+│   ├── next.config.js
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.ts
+│   ├── tsconfig.json
+│   ├── tsconfig.tsbuildinfo
+│   └── node_modules/ (generated, excluded)
+├── shared/
+│   ├── index.ts
+│   ├── types.ts
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── tsconfig.json
+│   └── node_modules/ (generated, excluded)
+├── docs/
+│   ├── ADMIN_SETUP.md
+│   ├── API_DOCUMENTATION.md
+│   ├── DEPLOYMENT.md
+│   └── PROJECT_STRUCTURE.md
+├── COMPLETION_SUMMARY.md
+├── ISSUE_FIX_500_ERROR.md
+├── QUICK_RUN.md
+├── QUICK_START.md
+├── README.md
+├── SETUP_AND_RUN.md
+└── structure.txt

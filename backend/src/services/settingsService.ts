@@ -12,13 +12,23 @@ export const getSettings = async (): Promise<Settings> => {
         const doc = await collections.settings.doc(SETTINGS_DOC_ID).get();
 
         if (!doc.exists) {
-            // Return default settings if not found
-            return {
-                shippingCharge: 50,
-                freeShippingAbove: 999,
-                codEnabled: true,
+            // Initialize with defaults for greenfield deployment
+            const defaults: Settings = {
+                // Wholesale GST configuration
+                gstRate: 0.18,
+                gstEnabled: true,
+                businessName: 'Wholesale Orchids',
+                businessAddress: '',
+                gstin: '',
+                // Legacy fields (kept for compatibility)
+                shippingCharge: 0,
+                freeShippingAbove: 0,
+                codEnabled: false,
                 returnPolicyDays: 7,
             };
+
+            await collections.settings.doc(SETTINGS_DOC_ID).set(defaults);
+            return defaults;
         }
 
         return doc.data() as Settings;

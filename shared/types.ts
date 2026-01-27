@@ -90,6 +90,103 @@ export interface Product {
     color?: string;      // e.g. "Navy Blue", "Black", "White"
 }
 
+// ========================================
+// WHOLESALE PLATFORM TYPES (Greenfield)
+// ========================================
+
+/**
+ * Wholesale Product Schema
+ * Clean greenfield implementation for B2B bundle-based sales
+ */
+export interface WholesaleProduct {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+
+    // Bundle configuration
+    bundleQty: number;                           // Total pieces per bundle (default: 20)
+    bundleComposition: Record<string, number>;   // Size distribution: { 'M': 8, 'L': 7, 'XL': 5 }
+    bundlePrice: number;                         // Total price per bundle
+
+    // Stock management
+    availableBundles: number;                    // Complete bundles in stock
+    totalPieces: number;                         // Auto-calculated: availableBundles * bundleQty
+
+    // Product attributes
+    mixedColors: boolean;                        // Always true for wholesale
+    colorDescription?: string;                   // e.g., "Assorted pastels"
+
+    // Accounting integrity
+    isLocked: boolean;                           // Price locked after first paid order
+    lockedAt?: Date;
+    firstOrderId?: string;                       // Order that locked the product
+
+    images: string[];                            // Image URLs
+    inStock: boolean;                            // availableBundles > 0
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+/**
+ * Wholesale Order Schema
+ * B2B orders with bundle-based line items
+ */
+export interface WholesaleBundleItem {
+    productId: string;
+    productTitle: string;
+    productImage: string;
+    bundleQty: number;
+    bundleComposition: Record<string, number>;
+    bundlesOrdered: number;                      // How many bundles ordered
+    pricePerBundle: number;                      // Price at time of order
+    lineTotal: number;                           // bundlesOrdered × pricePerBundle
+}
+
+export interface WholesaleOrder {
+    id: string;
+
+    // Line items
+    items: WholesaleBundleItem[];
+
+    // Pricing
+    subtotal: number;                            // Sum of line totals
+    gstRate: number;                             // GST rate from settings (e.g., 0.18)
+    gst: number;                                 // Calculated GST amount
+    adminDiscount: number;                       // Manual discount by admin
+    totalAmount: number;                         // subtotal + gst - adminDiscount
+
+    // Audit trail for discounts
+    adminDiscountHistory: {
+        amount: number;
+        reason: string;
+        appliedBy: string;                       // Admin user ID
+        appliedAt: Date;
+    }[];
+
+    // Payment (online only)
+    paymentStatus: 'paid' | 'failed' | 'pending';
+    razorpayOrderId: string;
+    razorpayPaymentId?: string;
+
+    // Order lifecycle
+    orderStatus: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+    statusHistory: {
+        status: string;
+        changedBy: string;                       // Admin user ID
+        changedAt: Date;
+        notes?: string;
+    }[];
+
+    // Metadata
+    userId: string;
+    address: Address;
+    invoiceNumber?: string;
+    stockDeducted: boolean;                      // Idempotency flag
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 // Order Types
 export type PaymentStatus = 'paid' | 'failed' | 'pending';
 export type OrderStatus = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
@@ -107,7 +204,7 @@ export interface OrderItem {
 export interface Order {
     id: string;
     userId: string;
-    items: OrderItem[];
+    items: (OrderItem | WholesaleBundleItem)[];  // Support both retail and wholesale
     totalAmount: number;
     paymentStatus: PaymentStatus;
     orderStatus: OrderStatus;
@@ -135,6 +232,16 @@ import type { OrderRefund } from './invoice-types';
 
 // Settings Types
 export interface Settings {
+    // GST Configuration (Wholesale Platform)
+    gstRate: number;                  // Default: 0.18 (18%)
+    gstEnabled: boolean;              // Toggle for GST calculation
+
+    // Business details
+    businessName: string;
+    businessAddress: string;
+    gstin?: string;                   // GST Identification Number
+
+    // Legacy (keep for compatibility)
     shippingCharge: number;
     freeShippingAbove: number;
     codEnabled: boolean;

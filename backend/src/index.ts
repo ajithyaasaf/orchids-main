@@ -23,6 +23,12 @@ import dashboardRoutes from './routes/dashboard';
 import invoiceRoutes from './routes/invoices';
 import collectionRoutes from './routes/collections';
 
+// Wholesale platform routes (greenfield)
+import wholesaleProductRoutes from './routes/wholesaleProducts';
+import wholesaleOrderRoutes from './routes/wholesaleOrders';
+import wholesaleCheckoutRoutes from './routes/wholesaleCheckout';
+import createWholesaleOrderRoute from './routes/createWholesaleOrder';
+
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 
@@ -95,21 +101,30 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/payment', webhookRoutes); // Webhook route (handles /api/payment/webhook)
-app.use('/api/upload', uploadRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/combos', comboRoutes);
-app.use('/api/shipping', shippingRoutes);
-app.use('/api/checkout', checkoutRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/coupons', couponRoutes);
-app.use('/api/customers', customersRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/invoices', invoiceRoutes);
-app.use('/api/collections', collectionRoutes);
+// WHOLESALE-ONLY SYSTEM: Retail routes commented out (archived for potential reuse)
+app.use('/api/products', productRoutes);        // RETAIL: Product catalog (Re-enabled for menu tags)
+// app.use('/api/orders', orderRoutes);            // RETAIL: Order management (Keep disabled if unused, check later)
+// app.use('/api/cart', cartRoutes);               // RETAIL: Shopping cart (Re-enable if retail cart needed)
+app.use('/api/shipping', shippingRoutes);       // RETAIL: Shipping calculator (Used by product page)
+// app.use('/api/checkout', checkoutRoutes);       // RETAIL: Checkout flow
+// app.use('/api/coupons', couponRoutes);          // RETAIL: Coupon system 
+// app.use('/api/combos', comboRoutes);            // RETAIL: Product combos 
+app.use('/api/collections', collectionRoutes);  // RETAIL: Product collections (Used by home page)
+// app.use('/api/customers', customersRoutes);     // RETAIL: Customer analytics
+// app.use('/api/dashboard', dashboardRoutes);     // RETAIL: Dashboard analytics
+
+// SHARED INFRASTRUCTURE (Keep for wholesale)
+app.use('/api/payment', paymentRoutes);           // Shared: Razorpay payment gateway
+app.use('/api/payment', webhookRoutes);           // Shared: Webhook route (handles /api/payment/webhook)
+app.use('/api/upload', uploadRoutes);             // Shared: Cloudinary image upload
+app.use('/api/settings', settingsRoutes);         // Shared: System configuration (GST, etc.)
+app.use('/api/invoices', invoiceRoutes);          // Shared: Invoice generation
+
+// Wholesale platform routes
+app.use('/api/wholesale/products', wholesaleProductRoutes);
+app.use('/api/wholesale/orders', wholesaleOrderRoutes);
+app.use('/api/wholesale/orders', createWholesaleOrderRoute); // POST /api/wholesale/orders
+app.use('/api/wholesale/checkout', wholesaleCheckoutRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

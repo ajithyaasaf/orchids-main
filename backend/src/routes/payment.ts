@@ -4,6 +4,7 @@ import {
     verifyPaymentSignature,
 } from '../services/paymentService';
 import { updatePaymentStatus, deductOrderStock, getOrderById } from '../services/orderService';
+import { deductBundleStock } from '../services/wholesaleStockService';
 import { verifyToken, AuthRequest } from '../middleware/auth';
 import { paymentLimiter } from '../middleware/rateLimiter';
 import { collections } from '../config/firebase';
@@ -199,8 +200,24 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
             // 1. Update order payment status to paid
             const updatedOrder = await updatePaymentStatus(orderId, 'paid', razorpayPaymentId);
 
-            // 2. CRITICAL STEP: Deduct inventory from the products in the order
-            await deductOrderStock(orderId);
+            // 2. CRITICAL STEP: Deduct bundle inventory atomically
+            // This also handles product price locking after first paid order
+            try {
+                // Check if this is a wholesale order (has bundlesOrdered field)
+                if (updatedOrder.items?.[0]?.bundlesOrdered !== undefined) {
+                    // Wholesale order - use bundle stock deduction
+                    await deductBundleStock(orderId, updatedOrder.items);
+                    logger.info(`Bundle stock deducted for wholesale order: ${orderId}`);
+                } else {
+                    // Retail order - use regular stock deduction
+                    await deductOrderStock(orderId);
+                    logger.info(`Regular stock deducted for retail order: ${orderId}`);
+                }
+            } catch (stockError) {
+                logger.error('Stock deduction failed after payment', stockError);
+                // Payment succeeded but stock deduction failed - requires manual intervention
+                // Order is marked as paid but stock not deducted - admin review needed
+            }
 
             // 3. AUTO-GENERATE INVOICE for paid orders
             try {

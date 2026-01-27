@@ -383,4 +383,5 @@ export const getTagsByCategory = async (): Promise<Record<string, string[]>> => 
         console.error('Error fetching tags by category:', error);
         return { Men: [], Women: [], Kids: [] };
     }
-};
+}; 
+ 

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
 import { PromotionalBanner } from '@/components/layout/PromotionalBanner';
@@ -40,6 +41,11 @@ export default function RootLayout({
                     </AuthProvider>
                 </ToastProvider>
             </body>
+            {/* Razorpay Payment Gateway Script */}
+            <Script
+                src="https://checkout.razorpay.com/v1/checkout.js"
+                strategy="lazyOnload"
+            />
         </html>
     );
 }

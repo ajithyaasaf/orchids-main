@@ -232,7 +232,7 @@ export default function WholesaleCheckoutPage() {
                         placeholder="Full Name *"
                         value={address.name}
                         onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                         required
                     />
                     <input
@@ -240,7 +240,7 @@ export default function WholesaleCheckoutPage() {
                         placeholder="Phone Number *"
                         value={address.phone}
                         onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                         required
                     />
                     <input
@@ -263,7 +263,7 @@ export default function WholesaleCheckoutPage() {
                         placeholder="City *"
                         value={address.city}
                         onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                         required
                     />
                     <input
@@ -271,7 +271,7 @@ export default function WholesaleCheckoutPage() {
                         placeholder="State *"
                         value={address.state}
                         onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                         required
                     />
                     <input
@@ -279,7 +279,7 @@ export default function WholesaleCheckoutPage() {
                         placeholder="Pincode *"
                         value={address.pincode}
                         onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                         maxLength={6}
                         required
                     />
@@ -287,7 +287,7 @@ export default function WholesaleCheckoutPage() {
             </div>
 
             {/* Price Breakdown */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <div className="bg-primary-light border border-pink-200 rounded-lg p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4">Price Breakdown</h2>
                 {calculatedOrder ? (
                     <div className="space-y-2">
@@ -321,7 +321,7 @@ export default function WholesaleCheckoutPage() {
                     <button
                         onClick={handleCalculate}
                         disabled={loading}
-                        className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="flex-1 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                     >
                         {loading ? 'Calculating...' : 'Calculate Order'}
                     </button>

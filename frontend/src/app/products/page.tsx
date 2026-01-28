@@ -105,7 +105,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                         <Link
                             href="/products"
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${!selectedCategory
-                                ? 'bg-blue-600 text-white'
+                                ? 'bg-primary text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                         >
@@ -116,7 +116,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                                 key={cat.value}
                                 href={`/products?category=${cat.value}`}
                                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedCategory === cat.value
-                                    ? 'bg-blue-600 text-white'
+                                    ? 'bg-primary text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                             >
@@ -153,7 +153,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                         {selectedCategory && (
                             <Link
                                 href="/products"
-                                className="text-blue-600 font-semibold hover:underline"
+                                className="text-primary font-semibold hover:underline"
                             >
                                 View all products
                             </Link>

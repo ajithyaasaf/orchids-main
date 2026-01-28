@@ -33,7 +33,7 @@ export default function WholesaleCartPage() {
                     <p className="text-gray-600 mb-4">Your cart is empty</p>
                     <button
                         onClick={() => router.push('/products')}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
                     >
                         Browse Products
                     </button>
@@ -137,7 +137,7 @@ export default function WholesaleCartPage() {
 
                                         {/* Price */}
                                         <div className="text-right">
-                                            <p className="text-lg font-bold text-blue-600">
+                                            <p className="text-lg font-bold text-primary">
                                                 ₹
                                                 {(item.bundlesOrdered * item.product.bundlePrice).toFixed(
                                                     2
@@ -167,7 +167,7 @@ export default function WholesaleCartPage() {
                         <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
 
                         {/* Statistics */}
-                        <div className="bg-blue-50 rounded-lg p-3 mb-4 space-y-1 text-sm">
+                        <div className="bg-primary-light rounded-lg p-3 mb-4 space-y-1 text-sm border border-pink-100">
                             <p className="flex justify-between">
                                 <span className="text-gray-600">Total Bundles:</span>
                                 <span className="font-semibold">{getTotalBundles()}</span>
@@ -196,7 +196,7 @@ export default function WholesaleCartPage() {
 
                         <button
                             onClick={() => router.push('/wholesale/checkout')}
-                            className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 mb-3"
+                            className="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark mb-3"
                         >
                             Proceed to Checkout
                         </button>

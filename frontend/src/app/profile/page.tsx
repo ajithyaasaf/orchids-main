@@ -107,8 +107,8 @@ export default function ProfilePage() {
                             <button
                                 onClick={() => setActiveTab('profile')}
                                 className={`w-full px-4 py-3 text-left rounded-lg transition flex items-center gap-2 ${activeTab === 'profile'
-                                    ? 'bg-primary/10 text-primary font-medium'
-                                    : 'hover:bg-gray-50'
+                                    ? 'bg-primary-light text-primary font-medium'
+                                    : 'hover:bg-pink-50'
                                     }`}
                             >
                                 <User className="w-4 h-4" />
@@ -117,8 +117,8 @@ export default function ProfilePage() {
                             <button
                                 onClick={() => setActiveTab('addresses')}
                                 className={`w-full px-4 py-3 text-left rounded-lg transition flex items-center gap-2 ${activeTab === 'addresses'
-                                    ? 'bg-primary/10 text-primary font-medium'
-                                    : 'hover:bg-gray-50'
+                                    ? 'bg-primary-light text-primary font-medium'
+                                    : 'hover:bg-pink-50'
                                     }`}
                             >
                                 <MapPin className="w-4 h-4" />
@@ -127,8 +127,8 @@ export default function ProfilePage() {
                             <button
                                 onClick={() => setActiveTab('orders')}
                                 className={`w-full px-4 py-3 text-left rounded-lg transition flex items-center gap-2 ${activeTab === 'orders'
-                                    ? 'bg-primary/10 text-primary font-medium'
-                                    : 'hover:bg-gray-50'
+                                    ? 'bg-primary-light text-primary font-medium'
+                                    : 'hover:bg-pink-50'
                                     }`}
                             >
                                 <Package className="w-4 h-4" />
@@ -205,7 +205,7 @@ export default function ProfilePage() {
                                                         className={`text-sm ${order.paymentStatus === 'paid' ? 'text-success' : 'text-error'
                                                             }`}
                                                     >
-                                                        {order.paymentStatus.toUpperCase()}
+                                                        {order.paymentStatus === 'paid' ? 'PAID' : order.paymentStatus.toUpperCase()}
                                                     </span>
                                                 </div>
                                             </div>
@@ -213,9 +213,15 @@ export default function ProfilePage() {
                                             <div className="border-t border-border pt-4 mb-4">
                                                 <h4 className="font-semibold mb-2 text-sm">Items:</h4>
                                                 <ul className="space-y-1">
-                                                    {order.items.map((item, idx) => (
+                                                    {order.items.map((item: any, idx) => (
                                                         <li key={idx} className="text-sm text-text-secondary">
-                                                            {item.productTitle} - Size {item.size} × {item.quantity}
+                                                            {item.bundleQty ? (
+                                                                // Wholesale Item
+                                                                <span>{item.productTitle} - {item.bundlesOrdered} Bundles ({item.bundleQty} pcs/bundle)</span>
+                                                            ) : (
+                                                                // Retail Item
+                                                                <span>{item.productTitle} - Size {item.size} × {item.quantity}</span>
+                                                            )}
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -228,7 +234,7 @@ export default function ProfilePage() {
                                                         ? 'bg-success/10 text-success'
                                                         : order.orderStatus === 'cancelled'
                                                             ? 'bg-error/10 text-error'
-                                                            : 'bg-primary/10 text-primary'
+                                                            : 'bg-primary-light text-primary'  // Replaced primary/10 with primary-light for better visibility
                                                         }`}
                                                 >
                                                     {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
@@ -241,7 +247,7 @@ export default function ProfilePage() {
                                                     <div className="flex flex-wrap gap-2">
                                                         <button
                                                             onClick={() => handleViewInvoice(order.id)}
-                                                            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors text-sm font-medium"
+                                                            className="flex items-center gap-2 px-4 py-2 bg-primary-light hover:bg-pink-100 text-primary rounded-lg transition-colors text-sm font-medium"
                                                         >
                                                             <Eye className="w-4 h-4" />
                                                             View Invoice

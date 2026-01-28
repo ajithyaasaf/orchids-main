@@ -22,7 +22,7 @@ export default function ShippingPage() {
             <div className="container-custom py-16">
                 <div className="max-w-5xl mx-auto">
                     {/* India Only Notice */}
-                    <div className="bg-blue-600 text-white rounded-xl p-6 mb-8 text-center">
+                    <div className="bg-primary text-white rounded-xl p-6 mb-8 text-center">
                         <h3 className="text-2xl font-bold mb-2">🇮🇳 India-Only Delivery</h3>
                         <p className="text-lg opacity-90">
                             We currently deliver within India only. International shipping is not available.
@@ -136,9 +136,9 @@ export default function ShippingPage() {
                             {/* Delivery Timeline */}
                             <section className="mb-8">
                                 <h2 className="text-2xl font-bold text-text-primary mb-4">3. Delivery Timeline</h2>
-                                <div className="bg-blue-50 p-6 rounded-lg mb-4">
-                                    <p className="text-blue-900 font-semibold mb-2">📦 Standard Delivery Times:</p>
-                                    <ul className="space-y-2 text-blue-800">
+                                <div className="bg-primary-light p-6 rounded-lg mb-4 border border-pink-100">
+                                    <p className="text-primary font-semibold mb-2">📦 Standard Delivery Times:</p>
+                                    <ul className="space-y-2 text-gray-800">
                                         <li>• <strong>South India:</strong> 3-5 business days</li>
                                         <li>• <strong>Other Regions:</strong> 5-7 business days</li>
                                     </ul>

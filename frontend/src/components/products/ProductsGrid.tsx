@@ -87,7 +87,7 @@ function ProductCard({ product, priority = false }: ProductCardProps) {
                 </h3>
 
                 {/* Bundle Info */}
-                <div className="bg-blue-50 rounded-lg p-3 mb-3 border border-blue-100">
+                <div className="bg-primary-light rounded-lg p-3 mb-3 border border-pink-100">
                     <div className="flex items-center justify-between text-sm mb-1">
                         <span className="text-gray-600 flex items-center gap-1">
                             <Package className="w-3.5 h-3.5" />
@@ -127,7 +127,7 @@ function ProductCard({ product, priority = false }: ProductCardProps) {
                 </div>
 
                 {/* View Details Button */}
-                <button className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 group-hover:bg-blue-700">
+                <button className="w-full bg-primary text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 group-hover:bg-primary-dark">
                     <ShoppingCart className="w-4 h-4" />
                     View Details
                 </button>

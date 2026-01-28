@@ -57,7 +57,7 @@ export default function OrderStatusPage() {
 
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
-            placed: 'bg-blue-100 text-blue-800',
+            placed: 'bg-primary-light text-primary',
             processing: 'bg-yellow-100 text-yellow-800',
             shipped: 'bg-purple-100 text-purple-800',
             delivered: 'bg-green-100 text-green-800',
@@ -78,7 +78,7 @@ export default function OrderStatusPage() {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading order details...</p>
                 </div>
             </div>
@@ -94,7 +94,7 @@ export default function OrderStatusPage() {
                     <p className="text-gray-600 mb-6">{error || 'The order you\'re looking for doesn\'t exist.'}</p>
                     <Link
                         href="/products"
-                        className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark"
                     >
                         Back to Products
                     </Link>
@@ -205,7 +205,7 @@ export default function OrderStatusPage() {
             </div>
 
             {/* Pricing Breakdown */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <div className="bg-primary-light border border-pink-200 rounded-lg p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4">Price Breakdown</h2>
                 <div className="space-y-2">
                     <div className="flex justify-between">
@@ -248,7 +248,7 @@ export default function OrderStatusPage() {
                     <h2 className="text-xl font-semibold mb-4">Order Timeline</h2>
                     <div className="space-y-3">
                         {order.statusHistory.map((history: any, index: number) => (
-                            <div key={index} className="flex items-start border-l-2 border-blue-500 pl-4">
+                            <div key={index} className="flex items-start border-l-2 border-primary pl-4">
                                 <div className="flex-1">
                                     <p className="font-semibold capitalize">{history.status}</p>
                                     <p className="text-sm text-gray-600">
@@ -268,7 +268,7 @@ export default function OrderStatusPage() {
             <div className="flex gap-4">
                 <Link
                     href="/products"
-                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg text-center font-semibold hover:bg-blue-700"
+                    className="flex-1 px-6 py-3 bg-primary text-white rounded-lg text-center font-semibold hover:bg-primary-dark"
                 >
                     Continue Shopping
                 </Link>
@@ -285,7 +285,7 @@ export default function OrderStatusPage() {
                 <p>Need help with your order?</p>
                 <p className="mt-1">
                     Contact us at{' '}
-                    <a href="mailto:support@wholesaleorchids.com" className="text-blue-600 hover:underline">
+                    <a href="mailto:support@wholesaleorchids.com" className="text-primary hover:underline">
                         support@wholesaleorchids.com
                     </a>
                 </p>

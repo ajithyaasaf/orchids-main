@@ -100,13 +100,13 @@ export default function ProductDetailPage() {
                     <p className="text-gray-600 mb-6">{product.description}</p>
 
                     {/* Bundle Configuration */}
-                    <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg mb-6">
-                        <h3 className="text-lg font-semibold mb-3 text-blue-900">
+                    <div className="bg-primary-light border border-pink-200 p-6 rounded-lg mb-6">
+                        <h3 className="text-lg font-semibold mb-3 text-primary">
                             Bundle Configuration
                         </h3>
 
                         <div className="mb-4">
-                            <p className="text-2xl font-bold text-blue-900">
+                            <p className="text-2xl font-bold text-primary">
                                 {product.bundleQty} pieces per bundle
                             </p>
                             {product.colorDescription && (
@@ -206,7 +206,7 @@ export default function ProductDetailPage() {
 
                             <button
                                 onClick={handleAddToCart}
-                                className="w-full py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
+                                className="w-full py-4 bg-primary text-white rounded-lg font-semibold text-lg hover:bg-primary-dark transition-colors"
                             >
                                 Add {bundleQty} Bundle{bundleQty > 1 ? 's' : ''} to Cart
                             </button>

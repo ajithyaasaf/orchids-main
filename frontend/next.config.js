@@ -23,6 +23,16 @@ const nextConfig = {
     output: 'standalone',
     swcMinify: true,
 
+    // API Rewrites
+    async rewrites() {
+        return [
+            {
+                source: '/api/:path*',
+                destination: 'http://localhost:5000/api/:path*',
+            },
+        ];
+    },
+
     // 2. Webpack config to prevent node module crashes
     webpack: (config) => {
         config.resolve.fallback = {

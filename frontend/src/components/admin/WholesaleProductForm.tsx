@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { WholesaleProduct } from '@tntrends/shared';
+import { useAuthToken } from '@/hooks/useAuthToken';
+import { useToast } from '@/context/ToastContext';
+import ImageUpload from './ImageUpload';
 
 /**
  * High-Speed Admin Product Entry Form
@@ -11,6 +14,9 @@ import { WholesaleProduct } from '@tntrends/shared';
  * - Composition presets for common size splits
  * - Real-time validation feedback
  * - "Save & Add Another" workflow
+ * - Image upload with Cloudinary integration
+ * - Authentication token handling
+ * - Toast notifications
  */
 
 interface ProductForm {
@@ -28,7 +34,7 @@ interface ProductForm {
 const INITIAL_FORM: ProductForm = {
     title: '',
     description: '',
-    category: 'Orchids',
+    category: 'Girls - T-Shirts',  // Default to most common category
     bundleQty: 20,
     bundleComposition: {},
     bundlePrice: 0,
@@ -36,6 +42,60 @@ const INITIAL_FORM: ProductForm = {
     colorDescription: 'Assorted colors',
     images: [],
 };
+
+// Available product categories (Wholesale Clothing Business)
+const CATEGORIES = [
+    // Newborn (0-12 months)
+    'Newborn - Jubba',
+    'Newborn - Gift Box',
+    'Newborn - Cord Sets',
+    'Newborn - Frocks',
+    'Newborn - Rompers',
+    'Newborn - Jumpsuits',
+    'Newborn - Diapers',
+    'Newborn - Underwear',
+    'Newborn - Towels',
+    'Newborn - Napkins',
+    'Newborn - Socks',
+    'Newborn - Gloves',
+    'Newborn - Caps',
+    'Newborn - Bibs',
+    'Newborn - Baby Beds',
+    'Newborn - Bed Sheets',
+
+    // Girls
+    'Girls - T-Shirts',
+    'Girls - Frocks',
+    'Girls - Skirts',
+    'Girls - Pants',
+    'Girls - Leggings',
+    'Girls - Tights',
+    'Girls - Palazzo Pants',
+    'Girls - Slips',
+    'Girls - Underwear',
+    'Girls - Shorts',
+    'Girls - 3/4 Pants',
+
+    // Boys
+    'Boys - T-Shirts',
+    'Boys - Pants',
+    'Boys - Shorts',
+    'Boys - Underwear',
+    'Boys - 3/4 Pants',
+
+    // Women
+    'Women - T-Shirts',
+    'Women - Pants',
+    'Women - Shorts',
+    'Women - Leggings',
+    'Women - 3/4 Pants',
+    'Women - Long Polos',
+    'Women - Feeding Dresses',
+    'Women - Dresses',
+    'Women - Underwear',
+    'Women - Tights',
+    'Women - Bed Sheets',
+];
 
 // Composition presets for common size distributions
 const PRESETS = {
@@ -49,9 +109,13 @@ const SIZES = ['S', 'M', 'L', 'XL', '2XL'];
 
 export default function WholesaleProductForm() {
     const router = useRouter();
+    const { authenticatedFetch, loading: authLoading } = useAuthToken();
+    const { showToast } = useToast();
+
     const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string>('');
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
     // Calculate total pieces in composition
     const totalPcs = Object.values(form.bundleComposition).reduce((a, b) => a + b, 0);
@@ -142,7 +206,7 @@ export default function WholesaleProductForm() {
                         value={form.title}
                         onChange={(e) => setForm({ ...form, title: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="e.g., Premium Orchid Mix"
+                        placeholder="e.g., Girls Cotton T-Shirt Mix"
                         autoFocus
                         required
                     />
@@ -158,6 +222,35 @@ export default function WholesaleProductForm() {
                         placeholder="Product description..."
                     />
                 </div>
+
+                {/* Category Selection */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                        value={form.category}
+                        onChange={(e) => setForm({ ...form, category: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                    >
+                        {CATEGORIES.map((cat) => (
+                            <option key={cat} value={cat}>
+                                {cat}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Image Upload */}
+                <ImageUpload
+                    images={form.images}
+                    onImagesChange={(images) => setForm({ ...form, images })}
+                    maxImages={5}
+                />
+                {fieldErrors.images && (
+                    <p className="text-sm text-red-600 -mt-2">{fieldErrors.images}</p>
+                )}
 
                 {/* Bundle Configuration */}
                 <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
@@ -224,8 +317,8 @@ export default function WholesaleProductForm() {
                     {/* Validation Feedback */}
                     <div
                         className={`text-base font-semibold px-4 py-3 rounded-lg ${isValidComposition
-                                ? 'bg-green-100 text-green-800 border border-green-300'
-                                : 'bg-red-100 text-red-800 border border-red-300'
+                            ? 'bg-green-100 text-green-800 border border-green-300'
+                            : 'bg-red-100 text-red-800 border border-red-300'
                             }`}
                     >
                         Total: {totalPcs} / {form.bundleQty}{' '}

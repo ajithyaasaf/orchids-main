@@ -64,12 +64,14 @@ export default function AdminProductListPage() {
         <div className="max-w-7xl mx-auto p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Wholesale Products</h1>
-                <button
-                    onClick={() => router.push('/admin/wholesale/products/new')}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
-                >
-                    + Add New Product
-                </button>
+                {products.length > 0 && (
+                    <button
+                        onClick={() => router.push('/admin/wholesale/products/new')}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+                    >
+                        + Add New Product
+                    </button>
+                )}
             </div>
 
             {error && (
@@ -83,9 +85,9 @@ export default function AdminProductListPage() {
                     <p className="text-gray-600 mb-4">No products found</p>
                     <button
                         onClick={() => router.push('/admin/wholesale/products/new')}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
                     >
-                        Add Your First Product
+                        + Add Your First Product
                     </button>
                 </div>
             ) : (

@@ -44,12 +44,12 @@ export function useAuthToken(): AuthTokenHook {
         return () => unsubscribe();
     }, []);
 
-    const getToken = async (): Promise<string> => {
+    const getToken = async (forceRefresh: boolean = true): Promise<string> => {
         const currentUser = auth.currentUser;
         if (!currentUser) {
             throw new Error('Not authenticated');
         }
-        const freshToken = await currentUser.getIdToken();
+        const freshToken = await currentUser.getIdToken(forceRefresh);
         setToken(freshToken);
         return freshToken;
     };

@@ -8,9 +8,12 @@ import { WholesaleOrder } from '@tntrends/shared';
  * Display orders with status management and manual discount controls
  */
 
+import { useAuthToken } from '@/hooks/useAuthToken';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export default function AdminOrdersPage() {
+    const { authenticatedFetch, loading: authLoading } = useAuthToken();
     const [orders, setOrders] = useState<WholesaleOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -22,23 +25,20 @@ export default function AdminOrdersPage() {
     const [discountReason, setDiscountReason] = useState('');
 
     useEffect(() => {
-        loadOrders();
-    }, [selectedStatus]);
+        if (!authLoading) {
+            loadOrders();
+        }
+    }, [selectedStatus, authLoading]);
 
     const loadOrders = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('authToken');
             const url =
                 selectedStatus === 'all'
                     ? `${API_BASE}/wholesale/orders`
                     : `${API_BASE}/wholesale/orders?status=${selectedStatus}`;
 
-            const response = await fetch(url, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const response = await authenticatedFetch(url);
 
             const data = await response.json();
             if (data.success) {
@@ -53,13 +53,9 @@ export default function AdminOrdersPage() {
 
     const handleStatusUpdate = async (orderId: string, newStatus: string, notes: string = '') => {
         try {
-            const token = localStorage.getItem('authToken');
-            const response = await fetch(`${API_BASE}/wholesale/orders/${orderId}/status`, {
+            const response = await authenticatedFetch(`${API_BASE}/wholesale/orders/${orderId}/status`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ orderStatus: newStatus, notes }),
             });
 
@@ -84,15 +80,11 @@ export default function AdminOrdersPage() {
         }
 
         try {
-            const token = localStorage.getItem('authToken');
-            const response = await fetch(
+            const response = await authenticatedFetch(
                 `${API_BASE}/wholesale/orders/${discountModal.orderId}/discount`,
                 {
                     method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         discount: discountAmount,
                         reason: discountReason,
@@ -135,8 +127,8 @@ export default function AdminOrdersPage() {
                 <button
                     onClick={() => setSelectedStatus('all')}
                     className={`px-4 py-2 rounded-lg ${selectedStatus === 'all'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-200 text-gray-700'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700'
                         }`}
                 >
                     All Orders
@@ -146,8 +138,8 @@ export default function AdminOrdersPage() {
                         key={status}
                         onClick={() => setSelectedStatus(status)}
                         className={`px-4 py-2 rounded-lg capitalize ${selectedStatus === status
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-200 text-gray-700'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700'
                             }`}
                     >
                         {status}
@@ -223,8 +215,8 @@ export default function AdminOrdersPage() {
                                     <td className="px-6 py-4">
                                         <span
                                             className={`text-sm ${order.paymentStatus === 'paid'
-                                                    ? 'text-green-600'
-                                                    : 'text-yellow-600'
+                                                ? 'text-green-600'
+                                                : 'text-yellow-600'
                                                 }`}
                                         >
                                             {order.paymentStatus}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/wholesaleCartStore';
 import { wholesaleCheckoutApi } from '@/lib/api/wholesaleApi';
+import { useAuthToken } from '@/hooks/useAuthToken';
 
 /**
  * Wholesale Checkout Component
@@ -21,6 +22,7 @@ interface CalculatedOrder {
 export default function WholesaleCheckout() {
     const router = useRouter();
     const { items, clearCart, fetchGSTRate } = useCartStore();
+    const { authenticatedFetch, getToken } = useAuthToken(); // Use robust auth hook
 
     const [address, setAddress] = useState({
         name: '',
@@ -55,6 +57,7 @@ export default function WholesaleCheckout() {
                 bundlesOrdered: item.bundlesOrdered,
             }));
 
+            // Use the API client (which we just updated to use force-refresh)
             const result = await wholesaleCheckoutApi.calculate(checkoutItems, address);
             setCalculatedOrder(result);
         } catch (err: any) {
@@ -73,12 +76,11 @@ export default function WholesaleCheckout() {
         try {
             setLoading(true);
 
-            // Create order on backend
-            const response = await fetch('/api/wholesale/orders', {
+            // Create order on backend using authenticatedFetch
+            const response = await authenticatedFetch('/api/wholesale/orders', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
                 },
                 body: JSON.stringify({
                     items: calculatedOrder.items,
@@ -108,12 +110,9 @@ export default function WholesaleCheckout() {
 
     const initiatePayment = async (orderId: string, amount: number) => {
         // Create Razorpay order
-        const response = await fetch('/api/payment/create-order', {
+        const response = await authenticatedFetch('/api/payment/create-order', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ orderId }),
         });
 
@@ -152,12 +151,9 @@ export default function WholesaleCheckout() {
 
     const verifyPayment = async (orderId: string, razorpayResponse: any) => {
         try {
-            const response = await fetch('/api/payment/verify', {
+            const response = await authenticatedFetch('/api/payment/verify', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     orderId,
                     razorpayOrderId: razorpayResponse.razorpay_order_id,

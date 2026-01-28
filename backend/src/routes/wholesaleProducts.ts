@@ -21,7 +21,7 @@ const router = express.Router();
  * GET /api/wholesale/products
  * Get all wholesale products
  */
-router.get('/', verifyToken, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
     try {
         const products = await getAllWholesaleProducts();
         res.json({ success: true, data: products });
@@ -34,7 +34,7 @@ router.get('/', verifyToken, async (req, res, next) => {
  * GET /api/wholesale/products/:id
  * Get single wholesale product
  */
-router.get('/:id', verifyToken, async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
     try {
         const product = await getWholesaleProductById(req.params.id);
         res.json({ success: true, data: product });

@@ -123,7 +123,7 @@ app.use('/api/invoices', invoiceRoutes);          // Shared: Invoice generation
 // Wholesale platform routes
 app.use('/api/wholesale/products', wholesaleProductRoutes);
 app.use('/api/wholesale/orders', wholesaleOrderRoutes);
-app.use('/api/wholesale/orders', createWholesaleOrderRoute); // POST /api/wholesale/orders
+// app.use('/api/wholesale/orders', createWholesaleOrderRoute); // Merged into wholesaleOrderRoutes
 app.use('/api/wholesale/checkout', wholesaleCheckoutRoutes);
 
 // 404 handler

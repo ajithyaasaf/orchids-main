@@ -155,7 +155,7 @@ export default function WholesaleProductForm() {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch('/api/wholesale/products', {
+            const response = await authenticatedFetch('/api/wholesale/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

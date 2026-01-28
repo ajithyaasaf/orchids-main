@@ -55,7 +55,7 @@ export default function ImageUpload({
             throw new Error(data.error || 'Upload failed');
         }
 
-        return data.url;
+        return data.data.url;
     };
 
     const handleFiles = async (files: FileList) => {

@@ -14,7 +14,8 @@ const getAuthToken = async (): Promise<string | null> => {
     const user = auth.currentUser;
     if (!user) return null;
 
-    return await user.getIdToken();
+    // Force refresh to get latest claims (admin role)
+    return await user.getIdToken(true);
 };
 
 /**
@@ -139,7 +140,7 @@ export const wholesaleCheckoutApi = {
      * Calculate order totals with dynamic GST
      */
     calculate: async (items: any[], address: any) => {
-        const token = localStorage.getItem('authToken');
+        const token = await getAuthToken();
 
         const response = await fetch(`${API_BASE}/wholesale/checkout/calculate`, {
             method: 'POST',

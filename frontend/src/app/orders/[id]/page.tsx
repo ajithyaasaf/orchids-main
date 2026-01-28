@@ -11,12 +11,16 @@ import Link from 'next/link';
  * Supports both wholesale and retail order types (hybrid compatibility)
  */
 
+import { useAuthToken } from '@/hooks/useAuthToken';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export default function OrderStatusPage() {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { authenticatedFetch, loading: authLoading } = useAuthToken();
+
     const orderId = params.id as string;
     const isSuccess = searchParams.get('success') === 'true';
 
@@ -25,21 +29,17 @@ export default function OrderStatusPage() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        loadOrder();
-    }, [orderId]);
+        if (!authLoading) {
+            loadOrder();
+        }
+    }, [orderId, authLoading]);
 
     const loadOrder = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('authToken');
 
-            // Try wholesale API first (hybrid compatibility)
-            const response = await fetch(`${API_BASE}/wholesale/orders/${orderId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+            // Try wholesale API first using authenticated fetch
+            const response = await authenticatedFetch(`${API_BASE}/wholesale/orders/${orderId}`);
 
             const data = await response.json();
 

@@ -9,7 +9,7 @@ import { useToast } from '@/context/ToastContext';
 
 const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/products', label: 'Products', icon: Package },
+    { href: '/admin/wholesale/products', label: 'Products', icon: Package },
     { href: '/admin/collections', label: 'Collections', icon: Sparkles },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
     { href: '/admin/customers', label: 'Customers', icon: Users },
@@ -128,8 +128,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                         key={item.href}
                                         href={item.href}
                                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${isActive
-                                                ? 'bg-primary text-white'
-                                                : 'text-text-secondary hover:bg-gray-100'
+                                            ? 'bg-primary text-white'
+                                            : 'text-text-secondary hover:bg-gray-100'
                                             }`}
                                         onClick={() => setSidebarOpen(false)}
                                     >

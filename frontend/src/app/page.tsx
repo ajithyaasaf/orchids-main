@@ -1,169 +1,228 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { productApi, collectionApi } from '@/lib/api';
-import { HomePageClient } from '@/components/pages/HomePageClient';
-import { CollectionShowcase } from '@/components/home/CollectionShowcase';
+import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
+import { OrganizationSchema } from '@/components/seo/StructuredData';
+import { ProductsGrid } from '@/components/products/ProductsGrid';
 import { Button } from '@/components/ui/Button';
-import { ArrowRight, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
-import { Product, Collection } from '@tntrends/shared';
+import { ArrowRight, ShieldCheck, Truck, Package } from 'lucide-react';
 
-// This is now a Server Component (no 'use client')
+/**
+ * ORCHID Wholesale Clothing - Homepage
+ * Server-side rendered for SEO with wholesale product catalog
+ */
+
 export default async function HomePage() {
-    // Fetch products and collections on the server for SEO
-    let featuredProducts: Product[] = [];
-    let activeCollections: Collection[] = [];
+    // Fetch wholesale products on server for SEO
+    let featuredProducts: Awaited<ReturnType<typeof wholesaleProductsApi.getAll>> = [];
 
     try {
-        const response = await productApi.getAll({ limit: 8, sortBy: 'newest' });
-        featuredProducts = response.data || [];
+        const allProducts = await wholesaleProductsApi.getAll();
+        // Show latest 8 products
+        featuredProducts = allProducts
+            .filter((p) => p.inStock)
+            .slice(0, 8);
     } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('Failed to fetch wholesale products:', error);
         featuredProducts = [];
     }
 
-    try {
-        const response = await collectionApi.getAll();
-        activeCollections = response.data || [];
-    } catch (error) {
-        console.error('Failed to fetch collections:', error);
-        activeCollections = [];
-    }
-
     return (
-        <div className="overflow-hidden">
-            {/* Hero Section - Single Banner Image (1920x800) */}
-            <section className="relative w-full">
-                {/* 
-                 Aspect Ratio Logic:
-                 - Mobile: aspect-[4/3] (standard mobile, crops sides to keep height)
-                 - Tablet/Desktop: aspect-[1920/800] (shows full banner perfectly)
-                */}
-                <div className="relative w-full aspect-[4/3] md:aspect-[1920/800]">
-                    <Image
-                        src="/11.png"
-                        alt="New Collection 2025"
-                        fill
-                        className="object-cover"
-                        priority
-                        sizes="100vw"
-                    />
-                </div>
-            </section>
+        <>
+            {/* SEO: Organization Schema */}
+            <OrganizationSchema />
 
-            {/* Categories Grid - Static, rendered on server */}
-            <section className="section">
-                <div className="container-custom">
-                    <div className="flex items-end justify-between mb-12">
-                        <div>
-                            <h2 className="text-4xl font-heading font-bold text-text-primary mb-4">Shop by Category</h2>
-                            <p className="text-text-secondary text-lg">Explore our wide range of collections</p>
-                        </div>
-                        <Link href="/search" className="hidden md:flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all">
-                            View All Categories <ArrowRight className="w-4 h-4" />
-                        </Link>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <Link href="/category/women" className="group relative rounded-3xl overflow-hidden min-h-[400px]">
-                            <Image
-                                src="/shop by categories/1.png"
-                                alt="Women's Fashion"
-                                fill
-                                className="object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-                            <div className="absolute bottom-8 left-8">
-                                <h3 className="text-3xl font-heading font-bold text-white mb-2">Women</h3>
-                                <span className="text-white/90 text-sm font-medium group-hover:underline">Shop Collection</span>
-                            </div>
-                        </Link>
-
-                        <Link href="/category/men" className="group relative rounded-3xl overflow-hidden min-h-[400px]">
-                            <Image
-                                src="/shop by categories/2.png"
-                                alt="Men's Fashion"
-                                fill
-                                className="object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-                            <div className="absolute bottom-8 left-8">
-                                <h3 className="text-3xl font-heading font-bold text-white mb-2">Men</h3>
-                                <span className="text-white/90 text-sm font-medium group-hover:underline">Shop Collection</span>
-                            </div>
-                        </Link>
-
-                        <Link href="/category/kids" className="group relative rounded-3xl overflow-hidden min-h-[400px]">
-                            <Image
-                                src="/shop by categories/3.png"
-                                alt="Kids Fashion"
-                                fill
-                                className="object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-                            <div className="absolute bottom-8 left-8">
-                                <h3 className="text-3xl font-heading font-bold text-white mb-2">Kids</h3>
-                                <span className="text-white/90 text-sm font-medium group-hover:underline">Shop Collection</span>
-                            </div>
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            {/* Promo Banner Section - Custom Design */}
-            {/* Promo Banner Section - Custom Design (Full Width) */}
-            <section className="section-sm">
-                <Link href="/search" className="block relative group cursor-pointer bg-slate-900">
-                    <div className="relative w-full aspect-[16/3]">
+            <div className="overflow-hidden">
+                {/* Hero Section - Single Banner Image (1920x800) */}
+                <section className="relative w-full">
+                    <div className="relative w-full aspect-[4/3] md:aspect-[1920/800]">
                         <Image
-                            src="/sections/unique designs.png"
-                            alt="Season Sale - Limited Time Offer"
+                            src="/11.png"
+                            alt="ORCHID Wholesale Clothing - Premium Apparel from Tirupur"
                             fill
-                            className="object-contain transition-transform duration-500 group-hover:scale-105"
-                            priority={false}
+                            className="object-cover"
+                            priority
+                            sizes="100vw"
                         />
                     </div>
-                </Link>
-            </section>
+                </section>
 
-            {/* Collections Showcase */}
-            <CollectionShowcase collections={activeCollections} />
-
-            {/* Featured Products - Client Component for Interactive Features */}
-            <HomePageClient featuredProducts={featuredProducts} />
-
-            {/* Features - Static, rendered on server */}
-            <section className="section">
-                <div className="container-custom">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {[
-                            {
-                                icon: ShieldCheck,
-                                title: "Quality Guarantee",
-                                desc: "Every item is manually verified for quality assurance"
-                            },
-                            {
-                                icon: Truck,
-                                title: "FREE Delivery",
-                                desc: "Always FREE in South India. FREE across India on orders above ₹1499"
-                            },
-                            {
-                                icon: RotateCcw,
-                                title: "Secure Checkout",
-                                desc: "Safe & secure payment powered by Razorpay"
-                            }
-                        ].map((feature, i) => (
-                            <div key={i} className="group p-8 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
-                                    <feature.icon className="w-7 h-7 text-primary group-hover:text-white transition-colors" />
-                                </div>
-                                <h3 className="text-xl font-heading font-bold text-text-primary mb-3">{feature.title}</h3>
-                                <p className="text-text-secondary leading-relaxed">{feature.desc}</p>
+                {/* Categories Grid - Wholesale Categories */}
+                <section className="section">
+                    <div className="container-custom">
+                        <div className="flex items-end justify-between mb-12">
+                            <div>
+                                <h1 className="text-4xl font-heading font-bold text-text-primary mb-4">
+                                    Shop by Category
+                                </h1>
+                                <p className="text-text-secondary text-lg">
+                                    Explore our wholesale clothing collections
+                                </p>
                             </div>
-                        ))}
+                        </div>
+
+                        {/* Category Grid - Wholesale Categories */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* Newborn Collection */}
+                            <CategoryCard
+                                href="/products?category=newborn"
+                                image="/11.png"
+                                title="Newborn Collection"
+                                description="0-2 years | Jubba, Gift boxes, Rompers, Frocks"
+                            />
+
+                            {/* Girls Wear */}
+                            <CategoryCard
+                                href="/products?category=girls"
+                                image="/11.png"
+                                title="Girls Wear"
+                                description="2-12 years | T-shirts, Frocks, Leggings, Skirts"
+                            />
+
+                            {/* Boys Wear */}
+                            <CategoryCard
+                                href="/products?category=boys"
+                                image="/11.png"
+                                title="Boys Wear"
+                                description="2-12 years | T-shirts, Pants, Shorts"
+                            />
+
+                            {/* Women's Apparel */}
+                            <CategoryCard
+                                href="/products?category=women"
+                                image="/11.png"
+                                title="Women's Apparel"
+                                description="Feeding dresses, Leggings, T-shirts, Tights"
+                            />
+                        </div>
                     </div>
-                </div>
-            </section>
-        </div>
+                </section>
+
+                {/* Promo Banner - Wholesale Messaging */}
+                <section className="bg-gradient-to-r from-primary to-primary-dark text-white py-16">
+                    <div className="container-custom text-center">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                            Wholesale Pricing from Tirupur
+                        </h2>
+                        <p className="text-xl mb-8 max-w-2xl mx-auto">
+                            Bundle-based pricing for retailers. GST included. Minimum order quantities
+                            apply.
+                        </p>
+                        <Link href="/products">
+                            <Button size="lg" variant="secondary">
+                                View All Products
+                                <ArrowRight className="ml-2 w-5 h-5" />
+                            </Button>
+                        </Link>
+                    </div>
+                </section>
+
+                {/* Featured Products - Wholesale Bundles */}
+                {featuredProducts.length > 0 && (
+                    <section className="section bg-gray-50">
+                        <div className="container-custom">
+                            <div className="flex items-end justify-between mb-12">
+                                <div>
+                                    <h2 className="text-4xl font-heading font-bold text-text-primary mb-4">
+                                        Latest Wholesale Products
+                                    </h2>
+                                    <p className="text-text-secondary text-lg">
+                                        Newest bundles from our collection
+                                    </p>
+                                </div>
+                                <Link
+                                    href="/products"
+                                    className="text-primary font-semibold hover:underline hidden md:block"
+                                >
+                                    View All Products →
+                                </Link>
+                            </div>
+
+                            <ProductsGrid products={featuredProducts} />
+
+                            <div className="text-center mt-12 md:hidden">
+                                <Link href="/products">
+                                    <Button>View All Products</Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* Features - Wholesale Benefits */}
+                <section className="section">
+                    <div className="container-custom">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {/* Bundle Pricing */}
+                            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100">
+                                <div className="inline-block p-4 bg-blue-100 rounded-full mb-6">
+                                    <Package className="w-8 h-8 text-blue-600" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">Bundle Pricing</h3>
+                                <p className="text-text-secondary">
+                                    Wholesale rates for bulk orders. Minimum order quantities apply for
+                                    best pricing.
+                                </p>
+                            </div>
+
+                            {/* GST Included */}
+                            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100">
+                                <div className="inline-block p-4 bg-green-100 rounded-full mb-6">
+                                    <ShieldCheck className="w-8 h-8 text-green-600" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">GST Included</h3>
+                                <p className="text-text-secondary">
+                                    All prices include GST. Proper invoices provided for every order.
+                                </p>
+                            </div>
+
+                            {/* Fast Delivery */}
+                            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100">
+                                <div className="inline-block p-4 bg-orange-100 rounded-full mb-6">
+                                    <Truck className="w-8 h-8 text-orange-600" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">India-wide Delivery</h3>
+                                <p className="text-text-secondary">
+                                    Fast shipping from Tirupur to all major cities across India.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </>
+    );
+}
+
+// ============================================================================
+// Category Card Component
+// ============================================================================
+
+interface CategoryCardProps {
+    href: string;
+    image: string;
+    title: string;
+    description: string;
+}
+
+function CategoryCard({ href, image, title, description }: CategoryCardProps) {
+    return (
+        <Link
+            href={href}
+            className="group relative overflow-hidden rounded-xl bg-gray-100 aspect-[4/5] hover:shadow-xl transition-all duration-300"
+        >
+            <Image
+                src={image}
+                alt={title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <h3 className="text-2xl font-bold mb-2">{title}</h3>
+                <p className="text-sm text-white/90">{description}</p>
+            </div>
+        </Link>
     );
 }

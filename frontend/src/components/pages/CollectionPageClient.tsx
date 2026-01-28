@@ -4,7 +4,6 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { CollectionWithProducts, ProductSortBy } from '@tntrends/shared';
 import { ProductCard } from '@/components/products/ProductCard';
-import { ProductSort } from '@/components/products/ProductSort';
 import { Clock, Sparkles } from 'lucide-react';
 
 interface CollectionPageClientProps {
@@ -178,7 +177,8 @@ export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ coll
                             </p>
                         </div>
 
-                        <ProductSort sortBy={sortBy} onSortChange={setSortBy} />
+                        {/* Sorting temporarily disabled for wholesale */}
+                        {/* <ProductSort sortBy={sortBy} onSortChange={setSortBy} /> */}
                     </div>
 
                     {/* Empty State */}

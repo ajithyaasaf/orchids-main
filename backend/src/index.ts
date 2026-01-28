@@ -102,14 +102,14 @@ app.get('/health', (req, res) => {
 
 // API routes
 // WHOLESALE-ONLY SYSTEM: Retail routes commented out (archived for potential reuse)
-app.use('/api/products', productRoutes);        // RETAIL: Product catalog (Re-enabled for menu tags)
+// app.use('/api/products', productRoutes);        // RETAIL: Product catalog (Disabled for wholesale-only)
 // app.use('/api/orders', orderRoutes);            // RETAIL: Order management (Keep disabled if unused, check later)
 // app.use('/api/cart', cartRoutes);               // RETAIL: Shopping cart (Re-enable if retail cart needed)
 app.use('/api/shipping', shippingRoutes);       // RETAIL: Shipping calculator (Used by product page)
 // app.use('/api/checkout', checkoutRoutes);       // RETAIL: Checkout flow
 // app.use('/api/coupons', couponRoutes);          // RETAIL: Coupon system 
 // app.use('/api/combos', comboRoutes);            // RETAIL: Product combos 
-app.use('/api/collections', collectionRoutes);  // RETAIL: Product collections (Used by home page)
+// app.use('/api/collections', collectionRoutes);  // RETAIL: Product collections (Disabled for wholesale-only)
 // app.use('/api/customers', customersRoutes);     // RETAIL: Customer analytics
 // app.use('/api/dashboard', dashboardRoutes);     // RETAIL: Dashboard analytics
 

@@ -38,7 +38,7 @@ export const createWholesaleProduct = async (
         updatedAt: new Date(),
     };
 
-    const docRef = await collections.products.add(newProduct);
+    const docRef = await collections.wholesaleProducts.add(newProduct);
     return { id: docRef.id, ...newProduct } as WholesaleProduct;
 };
 
@@ -50,7 +50,7 @@ export const updateWholesaleProduct = async (
     id: string,
     updates: Partial<WholesaleProduct>
 ): Promise<void> => {
-    const productDoc = await collections.products.doc(id).get();
+    const productDoc = await collections.wholesaleProducts.doc(id).get();
 
     if (!productDoc.exists) {
         throw new AppError('Product not found', 404);
@@ -86,7 +86,7 @@ export const updateWholesaleProduct = async (
         updates.inStock = updates.availableBundles > 0;
     }
 
-    await collections.products.doc(id).update({
+    await collections.wholesaleProducts.doc(id).update({
         ...updates,
         updatedAt: new Date(),
     });
@@ -96,7 +96,7 @@ export const updateWholesaleProduct = async (
  * Get wholesale product by ID
  */
 export const getWholesaleProductById = async (id: string): Promise<WholesaleProduct> => {
-    const doc = await collections.products.doc(id).get();
+    const doc = await collections.wholesaleProducts.doc(id).get();
 
     if (!doc.exists) {
         throw new AppError('Product not found', 404);
@@ -110,9 +110,9 @@ export const getWholesaleProductById = async (id: string): Promise<WholesaleProd
  * Returns only products with wholesale schema structure
  */
 export const getAllWholesaleProducts = async (): Promise<WholesaleProduct[]> => {
-    const snapshot = await collections.products
-        .where('bundleQty', '>=', 1) // Filter for wholesale products
-        .orderBy('createdAt', 'desc') // Sort by newest first
+    // Simple query - no composite index needed
+    const snapshot = await collections.wholesaleProducts
+        .orderBy('createdAt', 'desc')
         .get();
 
     return snapshot.docs.map(doc => ({
@@ -135,5 +135,5 @@ export const deleteWholesaleProduct = async (id: string): Promise<void> => {
         );
     }
 
-    await collections.products.doc(id).delete();
+    await collections.wholesaleProducts.doc(id).delete();
 };

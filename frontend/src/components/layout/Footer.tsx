@@ -12,9 +12,17 @@ export const Footer: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* Brand */}
                     <div>
-                        <h3 className="text-white text-xl font-bold mb-4">TNtrends</h3>
-                        <p className="text-sm">
-                            Your destination for trendy and affordable clothing.
+                        <h3 className="text-white text-xl font-bold mb-4">ORCHID</h3>
+                        <p className="text-sm mb-3">
+                            Wholesale clothing supplier from Tirupur. Baby wear, kids clothing, and women's apparel at bulk prices.
+                        </p>
+                        <p className="text-xs text-gray-400">
+                            no.3(1)2A, Sivarajan compound,<br />
+                            appachi Nagar extension, 2nd Street,<br />
+                            Kongu main road, Tirupur - 641607
+                        </p>
+                        <p className="text-sm mt-2">
+                            📞 <a href="tel:7539960399" className="hover:text-primary transition">7539960399</a>
                         </p>
                         <div className="flex space-x-4 mt-4">
                             <a href="#" className="hover:text-primary transition">
@@ -31,11 +39,12 @@ export const Footer: React.FC = () => {
 
                     {/* Shop */}
                     <div>
-                        <h4 className="text-white font-semibold mb-4">Shop</h4>
+                        <h4 className="text-white font-semibold mb-4">Categories</h4>
                         <ul className="space-y-2 text-sm">
-                            <li><Link href="/category/men" className="hover:text-primary transition">Men</Link></li>
-                            <li><Link href="/category/women" className="hover:text-primary transition">Women</Link></li>
-                            <li><Link href="/category/kids" className="hover:text-primary transition">Kids</Link></li>
+                            <li><Link href="/category/newborn" className="hover:text-primary transition">Newborn Collection</Link></li>
+                            <li><Link href="/category/girls" className="hover:text-primary transition">Girls Wear</Link></li>
+                            <li><Link href="/category/boys" className="hover:text-primary transition">Boys Wear</Link></li>
+                            <li><Link href="/category/women" className="hover:text-primary transition">Women's Apparel</Link></li>
                         </ul>
                     </div>
 
@@ -73,7 +82,7 @@ export const Footer: React.FC = () => {
                 </div>
 
                 <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-                    <p>&copy; {currentYear} TNtrends. All rights reserved.</p>
+                    <p>&copy; {currentYear} ORCHID Wholesale Clothing. All rights reserved.</p>
                 </div>
             </div>
         </footer>

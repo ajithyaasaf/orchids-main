@@ -17,12 +17,18 @@ export default function AdminProductListPage() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        loadProducts();
+        // Wait a bit for Firebase auth to initialize
+        const timer = setTimeout(() => {
+            loadProducts();
+        }, 500);
+
+        return () => clearTimeout(timer);
     }, []);
 
     const loadProducts = async () => {
         try {
             setLoading(true);
+            setError(''); // Clear previous errors
             const data = await wholesaleProductsApi.getAll();
             setProducts(data);
         } catch (err: any) {
@@ -148,8 +154,8 @@ export default function AdminProductListPage() {
                                         <div>
                                             <div
                                                 className={`font-medium ${product.inStock
-                                                        ? 'text-green-600'
-                                                        : 'text-red-600'
+                                                    ? 'text-green-600'
+                                                    : 'text-red-600'
                                                     }`}
                                             >
                                                 {product.availableBundles} bundles

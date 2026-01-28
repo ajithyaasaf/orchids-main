@@ -1,131 +1,168 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { WholesaleProduct } from '@tntrends/shared';
+import { Metadata } from 'next';
+import Link from 'next/link';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
+import { Breadcrumbs } from '@/components/seo/StructuredData';
+import { ProductsGrid } from '@/components/products/ProductsGrid';
+import { Filter } from 'lucide-react';
 
 /**
- * Products Listing Page
- * Display all available wholesale products for customers
+ * Products Browse Page - SEO Optimized
+ * Server-side rendered product catalog with category filtering
+ * 
+ * Features:
+ * - Server-side rendering for SEO crawlers
+ * - Category-based filtering
+ * - Automatic sorting (newest first)
+ * - Responsive grid layout
+ * - Breadcrumb navigation
  */
 
-export default function ProductsPage() {
-    const router = useRouter();
-    const [products, setProducts] = useState<WholesaleProduct[]>([]);
-    const [loading, setLoading] = useState(true);
+export const metadata: Metadata = {
+    title: 'Wholesale Clothing Products',
+    description: 'Browse our complete selection of wholesale clothing bundles. Baby wear, kids clothing, women\'s apparel from Tirupur. Bundle pricing for bulk orders. GST included.',
+    keywords: [
+        'wholesale clothing products',
+        'buy wholesale clothing',
+        'bulk apparel',
+        'Tirupur wholesale catalog',
+    ],
+    openGraph: {
+        title: 'Wholesale Clothing Catalog | ORCHID',
+        description: 'Browse wholesale clothing bundles - Baby wear, kids clothing, women\'s apparel',
+    },
+};
 
-    useEffect(() => {
-        loadProducts();
-    }, []);
-
-    const loadProducts = async () => {
-        try {
-            setLoading(true);
-            const data = await wholesaleProductsApi.getAll();
-            setProducts(data.filter((p) => p.inStock));
-        } catch (err) {
-            console.error('Failed to load products:', err);
-        } finally {
-            setLoading(false);
-        }
+interface ProductsPageProps {
+    searchParams: {
+        category?: string;
     };
+}
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-xl">Loading products...</div>
-            </div>
-        );
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+    // Fetch products on server for SEO
+    let products: Awaited<ReturnType<typeof wholesaleProductsApi.getAll>> = [];
+    const selectedCategory = searchParams.category;
+
+    try {
+        const allProducts = await wholesaleProductsApi.getAll();
+
+        // Filter by category if specified
+        products = selectedCategory
+            ? allProducts.filter((p) => p.category === selectedCategory)
+            : allProducts;
+    } catch (error) {
+        console.error('Failed to fetch products:', error);
+        products = [];
     }
 
+    const breadcrumbItems = [
+        { name: 'Home', url: '/' },
+        { name: 'Products', url: '/products' },
+    ];
+
+    if (selectedCategory) {
+        breadcrumbItems.push({
+            name: selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1),
+            url: `/products?category=${selectedCategory}`,
+        });
+    }
+
+    // Category filter options (based on ORCHID clothing categories)
+    const categories = [
+        { value: 'newborn', label: 'Newborn Collection' },
+        { value: 'girls', label: 'Girls Wear' },
+        { value: 'boys', label: 'Boys Wear' },
+        { value: 'women', label: 'Women\'s Apparel' },
+    ];
+
     return (
-        <div className="max-w-7xl mx-auto p-6">
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold mb-2">Wholesale Products</h1>
-                <p className="text-gray-600">Bundle-based pricing for bulk orders</p>
-            </div>
+        <main className="min-h-screen bg-gray-50">
+            <div className="container mx-auto px-6 py-8">
+                {/* Breadcrumbs */}
+                <Breadcrumbs items={breadcrumbItems} />
 
-            {products.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                    <p className="text-gray-600">No products available at the moment</p>
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                        {selectedCategory
+                            ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection`
+                            : 'All Wholesale Products'}
+                    </h1>
+                    <p className="text-lg text-gray-600">
+                        Browse our complete selection of wholesale clothing bundles. All prices include
+                        GST. Minimum order: 1 bundle.
+                    </p>
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {products.map((product) => (
-                        <div
-                            key={product.id}
-                            onClick={() => router.push(`/products/${product.id}`)}
-                            className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+
+                {/* Category Filter */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Filter className="w-5 h-5 text-gray-600" />
+                        <h2 className="text-lg font-semibold text-gray-900">Filter by Category</h2>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                        <Link
+                            href="/products"
+                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${!selectedCategory
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
                         >
-                            {/* Product Image */}
-                            <div className="relative h-64 bg-gray-100">
-                                {product.images.length > 0 ? (
-                                    <img
-                                        src={product.images[0]}
-                                        alt={product.title}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                        No Image
-                                    </div>
-                                )}
+                            All Products
+                        </Link>
+                        {categories.map((cat) => (
+                            <Link
+                                key={cat.value}
+                                href={`/products?category=${cat.value}`}
+                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedCategory === cat.value
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                            >
+                                {cat.label}
+                            </Link>
+                        ))}
+                    </div>
 
-                                {/* Stock Badge */}
-                                <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                    {product.availableBundles} bundles
-                                </div>
-                            </div>
-
-                            {/* Product Info */}
-                            <div className="p-4">
-                                <h3 className="text-xl font-semibold mb-2">{product.title}</h3>
-
-                                {product.description && (
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                                        {product.description}
-                                    </p>
-                                )}
-
-                                {/* Bundle Config */}
-                                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-3">
-                                    <p className="text-sm font-semibold text-blue-900 mb-1">
-                                        Bundle: {product.bundleQty} pieces
-                                    </p>
-                                    <p className="text-xs text-gray-600">
-                                        {Object.entries(product.bundleComposition)
-                                            .map(([size, qty]) => `${size}:${qty}`)
-                                            .join(' • ')}
-                                    </p>
-                                </div>
-
-                                {/* Pricing */}
-                                <div className="flex items-baseline justify-between">
-                                    <div>
-                                        <p className="text-2xl font-bold text-green-600">
-                                            ₹{product.bundlePrice.toFixed(2)}
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            ₹{(product.bundlePrice / product.bundleQty).toFixed(2)}{' '}
-                                            per piece
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            router.push(`/products/${product.id}`);
-                                        }}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold"
-                                    >
-                                        View Details
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                    {/* Results Count */}
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-sm text-gray-600">
+                            Showing{' '}
+                            <span className="font-semibold text-gray-900">{products.length}</span>{' '}
+                            {products.length === 1 ? 'product' : 'products'}
+                            {selectedCategory && (
+                                <span>
+                                    {' '}
+                                    in{' '}
+                                    <span className="font-semibold">
+                                        {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+                                    </span>
+                                </span>
+                            )}
+                        </p>
+                    </div>
                 </div>
-            )}
-        </div>
+
+                {/* Products Grid */}
+                {products.length === 0 ? (
+                    <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+                        <p className="text-gray-500 text-lg mb-4">
+                            No products found{selectedCategory && ` in ${selectedCategory} category`}
+                        </p>
+                        {selectedCategory && (
+                            <Link
+                                href="/products"
+                                className="text-blue-600 font-semibold hover:underline"
+                            >
+                                View all products
+                            </Link>
+                        )}
+                    </div>
+                ) : (
+                    <ProductsGrid products={products} />
+                )}
+            </div>
+        </main>
     );
 }

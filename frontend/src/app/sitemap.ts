@@ -1,9 +1,16 @@
 import { MetadataRoute } from 'next';
-import { productApi } from '@/lib/api';
+import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
+
+/**
+ * Dynamic Sitemap Generation for ORCHID Wholesale Clothing
+ * Generates sitemap with all product URLs and category pages
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap
+ */
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tntrends.shop';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
+    // Static routes (always present)
     const staticRoutes: MetadataRoute.Sitemap = [
         {
             url: baseUrl,
@@ -12,72 +19,53 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 1,
         },
         {
-            url: `${baseUrl}/category/men`,
+            url: `${baseUrl}/products`,
             lastModified: new Date(),
             changeFrequency: 'daily',
             priority: 0.9,
+        },
+        {
+            url: `${baseUrl}/category/newborn`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/category/girls`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/category/boys`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.8,
         },
         {
             url: `${baseUrl}/category/women`,
             lastModified: new Date(),
-            changeFrequency: 'daily',
-            priority: 0.9,
-        },
-        {
-            url: `${baseUrl}/category/kids`,
-            lastModified: new Date(),
-            changeFrequency: 'daily',
-            priority: 0.9,
-        },
-        {
-            url: `${baseUrl}/cart`,
-            lastModified: new Date(),
             changeFrequency: 'weekly',
-            priority: 0.7,
-        },
-        {
-            url: `${baseUrl}/checkout`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.7,
+            priority: 0.8,
         },
     ];
 
+    // Dynamic product routes
+    let productRoutes: MetadataRoute.Sitemap = [];
+
     try {
-        const { data: products } = await productApi.getAll({ limit: 500 });
+        const products = await wholesaleProductsApi.getAll();
 
-        // Fetch tags for sitemap
-        let tagRoutes: MetadataRoute.Sitemap = [];
-        try {
-            const { data: tagsByCategory } = await productApi.getTagsByCategory();
-            const allTags = new Set<string>();
-            Object.values(tagsByCategory || {}).forEach((tags: any) => {
-                tags.forEach((tag: string) => allTags.add(tag));
-            });
-
-            // Need to import tagToSlug dynamically or duplicate logic if shared import fails in this context
-            // Assuming shared is available
-            const { tagToSlug } = require('@tntrends/shared');
-
-            tagRoutes = Array.from(allTags).map(tag => ({
-                url: `${baseUrl}/shop/${tagToSlug(tag)}`,
-                lastModified: new Date(),
-                changeFrequency: 'weekly',
-                priority: 0.8,
-            }));
-        } catch (e) {
-            console.error('Failed to fetch tags for sitemap', e);
-        }
-
-        const productRoutes: MetadataRoute.Sitemap = products.map((product: any) => ({
+        productRoutes = products.map((product) => ({
             url: `${baseUrl}/product/${product.id}`,
-            lastModified: new Date(product.createdAt),
+            lastModified: product.updatedAt ? new Date(product.updatedAt) : new Date(),
             changeFrequency: 'weekly' as const,
-            priority: 0.8,
+            priority: 0.7,
         }));
-
-        return [...staticRoutes, ...tagRoutes, ...productRoutes];
     } catch (error) {
-        return staticRoutes;
+        console.error('Error fetching products for sitemap:', error);
+        // Continue with empty product list if API fails
     }
+
+    return [...staticRoutes, ...productRoutes];
 }

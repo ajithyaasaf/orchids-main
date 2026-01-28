@@ -33,6 +33,8 @@ export const collections = {
     settings: db.collection('settings'),
     coupons: db.collection('coupons'),
     analytics: db.collection('analytics'),
+    wholesaleProducts: db.collection('wholesaleProducts'), // WHOLESALE: Product catalog
+    wholesaleOrders: db.collection('wholesaleOrders'),     // WHOLESALE: Order management
 };
 
 export default admin;

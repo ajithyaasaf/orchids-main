@@ -228,7 +228,7 @@ export const Header: React.FC = () => {
                         )}
 
                         {/* Cart */}
-                        <Link href="/cart" className="relative text-slate-600 hover:text-primary transition-colors group">
+                        <Link href="/wholesale/cart" className="relative text-slate-600 hover:text-primary transition-colors group">
                             <div className="relative">
                                 <ShoppingCart className="w-5 h-5" />
                                 {isMounted && cartItemsCount > 0 && (

@@ -32,7 +32,7 @@ export const deductBundleStock = async (
             const stockUpdates: { productId: string; newStock: number }[] = [];
 
             for (const item of items) {
-                const productRef = collections.products.doc(item.productId);
+                const productRef = collections.wholesaleProducts.doc(item.productId);
                 const productDoc = await transaction.get(productRef);
 
                 if (!productDoc.exists) {
@@ -54,7 +54,7 @@ export const deductBundleStock = async (
 
             // 3. Apply stock updates atomically
             for (const update of stockUpdates) {
-                const productRef = collections.products.doc(update.productId);
+                const productRef = collections.wholesaleProducts.doc(update.productId);
                 const productDoc = await transaction.get(productRef);
                 const product = productDoc.data() as WholesaleProduct;
 
@@ -101,7 +101,7 @@ export const restoreBundleStock = async (orderId: string): Promise<void> => {
 
     await db.runTransaction(async (transaction) => {
         for (const item of order.data()!.items) {
-            const productRef = collections.products.doc(item.productId);
+            const productRef = collections.wholesaleProducts.doc(item.productId);
             const productDoc = await transaction.get(productRef);
 
             if (productDoc.exists) {

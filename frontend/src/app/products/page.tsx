@@ -82,31 +82,25 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 <Breadcrumbs items={breadcrumbItems} />
 
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                <div className="flex flex-col items-center text-center mb-12 max-w-2xl mx-auto">
+                    <h1 className="text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-4 tracking-tight">
                         {selectedCategory
                             ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection`
-                            : 'All Wholesale Products'}
+                            : 'Wholesale Collection'}
                     </h1>
-                    <p className="text-lg text-gray-600">
-                        Browse our complete selection of wholesale clothing bundles. All prices include
-                        GST. Minimum order: 1 bundle.
+                    <p className="text-lg text-gray-500 leading-relaxed">
+                        Curated bundles for the modern retailer. Premium quality, GST included, and designed for high margin.
                     </p>
                 </div>
 
-                {/* Category Filter */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Filter className="w-5 h-5 text-gray-600" />
-                        <h2 className="text-lg font-semibold text-gray-900">Filter by Category</h2>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
+                {/* Category Filter - Premium Tabs */}
+                <div className="mb-10">
+                    <div className="flex flex-wrap justify-center gap-3">
                         <Link
                             href="/products"
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${!selectedCategory
-                                ? 'bg-primary text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-300 border ${!selectedCategory
+                                ? 'bg-gray-900 text-white border-gray-900 shadow-lg shadow-gray-900/20'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-900 hover:text-gray-900'
                                 }`}
                         >
                             All Products
@@ -115,9 +109,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                             <Link
                                 key={cat.value}
                                 href={`/products?category=${cat.value}`}
-                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedCategory === cat.value
-                                    ? 'bg-primary text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-300 border ${selectedCategory === cat.value
+                                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/25'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary'
                                     }`}
                             >
                                 {cat.label}
@@ -125,23 +119,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                         ))}
                     </div>
 
-                    {/* Results Count */}
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                        <p className="text-sm text-gray-600">
-                            Showing{' '}
-                            <span className="font-semibold text-gray-900">{products.length}</span>{' '}
-                            {products.length === 1 ? 'product' : 'products'}
-                            {selectedCategory && (
-                                <span>
-                                    {' '}
-                                    in{' '}
-                                    <span className="font-semibold">
-                                        {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
-                                    </span>
-                                </span>
-                            )}
-                        </p>
-                    </div>
+                    {/* Results Count (Subtle) */}
+                    <p className="text-center text-xs text-gray-400 mt-6 uppercase tracking-widest font-medium">
+                        Showing {products.length} {products.length === 1 ? 'Style' : 'Styles'}
+                    </p>
                 </div>
 
                 {/* Products Grid */}

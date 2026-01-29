@@ -47,32 +47,34 @@ export default function WholesaleCartPage() {
     const total = getTotal();
 
     return (
-        <div className="max-w-6xl mx-auto p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Shopping Cart</h1>
-                <button
-                    onClick={() => {
-                        if (confirm('Clear all items from cart?')) {
-                            clearCart();
-                        }
-                    }}
-                    className="text-red-600 hover:text-red-800 text-sm"
-                >
-                    Clear Cart
-                </button>
-            </div>
+        <div className="min-h-screen bg-gray-50/50 py-12">
+            <div className="container mx-auto px-6 max-w-7xl">
+                <div className="flex items-center justify-between mb-8">
+                    <h1 className="text-3xl font-heading font-bold text-gray-900">
+                        Shopping Cart <span className="text-gray-400 font-normal text-lg ml-2">({items.length} items)</span>
+                    </h1>
+                    <button
+                        onClick={() => {
+                            if (confirm('Clear all items from cart?')) {
+                                clearCart();
+                            }
+                        }}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
+                    >
+                        Clear Cart
+                    </button>
+                </div>
 
-            <div className="grid lg:grid-cols-3 gap-6">
-                {/* Cart Items */}
-                <div className="lg:col-span-2 space-y-4">
-                    {items.map((item) => (
-                        <div
-                            key={item.product.id}
-                            className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow"
-                        >
-                            <div className="flex gap-4">
+                <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+                    {/* Cart Items List */}
+                    <div className="lg:col-span-8 space-y-6">
+                        {items.map((item) => (
+                            <div
+                                key={item.product.id}
+                                className="bg-white border boundary-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow flex gap-6"
+                            >
                                 {/* Product Image */}
-                                <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+                                <div className="w-32 h-40 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden relative border border-gray-100">
                                     {item.product.images.length > 0 ? (
                                         <img
                                             src={item.product.images[0]}
@@ -87,126 +89,121 @@ export default function WholesaleCartPage() {
                                 </div>
 
                                 {/* Product Info */}
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-semibold mb-1">
-                                        {item.product.title}
-                                    </h3>
-                                    <div className="text-sm text-gray-600 space-y-1">
-                                        <p>
-                                            Bundle: {item.product.bundleQty} pieces
-                                        </p>
-                                        <p className="text-xs">
-                                            Composition: {Object.entries(item.product.bundleComposition)
-                                                .map(([size, qty]) => `${size}:${qty}`)
-                                                .join(', ')}
+                                <div className="flex-1 flex flex-col">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-gray-900 line-clamp-1">
+                                                {item.product.title}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                Bundle Size: <span className="font-medium text-gray-900">{item.product.bundleQty} pieces</span>
+                                            </p>
+                                        </div>
+                                        <p className="text-lg font-bold text-primary">
+                                            ₹{(item.bundlesOrdered * item.product.bundlePrice).toLocaleString('en-IN')}
                                         </p>
                                     </div>
-                                    <div className="mt-3 flex items-center justify-between">
-                                        {/* Quantity Controls */}
-                                        <div className="flex items-center gap-3">
+
+                                    {/* Size Specs */}
+                                    <div className="mt-2 mb-auto">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {Object.entries(item.product.bundleComposition).map(([size, qty]) => (
+                                                <span key={size} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                                                    {size}: {qty}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Controls Row */}
+                                    <div className="flex items-end justify-between mt-4">
+                                        <div className="flex items-center gap-4">
+                                            {/* Quantity Control */}
+                                            <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-200">
+                                                <button
+                                                    onClick={() => updateBundleQty(item.product.id, item.bundlesOrdered - 1)}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-gray-900 transition-all disabled:opacity-30"
+                                                    disabled={item.bundlesOrdered <= 1}
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="w-10 text-center font-bold text-sm text-gray-900">
+                                                    {item.bundlesOrdered}
+                                                </span>
+                                                <button
+                                                    onClick={() => updateBundleQty(item.product.id, item.bundlesOrdered + 1)}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 hover:bg-white hover:text-gray-900 transition-all disabled:opacity-30"
+                                                    disabled={item.bundlesOrdered >= item.product.availableBundles}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
                                             <button
-                                                onClick={() =>
-                                                    updateBundleQty(
-                                                        item.product.id,
-                                                        item.bundlesOrdered - 1
-                                                    )
-                                                }
-                                                className="w-8 h-8 bg-gray-200 rounded hover:bg-gray-300 flex items-center justify-center"
-                                                disabled={item.bundlesOrdered <= 1}
+                                                onClick={() => removeBundle(item.product.id)}
+                                                className="text-xs font-medium text-gray-400 hover:text-red-600 underline decoration-dotted underline-offset-2 transition-colors"
                                             >
-                                                -
-                                            </button>
-                                            <span className="w-12 text-center font-semibold">
-                                                {item.bundlesOrdered}
-                                            </span>
-                                            <button
-                                                onClick={() =>
-                                                    updateBundleQty(
-                                                        item.product.id,
-                                                        item.bundlesOrdered + 1
-                                                    )
-                                                }
-                                                className="w-8 h-8 bg-gray-200 rounded hover:bg-gray-300 flex items-center justify-center"
-                                                disabled={
-                                                    item.bundlesOrdered >= item.product.availableBundles
-                                                }
-                                            >
-                                                +
+                                                Remove
                                             </button>
                                         </div>
 
-                                        {/* Price */}
                                         <div className="text-right">
-                                            <p className="text-lg font-bold text-primary">
-                                                ₹
-                                                {(item.bundlesOrdered * item.product.bundlePrice).toFixed(
-                                                    2
-                                                )}
-                                            </p>
-                                            <p className="text-sm text-gray-500">
-                                                {item.bundlesOrdered} × {item.product.bundleQty} ={' '}
-                                                {item.bundlesOrdered * item.product.bundleQty} pcs
+                                            <p className="text-xs text-gray-400">
+                                                {item.bundlesOrdered * item.product.bundleQty} total pieces
                                             </p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => removeBundle(item.product.id)}
-                                        className="mt-2 text-red-600 hover:text-red-800 text-sm"
-                                    >
-                                        Remove
-                                    </button>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
 
-                {/* Order Summary */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white border rounded-lg p-6 sticky top-6">
-                        <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+                    {/* Order Summary Sidebar */}
+                    <div className="lg:col-span-4">
+                        <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm sticky top-24">
+                            <h2 className="text-xl font-heading font-bold text-gray-900 mb-6">Order Summary</h2>
 
-                        {/* Statistics */}
-                        <div className="bg-primary-light rounded-lg p-3 mb-4 space-y-1 text-sm border border-pink-100">
-                            <p className="flex justify-between">
-                                <span className="text-gray-600">Total Bundles:</span>
-                                <span className="font-semibold">{getTotalBundles()}</span>
-                            </p>
-                            <p className="flex justify-between">
-                                <span className="text-gray-600">Total Pieces:</span>
-                                <span className="font-semibold">{getTotalPieces()}</span>
-                            </p>
-                        </div>
-
-                        {/* Pricing */}
-                        <div className="space-y-2 mb-4">
-                            <div className="flex justify-between">
-                                <span>Subtotal:</span>
-                                <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
+                            {/* Stats */}
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
+                                    <span className="block text-2xl font-bold text-gray-900">{getTotalBundles()}</span>
+                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Bundles</span>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
+                                    <span className="block text-2xl font-bold text-gray-900">{getTotalPieces()}</span>
+                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Px Total</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between">
-                                <span>GST ({(gstRate * 100).toFixed(0)}%):</span>
-                                <span className="font-semibold">₹{gst.toFixed(2)}</span>
+
+                            {/* Totals */}
+                            <div className="space-y-3 mb-6 pb-6 border-b border-gray-100">
+                                <div className="flex justify-between text-gray-600">
+                                    <span>Subtotal</span>
+                                    <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-600">
+                                    <span>GST ({(gstRate * 100).toFixed(0)}%)</span>
+                                    <span className="font-medium text-gray-900">₹{gst.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between items-end pt-2">
+                                    <span className="text-lg font-bold text-gray-900">Total</span>
+                                    <span className="text-3xl font-heading font-bold text-primary">₹{total.toLocaleString('en-IN')}</span>
+                                </div>
                             </div>
-                            <div className="border-t pt-2 flex justify-between text-lg font-bold">
-                                <span>Total:</span>
-                                <span className="text-green-600">₹{total.toFixed(2)}</span>
-                            </div>
+
+                            <button
+                                onClick={() => router.push('/wholesale/checkout')}
+                                className="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all mb-4"
+                            >
+                                Proceed to Checkout
+                            </button>
+
+                            <button
+                                onClick={() => router.push('/products')}
+                                className="w-full py-3 text-gray-500 font-medium hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors text-sm"
+                            >
+                                Continue Shopping
+                            </button>
                         </div>
-
-                        <button
-                            onClick={() => router.push('/wholesale/checkout')}
-                            className="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark mb-3"
-                        >
-                            Proceed to Checkout
-                        </button>
-
-                        <button
-                            onClick={() => router.push('/products')}
-                            className="w-full py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-                        >
-                            Continue Shopping
-                        </button>
                     </div>
                 </div>
             </div>

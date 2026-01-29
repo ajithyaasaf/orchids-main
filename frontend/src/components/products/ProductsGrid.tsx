@@ -40,97 +40,97 @@ function ProductCard({ product, priority = false }: ProductCardProps) {
     return (
         <Link
             href={`/product/${product.id}`}
-            className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+            className="group flex flex-col h-full bg-white rounded-xl overflow-hidden hover:shadow-soft-lg transition-all duration-300 border border-transparent hover:border-gray-100"
         >
             {/* Product Image */}
-            <div className="relative aspect-square bg-gray-100 overflow-hidden">
+            <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden">
                 {product.images.length > 0 ? (
                     <Image
                         src={product.images[0]}
                         alt={`${product.title} wholesale bundle`}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         priority={priority}
-                        quality={80}
+                        quality={85}
                     />
                 ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                        <span className="text-sm">No Image</span>
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+                        <Package className="w-12 h-12 opacity-20" />
                     </div>
                 )}
 
-                {/* Stock Badge */}
+                {/* Minimalist Stock Status */}
                 {!product.inStock ? (
-                    <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-900 px-3 py-1 text-xs font-medium uppercase tracking-wider shadow-sm">
                         Out of Stock
                     </div>
                 ) : product.availableBundles < 10 ? (
-                    <div className="absolute top-2 right-2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-orange-600 px-3 py-1 text-xs font-medium uppercase tracking-wider shadow-sm flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
                         Low Stock
                     </div>
                 ) : null}
 
-                {/* Category Badge */}
-                {product.category && (
-                    <div className="absolute top-2 left-2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
-                        {product.category}
+                {/* Hover Action Overlay */}
+                <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/20 to-transparent flex items-end justify-center pointer-events-none">
+                    <div className="w-full bg-white text-gray-900 py-3 text-sm font-bold text-center shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 pointer-events-auto hover:bg-gray-900 hover:text-white rounded-lg">
+                        View Details
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Product Info */}
-            <div className="p-4">
+            <div className="p-4 flex flex-col flex-grow">
+                {/* Category */}
+                {product.category && (
+                    <div className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-2">
+                        {product.category}
+                    </div>
+                )}
+
                 {/* Title */}
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors min-h-[56px]">
+                <h3 className="text-base font-medium text-gray-900 mb-1 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                     {product.title}
                 </h3>
 
-                {/* Bundle Info */}
-                <div className="bg-primary-light rounded-lg p-3 mb-3 border border-pink-100">
-                    <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-600 flex items-center gap-1">
-                            <Package className="w-3.5 h-3.5" />
-                            Bundle:
-                        </span>
-                        <span className="font-semibold text-gray-900">{product.bundleQty} pcs</span>
-                    </div>
-                    <div className="text-xs text-gray-600">
-                        {Object.entries(product.bundleComposition)
-                            .map(([size, qty]) => `${size}:${qty}`)
-                            .join(' • ')}
-                    </div>
-                </div>
-
                 {/* Price */}
-                <div className="mb-3">
+                <div className="mt-2 mb-4">
                     <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-green-600">
+                        <span className="text-lg font-bold font-heading text-gray-900">
                             ₹{product.bundlePrice.toLocaleString('en-IN')}
                         </span>
-                        <span className="text-xs text-gray-500">per bundle</span>
+                        <span className="text-xs text-gray-500 font-medium">/ bundle</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                        ₹{(product.bundlePrice / product.bundleQty).toFixed(2)} per piece
-                    </p>
+                    {product.bundleQty > 1 && (
+                        <p className="text-xs text-gray-400">
+                            ₹{(product.bundlePrice / product.bundleQty).toFixed(0)} / pc
+                        </p>
+                    )}
                 </div>
 
-                {/* Stock Status */}
-                <div className="flex items-center justify-between text-sm mb-3 pb-3 border-b border-gray-100">
-                    <span className="text-gray-600">Available:</span>
-                    <span
-                        className={`font-semibold ${product.inStock ? 'text-green-600' : 'text-red-600'
-                            }`}
-                    >
-                        {product.inStock ? `${product.availableBundles} bundles` : 'Out of stock'}
-                    </span>
-                </div>
+                {/* Divider */}
+                <div className="mt-auto border-t border-gray-100 pt-3">
+                    {/* Compact Bundle Details */}
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                        <div className="flex items-center gap-1.5">
+                            <Package className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="font-medium">{product.bundleQty} Pcs</span>
+                        </div>
 
-                {/* View Details Button */}
-                <button className="w-full bg-primary text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 group-hover:bg-primary-dark">
-                    <ShoppingCart className="w-4 h-4" />
-                    View Details
-                </button>
+                        {/* Size Distribution Preview */}
+                        <div className="flex gap-1">
+                            {Object.entries(product.bundleComposition).slice(0, 3).map(([size, _], i) => (
+                                <span key={size} className="bg-gray-50 px-1.5 py-0.5 rounded text-gray-500 border border-gray-100">
+                                    {size}
+                                </span>
+                            ))}
+                            {Object.keys(product.bundleComposition).length > 3 && (
+                                <span className="text-gray-400 pl-0.5">+</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
         </Link>
     );

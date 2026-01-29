@@ -96,139 +96,111 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {/* SEO: Product Schema */}
             <ProductSchema product={product} />
 
-            <main className="min-h-screen bg-white">
-                <div className="container mx-auto px-6 py-8 max-w-7xl">
+            <main className="min-h-screen bg-gray-50/50">
+                <div className="container mx-auto px-6 py-12 max-w-7xl">
                     {/* SEO: Breadcrumb Navigation */}
-                    <Breadcrumbs items={breadcrumbItems} />
+                    <div className="mb-6">
+                        <Breadcrumbs items={breadcrumbItems} />
+                    </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        {/* Left Column: Images */}
-                        <div>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+                        {/* Left Column: Images (7 columns) */}
+                        <div className="lg:col-span-7">
                             <ProductImageGallery images={product.images} title={product.title} />
                         </div>
 
-                        {/* Right Column: Product Info */}
-                        <div>
-                            {/* Category Badge */}
-                            {product.category && (
-                                <div className="mb-4">
-                                    <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
-                                        {product.category}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Product Title - H1 for SEO */}
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                                {product.title}
-                            </h1>
-
-                            {/* Price */}
-                            <div className="mb-6">
-                                <div className="flex items-baseline gap-3">
-                                    <span className="text-4xl font-bold text-green-600">
-                                        ₹{product.bundlePrice.toLocaleString('en-IN')}
-                                    </span>
-                                    <span className="text-gray-500">per bundle</span>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-1">
-                                    ₹{(product.bundlePrice / product.bundleQty).toFixed(2)} per piece
-                                </p>
-                            </div>
-
-                            {/* Stock Status */}
-                            <div className="mb-6">
-                                {product.inStock ? (
-                                    <div className="flex items-center gap-2 text-green-600">
-                                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                                        <span className="font-semibold">
-                                            {product.availableBundles} bundles in stock
+                        {/* Right Column: Product Info (5 columns) */}
+                        <div className="lg:col-span-5 space-y-8">
+                            <div>
+                                {/* Category Badge */}
+                                {product.category && (
+                                    <div className="mb-3">
+                                        <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">
+                                            {product.category}
                                         </span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-2 text-red-600">
-                                        <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                                        <span className="font-semibold">Out of Stock</span>
                                     </div>
                                 )}
-                            </div>
 
-                            {/* Bundle Information - Structured for SEO */}
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Package className="w-5 h-5 text-blue-600" />
-                                    Bundle Configuration
-                                </h2>
+                                {/* Product Title - H1 for SEO */}
+                                <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 mb-6 leading-tight">
+                                    {product.title}
+                                </h1>
 
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-gray-700">Bundle Size:</span>
-                                        <span className="font-bold text-gray-900">
-                                            {product.bundleQty} pieces
+                                {/* Price */}
+                                <div className="mb-6 pb-6 border-b border-gray-100">
+                                    <div className="flex items-baseline gap-3">
+                                        <span className="text-5xl font-heading font-bold text-primary">
+                                            ₹{product.bundlePrice.toLocaleString('en-IN')}
+                                        </span>
+                                        <span className="text-lg text-gray-500 font-medium">/ bundle</span>
+                                    </div>
+                                    <p className="text-sm text-gray-400 mt-2 font-medium">
+                                        ₹{(product.bundlePrice / product.bundleQty).toFixed(0)} per piece • GST Included
+                                    </p>
+                                </div>
+
+                                {/* Bundle Configuration - Clean Grid Spec */}
+                                <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                                            <Package className="w-4 h-4 text-primary" />
+                                            Bundle Config
+                                        </h2>
+                                        <span className="bg-gray-100 text-gray-700 font-bold px-3 py-1 rounded-full text-xs">
+                                            {product.bundleQty} Pieces Total
                                         </span>
                                     </div>
 
-                                    <div className="border-t border-blue-200 pt-3">
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">
-                                            Size Composition:
-                                        </p>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {Object.entries(product.bundleComposition).map(([size, qty]) => (
-                                                <div
-                                                    key={size}
-                                                    className="flex items-center justify-between bg-white px-3 py-2 rounded border border-blue-100"
-                                                >
-                                                    <span className="text-sm font-medium text-gray-700">
-                                                        {size}:
-                                                    </span>
-                                                    <span className="text-sm font-bold text-gray-900">
-                                                        {qty} pcs
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {Object.entries(product.bundleComposition).map(([size, qty]) => (
+                                            <div
+                                                key={size}
+                                                className="flex flex-col items-center justify-center bg-gray-50 p-3 rounded-lg border border-transparent hover:border-gray-200 transition-colors"
+                                            >
+                                                <span className="text-xs text-gray-500 mb-1">Size {size}</span>
+                                                <span className="text-lg font-bold text-gray-900">{qty}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Description */}
-                            {product.description && (
-                                <div className="mb-6">
-                                    <h2 className="text-xl font-bold text-gray-900 mb-3">Description</h2>
-                                    <p className="text-gray-700 leading-relaxed">{product.description}</p>
-                                </div>
-                            )}
 
                             {/* Add to Cart Section */}
                             <AddToCartSection product={product} />
 
-                            {/* Additional Info */}
-                            <div className="mt-8 border-t pt-6">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                                    Wholesale Information
-                                </h3>
-                                <ul className="space-y-3 text-sm text-gray-700">
-                                    <li className="flex items-start gap-2">
-                                        <ShoppingBag className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <span>
-                                            <strong>Minimum Order:</strong> 1 bundle ({product.bundleQty}{' '}
-                                            pieces)
-                                        </span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <Ruler className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <span>
-                                            <strong>GST:</strong> Included in price (GST: 33ATDPB1895L2ZM)
-                                        </span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <Package className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <span>
-                                            <strong>Packaging:</strong> Professional wholesale packaging
-                                        </span>
-                                    </li>
-                                </ul>
+                            {/* Description - Accordion style or clean block */}
+                            {product.description && (
+                                <div className="prose prose-sm text-gray-600 leading-relaxed max-w-none">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Description</h3>
+                                    <p>{product.description}</p>
+                                </div>
+                            )}
+
+                            {/* Wholesale Value Props */}
+                            <div className="grid grid-cols-3 gap-4 py-6 border-t border-gray-100">
+                                <div className="text-center">
+                                    <div className="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                        <ShoppingBag className="w-5 h-5 text-gray-600" />
+                                    </div>
+                                    <p className="text-xs font-semibold text-gray-900">Low MOQ</p>
+                                    <p className="text-[10px] text-gray-500">1 Bundle Only</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                        <Ruler className="w-5 h-5 text-gray-600" />
+                                    </div>
+                                    <p className="text-xs font-semibold text-gray-900">GST Invoice</p>
+                                    <p className="text-[10px] text-gray-500">Input Credit</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                        <Package className="w-5 h-5 text-gray-600" />
+                                    </div>
+                                    <p className="text-xs font-semibold text-gray-900">Fast Ship</p>
+                                    <p className="text-[10px] text-gray-500">Professional Pack</p>
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -244,42 +216,62 @@ export default async function ProductPage({ params }: ProductPageProps) {
 function ProductImageGallery({ images, title }: { images: string[]; title: string }) {
     if (images.length === 0) {
         return (
-            <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+            <div className="aspect-[4/5] bg-gray-100 rounded-2xl flex items-center justify-center">
                 <span className="text-gray-400">No Image Available</span>
             </div>
         );
     }
 
     return (
-        <div className="space-y-4">
-            {/* Main Image - Optimized for LCP */}
-            <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+        <div className="flex gap-6 sticky top-24">
+            {/* Thumbnail Strip (Left Side) */}
+            {images.length > 1 && (
+                <div className="hidden lg:flex flex-col gap-4 w-24 flex-shrink-0">
+                    {images.map((image, index) => (
+                        <div
+                            key={index}
+                            className={`relative aspect-square bg-white rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${index === 0 ? 'border-primary shadow-sm' : 'border-transparent hover:border-gray-200'
+                                }`}
+                        >
+                            <Image
+                                src={image}
+                                alt={`${title} - view ${index + 1}`}
+                                fill
+                                className="object-cover"
+                                sizes="96px"
+                            />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Main Image */}
+            <div className="relative flex-grow aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                 <Image
                     src={images[0]}
                     alt={`${title} - wholesale clothing bundle`}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="(max-width: 1024px) 100vw, 60vw"
                     priority
-                    quality={90}
+                    quality={95}
                 />
             </div>
 
-            {/* Thumbnail Gallery */}
+            {/* Mobile Thumbnails (Below) */}
             {images.length > 1 && (
-                <div className="grid grid-cols-4 gap-4">
-                    {images.slice(1, 5).map((image, index) => (
+                <div className="flex lg:hidden gap-3 overflow-x-auto pb-4 mt-4 w-full">
+                    {images.map((image, index) => (
                         <div
                             key={index}
-                            className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-75 transition-opacity"
+                            className="relative w-20 aspect-square flex-shrink-0 bg-white rounded-lg overflow-hidden border border-gray-200"
                         >
                             <Image
                                 src={image}
-                                alt={`${title} - view ${index + 2}`}
+                                alt={`${title} view ${index}`}
                                 fill
                                 className="object-cover"
-                                sizes="25vw"
-                                quality={75}
+                                sizes="80px"
                             />
                         </div>
                     ))}

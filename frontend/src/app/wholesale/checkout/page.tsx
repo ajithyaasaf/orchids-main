@@ -184,163 +184,189 @@ export default function WholesaleCheckoutPage() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+        <div className="min-h-screen bg-gray-50/50 py-12">
+            <div className="container mx-auto px-6 max-w-7xl">
+                <h1 className="text-3xl font-heading font-bold text-gray-900 mb-8">Checkout</h1>
 
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-                    {error}
-                </div>
-            )}
+                <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
 
-            {/* Cart Items */}
-            <div className="bg-white border rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-                <div className="space-y-4">
-                    {items.map((item) => (
-                        <div key={item.product.id} className="flex justify-between items-start pb-4 border-b last:border-0">
-                            <div className="flex-1">
-                                <h3 className="font-semibold">{item.product.title}</h3>
-                                <p className="text-sm text-gray-600">
-                                    {item.bundlesOrdered} × {item.product.bundleQty} pcs bundle
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                    ({Object.entries(item.product.bundleComposition)
-                                        .map(([size, qty]) => `${size}:${qty}`)
-                                        .join(', ')})
-                                </p>
+                    {/* Left Column: Forms */}
+                    <div className="lg:col-span-7 space-y-8">
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+                                <span className="bg-red-100 p-1 rounded-full">⚠️</span>
+                                {error}
                             </div>
-                            <div className="text-right">
-                                <p className="font-semibold">
-                                    ₹{(item.bundlesOrdered * item.product.bundlePrice).toFixed(2)}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                    ₹{item.product.bundlePrice} per bundle
-                                </p>
+                        )}
+
+                        {/* Delivery Address */}
+                        <div className="bg-white border border-gray-100 rounded-xl p-8 shadow-sm">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm">1</span>
+                                Delivery Address
+                            </h2>
+                            <div className="grid grid-cols-2 gap-5">
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                    <input
+                                        type="text"
+                                        value={address.name}
+                                        onChange={(e) => setAddress({ ...address, name: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                        placeholder="Enter your name"
+                                        required
+                                    />
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        value={address.phone}
+                                        onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                        placeholder="10-digit mobile number"
+                                        required
+                                    />
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+                                    <input
+                                        type="text"
+                                        value={address.pincode}
+                                        onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                        placeholder="6-digit pincode"
+                                        maxLength={6}
+                                        required
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                                    <input
+                                        type="text"
+                                        value={address.addressLine1}
+                                        onChange={(e) => setAddress({ ...address, addressLine1: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all mb-3"
+                                        placeholder="House No, Building, Street"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        value={address.addressLine2}
+                                        onChange={(e) => setAddress({ ...address, addressLine2: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                        placeholder="Area, Landmark (Optional)"
+                                    />
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                                    <input
+                                        type="text"
+                                        value={address.city}
+                                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                        required
+                                    />
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                                    <input
+                                        type="text"
+                                        value={address.state}
+                                        onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                        required
+                                    />
+                                </div>
                             </div>
                         </div>
-                    ))}
-                </div>
-            </div>
 
-            {/* Address Form */}
-            <div className="bg-white border rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold mb-4">Delivery Address</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <input
-                        type="text"
-                        placeholder="Full Name *"
-                        value={address.name}
-                        onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                        required
-                    />
-                    <input
-                        type="tel"
-                        placeholder="Phone Number *"
-                        value={address.phone}
-                        onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                        required
-                    />
-                    <input
-                        type="text"
-                        placeholder="Address Line 1 *"
-                        value={address.addressLine1}
-                        onChange={(e) => setAddress({ ...address, addressLine1: e.target.value })}
-                        className="col-span-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
-                    <input
-                        type="text"
-                        placeholder="Address Line 2"
-                        value={address.addressLine2}
-                        onChange={(e) => setAddress({ ...address, addressLine2: e.target.value })}
-                        className="col-span-2 px-4 py-2 border rounded-lg"
-                    />
-                    <input
-                        type="text"
-                        placeholder="City *"
-                        value={address.city}
-                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                        required
-                    />
-                    <input
-                        type="text"
-                        placeholder="State *"
-                        value={address.state}
-                        onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                        required
-                    />
-                    <input
-                        type="text"
-                        placeholder="Pincode *"
-                        value={address.pincode}
-                        onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
-                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                        maxLength={6}
-                        required
-                    />
-                </div>
-            </div>
+                        <button
+                            onClick={() => router.push('/wholesale/cart')}
+                            className="text-gray-500 font-medium hover:text-gray-900 flex items-center gap-2 transition-colors px-2"
+                        >
+                            ← Back to Cart
+                        </button>
+                    </div>
 
-            {/* Price Breakdown */}
-            <div className="bg-primary-light border border-pink-200 rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold mb-4">Price Breakdown</h2>
-                {calculatedOrder ? (
-                    <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <span>Subtotal:</span>
-                            <span className="font-semibold">
-                                ₹{calculatedOrder.subtotal.toFixed(2)}
-                            </span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>GST ({(calculatedOrder.gstRate * 100).toFixed(0)}%):</span>
-                            <span className="font-semibold">₹{calculatedOrder.gst.toFixed(2)}</span>
-                        </div>
-                        <div className="border-t pt-2 flex justify-between text-lg font-bold">
-                            <span>Total:</span>
-                            <span className="text-green-600">
-                                ₹{calculatedOrder.totalAmount.toFixed(2)}
-                            </span>
+                    {/* Right Column: Order Summary */}
+                    <div className="lg:col-span-5 relative">
+                        <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm sticky top-24">
+                            <h2 className="text-xl font-heading font-bold text-gray-900 mb-6">Order Summary</h2>
+
+                            {/* Mini Cart Items */}
+                            <div className="max-h-60 overflow-y-auto pr-2 space-y-4 mb-6 scrollbar-thin scrollbar-thumb-gray-200">
+                                {items.map((item) => (
+                                    <div key={item.product.id} className="flex gap-4 items-start">
+                                        <div className="w-16 h-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
+                                            {item.product.images.length > 0 && (
+                                                <img src={item.product.images[0]} alt="" className="w-full h-full object-cover" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug">{item.product.title}</p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {item.bundlesOrdered} bundles × {item.product.bundleQty} pcs
+                                            </p>
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-900">
+                                            ₹{(item.bundlesOrdered * item.product.bundlePrice).toLocaleString('en-IN')}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Price Breakdown */}
+                            <div className="bg-gray-50 rounded-lg p-5 mb-6 border border-gray-100">
+                                {calculatedOrder ? (
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between text-sm text-gray-600">
+                                            <span>Subtotal</span>
+                                            <span className="font-medium text-gray-900">₹{calculatedOrder.subtotal.toLocaleString('en-IN')}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm text-gray-600">
+                                            <span>GST ({(calculatedOrder.gstRate * 100).toFixed(0)}%)</span>
+                                            <span className="font-medium text-gray-900">₹{calculatedOrder.gst.toLocaleString('en-IN')}</span>
+                                        </div>
+                                        <div className="border-t border-gray-200 pt-3 flex justify-between items-end">
+                                            <span className="text-base font-bold text-gray-900">Total Pay</span>
+                                            <span className="text-2xl font-heading font-bold text-primary">₹{calculatedOrder.totalAmount.toLocaleString('en-IN')}</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <p className="text-sm text-gray-500 mb-3">Calculate taxes & shipping to see total</p>
+                                        <button
+                                            onClick={handleCalculate}
+                                            disabled={loading}
+                                            className="w-full py-3 bg-gray-900 text-white rounded-lg font-bold text-sm hover:bg-black transition-colors"
+                                        >
+                                            {loading ? 'Calculating...' : 'Calculate Total'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Place Order Button */}
+                            {calculatedOrder && (
+                                <button
+                                    onClick={handlePlaceOrder}
+                                    disabled={loading}
+                                    className="w-full py-4 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg shadow-green-600/20 transition-all mb-4 flex items-center justify-center gap-2"
+                                >
+                                    {loading ? 'Processing...' : 'Pay Securely'}
+                                    {!loading && <span className="text-xl">🔒</span>}
+                                </button>
+                            )}
+
+                            <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                                <span>SSL Encrypted Payment</span>
+                                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                <span>Powered by Razorpay</span>
+                            </div>
                         </div>
                     </div>
-                ) : (
-                    <div className="text-center text-gray-500">
-                        Click "Calculate Order" to see final price with GST
-                    </div>
-                )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-4">
-                {!calculatedOrder ? (
-                    <button
-                        onClick={handleCalculate}
-                        disabled={loading}
-                        className="flex-1 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                    >
-                        {loading ? 'Calculating...' : 'Calculate Order'}
-                    </button>
-                ) : (
-                    <button
-                        onClick={handlePlaceOrder}
-                        disabled={loading}
-                        className="flex-1 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-300"
-                    >
-                        {loading ? 'Processing...' : 'Proceed to Payment'}
-                    </button>
-                )}
-
-                <button
-                    onClick={() => router.push('/wholesale/cart')}
-                    className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                    Back to Cart
-                </button>
+                </div>
             </div>
         </div>
     );

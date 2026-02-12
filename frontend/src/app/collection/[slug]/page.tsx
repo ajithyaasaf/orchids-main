@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { collectionApi } from '@/lib/api';
 import { CollectionPageClient } from '@/components/pages/CollectionPageClient';
+import { WholesaleProduct } from '@tntrends/shared';
 
 interface PageProps {
     params: { slug: string };
@@ -14,6 +15,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     try {
         const { data: collection } = await collectionApi.getBySlug(params.slug);
+
 
         return {
             title: collection.seo.metaTitle || `${collection.name} | TNtrends`,
@@ -49,8 +51,12 @@ export default async function CollectionPage({ params }: PageProps) {
     try {
         const { data: collection } = await collectionApi.getBySlug(params.slug);
 
+        // Backend now returns wholesale products directly in collection.products
+        // (Type: CollectionWithProducts has Product[] but we return WholesaleProduct[])
+        const wholesaleProducts = (collection as any).products || [];
+
         // Pass data to client component for interactivity
-        return <CollectionPageClient collection={collection} />;
+        return <CollectionPageClient collection={collection} products={wholesaleProducts} />;
     } catch (error) {
         console.error('Failed to fetch collection:', error);
         notFound();

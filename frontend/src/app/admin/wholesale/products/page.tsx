@@ -61,7 +61,7 @@ export default function AdminProductListPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="container-custom p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Wholesale Products</h1>
                 {products.length > 0 && (

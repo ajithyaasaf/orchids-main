@@ -3,9 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
-import { ShoppingCart, User, Search, Menu, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, LogOut, ChevronDown } from 'lucide-react';
 
 /**
  * Main Header Component - Wholesale Platform
@@ -25,12 +26,132 @@ import { ShoppingCart, User, Search, Menu, LogOut } from 'lucide-react';
  * Wholesale category navigation items
  * Aligned with ORCHID business categories: Newborn, Girls, Boys, Women's Apparel
  */
-const WHOLESALE_CATEGORIES = [
-    { name: 'Newborn', href: '/products?category=newborn', description: '0-2 years' },
-    { name: 'Girls', href: '/products?category=girls', description: '2-12 years' },
-    { name: 'Boys', href: '/products?category=boys', description: '2-12 years' },
-    { name: 'Women', href: '/products?category=women', description: 'Adult apparel' },
-] as const;
+const WHOLESALE_NAVIGATION = [
+    {
+        name: 'Newborn',
+        href: '/products?category=newborn',
+        sections: [
+            {
+                title: 'Clothing',
+                items: [
+                    { label: 'Jubba Sets', href: '/products?category=newborn&tag=jubba' },
+                    { label: 'Rompers', href: '/products?category=newborn&tag=rompers' },
+                    { label: 'Frocks', href: '/products?category=newborn&tag=frocks' },
+                    { label: 'Cord Sets', href: '/products?category=newborn&tag=cord-sets' },
+                ]
+            },
+            {
+                title: 'Essentials',
+                items: [
+                    { label: 'Cloth Diapers', href: '/products?category=newborn&tag=diapers' },
+                    { label: 'Gift Boxes', href: '/products?category=newborn&tag=gift-box' },
+                    { label: 'Towels & Wipes', href: '/products?category=newborn&tag=towels' },
+                    { label: 'Bibs & Caps', href: '/products?category=newborn&tag=bibs' },
+                ]
+            },
+            {
+                title: 'Bedding',
+                items: [
+                    { label: 'Baby Beds', href: '/products?category=newborn&tag=beds' },
+                    { label: 'Bed Sheets', href: '/products?category=newborn&tag=sheets' },
+                    { label: 'Mosquito Nets', href: '/products?category=newborn&tag=nets' },
+                ]
+            }
+        ]
+    },
+    {
+        name: 'Girls',
+        href: '/products?category=girls',
+        sections: [
+            {
+                title: 'Apparel',
+                items: [
+                    { label: 'Frocks & Dresses', href: '/products?category=girls&tag=frocks' },
+                    { label: 'T-Shirts & Tops', href: '/products?category=girls&tag=t-shirts' },
+                    { label: 'Sets & Combos', href: '/products?category=girls&tag=sets' },
+                ]
+            },
+            {
+                title: 'Bottoms',
+                items: [
+                    { label: 'Leggings', href: '/products?category=girls&tag=leggings' },
+                    { label: 'Skirts', href: '/products?category=girls&tag=skirts' },
+                    { label: 'Pants & Palazzo', href: '/products?category=girls&tag=pants' },
+                    { label: 'Shorts', href: '/products?category=girls&tag=shorts' },
+                ]
+            },
+            {
+                title: 'Innerwear',
+                items: [
+                    { label: 'Slips & Camisoles', href: '/products?category=girls&tag=slips' },
+                    { label: 'Panties', href: '/products?category=girls&tag=panties' },
+                    { label: 'Bloomers', href: '/products?category=girls&tag=bloomers' },
+                ]
+            }
+        ]
+    },
+    {
+        name: 'Boys',
+        href: '/products?category=boys',
+        sections: [
+            {
+                title: 'Top Wear',
+                items: [
+                    { label: 'T-Shirts', href: '/products?category=boys&tag=t-shirts' },
+                    { label: 'Shirts', href: '/products?category=boys&tag=shirts' },
+                    { label: 'Sets', href: '/products?category=boys&tag=sets' },
+                ]
+            },
+            {
+                title: 'Bottom Wear',
+                items: [
+                    { label: 'Shorts', href: '/products?category=boys&tag=shorts' },
+                    { label: 'Track Pants', href: '/products?category=boys&tag=pants' },
+                    { label: 'Jeans', href: '/products?category=boys&tag=jeans' },
+                    { label: '3/4 Pants', href: '/products?category=boys&tag=capris' },
+                ]
+            },
+            {
+                title: 'Essentials',
+                items: [
+                    { label: 'Briefs & Trunks', href: '/products?category=boys&tag=underwear' },
+                    { label: 'Vests', href: '/products?category=boys&tag=vests' },
+                    { label: 'Nightwear', href: '/products?category=boys&tag=nightwear' },
+                ]
+            }
+        ]
+    },
+    {
+        name: 'Women',
+        href: '/products?category=women',
+        sections: [
+            {
+                title: 'Maternity',
+                items: [
+                    { label: 'Feeding Dresses', href: '/products?category=women&tag=feeding' },
+                    { label: 'Maternity Tops', href: '/products?category=women&tag=maternity' },
+                    { label: 'Nighties', href: '/products?category=women&tag=nighties' },
+                ]
+            },
+            {
+                title: 'Comfy Wear',
+                items: [
+                    { label: 'T-Shirts', href: '/products?category=women&tag=t-shirts' },
+                    { label: 'Leggings', href: '/products?category=women&tag=leggings' },
+                    { label: 'Pants & Pyjamas', href: '/products?category=women&tag=pants' },
+                ]
+            },
+            {
+                title: 'Essentials',
+                items: [
+                    { label: 'Bed Sheets', href: '/products?category=women&tag=sheets' },
+                    { label: 'Bath Towels', href: '/products?category=women&tag=towels' },
+                    { label: 'Innerwear', href: '/products?category=women&tag=innerwear' },
+                ]
+            }
+        ]
+    }
+];
 
 /**
  * Mobile menu navigation items
@@ -38,7 +159,7 @@ const WHOLESALE_CATEGORIES = [
  */
 const MOBILE_NAV_ITEMS = [
     { name: 'Home', href: '/' },
-    ...WHOLESALE_CATEGORIES.map(cat => ({ name: cat.name, href: cat.href })),
+    ...WHOLESALE_NAVIGATION.map(cat => ({ name: cat.name, href: cat.href })),
     { name: 'All Products', href: '/products' },
 ] as const;
 
@@ -56,6 +177,9 @@ export const Header: React.FC = () => {
 
     // Hydration safety: Prevent SSR/client mismatch for cart count
     const [isMounted, setIsMounted] = React.useState(false);
+    const [activeMegaMenu, setActiveMegaMenu] = React.useState<string | null>(null);
+    const pathname = usePathname();
+
     React.useEffect(() => setIsMounted(true), []);
 
     // UI state
@@ -99,16 +223,14 @@ export const Header: React.FC = () => {
 
     return (
         <header
-            className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
+            className={`sticky top-0 z-[999] transition-all duration-300 ${scrolled
                 ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100'
                 : 'bg-white border-b border-transparent'
                 }`}
         >
             <div className="container-custom">
                 <div className="flex items-center justify-between h-20">
-                    {/* =================================== */}
-                    {/* LOGO */}
-                    {/* =================================== */}
+                    {/* ... LOGO ... */}
                     <Link href="/" className="flex items-center gap-2 relative z-10">
                         <div className="relative w-56 h-16">
                             <Image
@@ -121,26 +243,75 @@ export const Header: React.FC = () => {
                         </div>
                     </Link>
 
-                    {/* =================================== */}
-                    {/* DESKTOP NAVIGATION */}
-                    {/* =================================== */}
+                    {/* ... DESKTOP NAV ... */}
                     <nav className="hidden md:flex items-center space-x-8" aria-label="Main navigation">
-                        <Link
-                            href="/"
-                            className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-                        >
+                        <Link href="/" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">
                             Home
                         </Link>
 
-                        {WHOLESALE_CATEGORIES.map((category) => (
-                            <Link
+                        {WHOLESALE_NAVIGATION.map((category) => (
+                            <div
                                 key={category.name}
-                                href={category.href}
-                                className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-                                title={category.description}
+                                className="group"
+                                onMouseEnter={() => setActiveMegaMenu(category.name)}
+                                onMouseLeave={() => setActiveMegaMenu(null)}
                             >
-                                {category.name}
-                            </Link>
+                                <Link
+                                    href={category.href}
+                                    className={`flex items-center gap-1 text-sm font-medium transition-colors py-8 ${pathname?.startsWith(category.href) || activeMegaMenu === category.name
+                                        ? 'text-primary'
+                                        : 'text-slate-600 hover:text-primary'
+                                        }`}
+                                >
+                                    {category.name}
+                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeMegaMenu === category.name ? 'rotate-180' : ''}`} />
+                                </Link>
+
+                                {/* MEGA MENU DROPDOWN */}
+                                <div
+                                    style={{ backgroundColor: '#ffffff', opacity: 1, zIndex: 1000 }}
+                                    className={`absolute left-0 w-full bg-white shadow-xl border-t border-gray-100 transition-all duration-300 ease-in-out origin-top ${activeMegaMenu === category.name
+                                        ? 'opacity-100 visible translate-y-0'
+                                        : 'opacity-0 invisible -translate-y-2'
+                                        }`}
+                                >
+                                    <div className="container-custom py-8">
+                                        <div className="grid grid-cols-4 gap-8">
+                                            {/* Featured Image - Placeholder logic */}
+                                            <div className="col-span-1 relative h-64 rounded-xl overflow-hidden group/image hidden lg:block">
+                                                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-400">
+                                                    <span>{category.name} Collection</span>
+                                                </div>
+                                                <div className="absolute bottom-4 left-4 text-gray-900 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold">
+                                                    New Arrivals
+                                                </div>
+                                            </div>
+
+                                            {/* Subcategories */}
+                                            {category.sections.map((section) => (
+                                                <div key={section.title} className="col-span-1">
+                                                    <h3 className="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">
+                                                        {section.title}
+                                                    </h3>
+                                                    <ul className="space-y-3">
+                                                        {section.items.map((item) => (
+                                                            <li key={item.label}>
+                                                                <Link
+                                                                    href={item.href}
+                                                                    className="text-slate-600 hover:text-primary hover:pl-1 transition-all text-sm block"
+                                                                    onClick={() => setActiveMegaMenu(null)}
+                                                                >
+                                                                    {item.label}
+                                                                </Link>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         ))}
 
                         <Link

@@ -2,8 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
+import { collectionApi } from '@/lib/api';
 import { OrganizationSchema } from '@/components/seo/StructuredData';
 import { ProductsGrid } from '@/components/products/ProductsGrid';
+import { CollectionShowcase } from '@/components/home/CollectionShowcase';
+import { Collection } from '@tntrends/shared';
 import { Button } from '@/components/ui/Button';
 import { ArrowRight, ShieldCheck, Truck, Package } from 'lucide-react';
 
@@ -15,16 +18,26 @@ import { ArrowRight, ShieldCheck, Truck, Package } from 'lucide-react';
 export default async function HomePage() {
     // Fetch wholesale products on server for SEO
     let featuredProducts: Awaited<ReturnType<typeof wholesaleProductsApi.getAll>> = [];
+    let collections: Collection[] = [];
 
     try {
-        const allProducts = await wholesaleProductsApi.getAll();
+        const [productsData, collectionsData] = await Promise.all([
+            wholesaleProductsApi.getAll(),
+            collectionApi.getAll()
+        ]);
+
         // Show latest 8 products
-        featuredProducts = allProducts
+        featuredProducts = productsData
             .filter((p) => p.inStock)
             .slice(0, 8);
+
+        // Get collections
+        collections = collectionsData.data || [];
+
     } catch (error) {
-        console.error('Failed to fetch wholesale products:', error);
+        console.error('Failed to fetch homepage data:', error);
         featuredProducts = [];
+        collections = [];
     }
 
     return (
@@ -46,6 +59,9 @@ export default async function HomePage() {
                         />
                     </div>
                 </section>
+
+                {/* Collections Showcase */}
+                <CollectionShowcase collections={collections} />
 
                 {/* Categories Grid - Wholesale Categories */}
                 <section className="section">

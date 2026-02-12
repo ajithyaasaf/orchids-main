@@ -1,4 +1,5 @@
 import { collections } from '../config/firebase';
+import admin from 'firebase-admin';
 import { WholesaleProduct } from '@tntrends/shared';
 import { AppError } from '../middleware/errorHandler';
 
@@ -104,6 +105,39 @@ export const getWholesaleProductById = async (id: string): Promise<WholesaleProd
 
     return { id: doc.id, ...doc.data() } as WholesaleProduct;
 };
+
+/**
+ * Get multiple wholesale products by IDs (for collections)
+ */
+export const getWholesaleProductsByIds = async (ids: string[]): Promise<WholesaleProduct[]> => {
+    if (!ids || ids.length === 0) {
+        return [];
+    }
+
+    // Firestore 'in' query limit is 10, so batch if needed
+    const chunkSize = 10;
+    const chunks: string[][] = [];
+    for (let i = 0; i < ids.length; i += chunkSize) {
+        chunks.push(ids.slice(i, i + chunkSize));
+    }
+
+    const allProducts: WholesaleProduct[] = [];
+
+    for (const chunk of chunks) {
+        const snapshot = await collections.wholesaleProducts
+            .where(admin.firestore.FieldPath.documentId(), 'in', chunk)
+            .get();
+
+        snapshot.forEach(doc => {
+            allProducts.push({ id: doc.id, ...doc.data() } as WholesaleProduct);
+        });
+    }
+
+    // Maintain order of input IDs
+    const productMap = new Map(allProducts.map(p => [p.id, p]));
+    return ids.map(id => productMap.get(id)).filter(Boolean) as WholesaleProduct[];
+};
+
 
 /**
  * Get all wholesale products

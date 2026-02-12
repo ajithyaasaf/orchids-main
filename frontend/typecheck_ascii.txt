@@ -1,0 +1,10 @@
+
+> @tntrends/frontend@1.0.0 type-check
+> tsc --noEmit
+
+src/app/admin/orders/page.tsx(207,82): error TS2339: Property 'size' does not exist on type 'WholesaleBundleItem | OrderItem'.
+  Property 'size' does not exist on type 'WholesaleBundleItem'.
+src/app/admin/orders/page.tsx(207,96): error TS2339: Property 'quantity' does not exist on type 'WholesaleBundleItem | OrderItem'.
+  Property 'quantity' does not exist on type 'WholesaleBundleItem'.
+src/app/checkout/page.tsx(268,29): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.

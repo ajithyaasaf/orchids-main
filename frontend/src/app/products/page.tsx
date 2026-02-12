@@ -3,53 +3,74 @@ import Link from 'next/link';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 import { Breadcrumbs } from '@/components/seo/StructuredData';
 import { ProductsGrid } from '@/components/products/ProductsGrid';
-import { Filter } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Filter, SlidersHorizontal } from 'lucide-react';
+import { FilterSidebarClient } from './FilterSidebarClient';
+import { ProductsClientWrapper } from './ProductsClientWrapper';
 
 /**
  * Products Browse Page - SEO Optimized
- * Server-side rendered product catalog with category filtering
- * 
- * Features:
- * - Server-side rendering for SEO crawlers
- * - Category-based filtering
- * - Automatic sorting (newest first)
- * - Responsive grid layout
- * - Breadcrumb navigation
+ * Server-side rendered product catalog with sidebar filtering
  */
 
 export const metadata: Metadata = {
     title: 'Wholesale Clothing Products',
-    description: 'Browse our complete selection of wholesale clothing bundles. Baby wear, kids clothing, women\'s apparel from Tirupur. Bundle pricing for bulk orders. GST included.',
-    keywords: [
-        'wholesale clothing products',
-        'buy wholesale clothing',
-        'bulk apparel',
-        'Tirupur wholesale catalog',
-    ],
-    openGraph: {
-        title: 'Wholesale Clothing Catalog | ORCHID',
-        description: 'Browse wholesale clothing bundles - Baby wear, kids clothing, women\'s apparel',
-    },
+    description: 'Browse our complete selection of wholesale clothing bundles. Baby wear, kids clothing, women\'s apparel from Tirupur. Bundle pricing for bulk orders.',
 };
 
 interface ProductsPageProps {
     searchParams: {
         category?: string;
+        tag?: string | string[]; // Can be string or array
     };
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-    // Fetch products on server for SEO
-    let products: Awaited<ReturnType<typeof wholesaleProductsApi.getAll>> = [];
+    // 1. Parse Search Params
     const selectedCategory = searchParams.category;
+    const tags = typeof searchParams.tag === 'string'
+        ? [searchParams.tag]
+        : Array.isArray(searchParams.tag)
+            ? searchParams.tag
+            : [];
+
+    // 2. Fetch Data
+    let products: Awaited<ReturnType<typeof wholesaleProductsApi.getAll>> = [];
 
     try {
         const allProducts = await wholesaleProductsApi.getAll();
 
-        // Filter by category if specified
-        products = selectedCategory
-            ? allProducts.filter((p) => p.category === selectedCategory)
-            : allProducts;
+        // 3. Filter Data
+        products = allProducts.filter((p) => {
+            // Category Filter
+            if (selectedCategory && p.category !== selectedCategory) {
+                return false;
+            }
+
+            // Tag Filter (check if product has ANY of the selected tags)
+            // Ideally: AND logic or OR logic? 
+            // Usually "Red" OR "Blue" (OR logic for same group), but we are doing global tags.
+            // Let's implement OR logic: if any selected tag matches any product tag
+            if (tags.length > 0) {
+                if (!p.tags) return false;
+
+                // We need to normalize tags for comparison (jubba-sets vs Jubba Sets)
+                // Assuming API returns slugs or we normalize here.
+                // The FilterSidebar sends values like 'jubba', 'rompers'.
+                // The product tags might be 'Jubba Sets'.
+                // We need a robust matching strategy. For MVP, simple substring/includes check.
+
+                const lowerProductTags = p.tags.map(t => t.toLowerCase());
+                const matchesTag = tags.some(tag =>
+                    lowerProductTags.some(pt => pt.includes(tag.toLowerCase()))
+                );
+
+                if (!matchesTag) return false;
+            }
+
+            return true;
+        });
+
     } catch (error) {
         console.error('Failed to fetch products:', error);
         products = [];
@@ -67,82 +88,67 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         });
     }
 
-    // Category filter options (based on ORCHID clothing categories)
-    const categories = [
-        { value: 'newborn', label: 'Newborn Collection' },
-        { value: 'girls', label: 'Girls Wear' },
-        { value: 'boys', label: 'Boys Wear' },
-        { value: 'women', label: 'Women\'s Apparel' },
-    ];
-
     return (
-        <main className="min-h-screen bg-gray-50">
-            <div className="container mx-auto px-6 py-8">
-                {/* Breadcrumbs */}
-                <Breadcrumbs items={breadcrumbItems} />
-
-                {/* Header */}
-                <div className="flex flex-col items-center text-center mb-12 max-w-2xl mx-auto">
-                    <h1 className="text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-4 tracking-tight">
-                        {selectedCategory
-                            ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection`
-                            : 'Wholesale Collection'}
-                    </h1>
-                    <p className="text-lg text-gray-500 leading-relaxed">
-                        Curated bundles for the modern retailer. Premium quality, GST included, and designed for high margin.
-                    </p>
+        <main className="min-h-screen bg-white">
+            <div className="border-b border-gray-100 bg-gray-50/50">
+                <div className="container-custom py-4">
+                    <Breadcrumbs items={breadcrumbItems} />
                 </div>
+            </div>
 
-                {/* Category Filter - Premium Tabs */}
-                <div className="mb-10">
-                    <div className="flex flex-wrap justify-center gap-3">
-                        <Link
-                            href="/products"
-                            className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-300 border ${!selectedCategory
-                                ? 'bg-gray-900 text-white border-gray-900 shadow-lg shadow-gray-900/20'
-                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-900 hover:text-gray-900'
-                                }`}
-                        >
-                            All Products
-                        </Link>
-                        {categories.map((cat) => (
-                            <Link
-                                key={cat.value}
-                                href={`/products?category=${cat.value}`}
-                                className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-300 border ${selectedCategory === cat.value
-                                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/25'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary'
-                                    }`}
-                            >
-                                {cat.label}
-                            </Link>
-                        ))}
+            <div className="container-custom py-8">
+                <ProductsClientWrapper>
+                    <div className="flex flex-col lg:flex-row gap-8">
+
+                        {/* FILTER SIDEBAR - Handles mobile/desktop internally */}
+                        <FilterSidebarClient />
+
+                        {/* MAIN CONTENT */}
+                        <div className="flex-1">
+
+                            {/* Header */}
+                            <div className="mb-8">
+                                <h1 className="text-3xl font-heading font-bold text-gray-900">
+                                    {selectedCategory
+                                        ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection`
+                                        : 'All Products'}
+                                </h1>
+                                <p className="text-gray-500 mt-1">
+                                    {products.length} {products.length === 1 ? 'Result' : 'Results'} found
+                                </p>
+                            </div>
+
+                            {/* Active Filters (Chips) - Optional: visual confirmation */}
+                            {tags.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-6">
+                                    {tags.map(tag => (
+                                        <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium capitalize">
+                                            {tag.replace('-', ' ')}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Products Grid */}
+                            {products.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                    <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+                                        <Filter className="w-8 h-8 text-gray-300" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">No products found</h3>
+                                    <p className="text-gray-500 max-w-sm mx-auto mb-6">
+                                        Try adjusting your filters or browsing a different category to find what you're looking for.
+                                    </p>
+                                    <Link href="/products">
+                                        <Button variant="outline">Clear Filters</Button>
+                                    </Link>
+                                </div>
+                            ) : (
+                                <ProductsGrid products={products} />
+                            )}
+                        </div>
                     </div>
-
-                    {/* Results Count (Subtle) */}
-                    <p className="text-center text-xs text-gray-400 mt-6 uppercase tracking-widest font-medium">
-                        Showing {products.length} {products.length === 1 ? 'Style' : 'Styles'}
-                    </p>
-                </div>
-
-                {/* Products Grid */}
-                {products.length === 0 ? (
-                    <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                        <p className="text-gray-500 text-lg mb-4">
-                            No products found{selectedCategory && ` in ${selectedCategory} category`}
-                        </p>
-                        {selectedCategory && (
-                            <Link
-                                href="/products"
-                                className="text-primary font-semibold hover:underline"
-                            >
-                                View all products
-                            </Link>
-                        )}
-                    </div>
-                ) : (
-                    <ProductsGrid products={products} />
-                )}
+                </ProductsClientWrapper>
             </div>
         </main>
     );

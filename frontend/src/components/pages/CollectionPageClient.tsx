@@ -2,12 +2,13 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { CollectionWithProducts, ProductSortBy } from '@tntrends/shared';
-import { ProductCard } from '@/components/products/ProductCard';
+import { Collection, WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProductCard } from '@/components/products/WholesaleProductCard';
 import { Clock, Sparkles } from 'lucide-react';
 
 interface CollectionPageClientProps {
-    collection: CollectionWithProducts;
+    collection: Collection;
+    products: WholesaleProduct[];
 }
 
 /**
@@ -28,42 +29,15 @@ function calculateTimeRemaining(endDate: Date): { hours: number; minutes: number
 }
 
 /**
- * Sort products based on selected criteria
- */
-function sortProducts(products: CollectionWithProducts['products'], sortBy: ProductSortBy) {
-    const sorted = [...products];
-
-    switch (sortBy) {
-        case 'price-low':
-            return sorted.sort((a, b) => (a.basePrice || a.price) - (b.basePrice || b.price));
-        case 'price-high':
-            return sorted.sort((a, b) => (b.basePrice || b.price) - (a.basePrice || a.price));
-        case 'newest':
-            return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        case 'popular':
-            // TODO: Implement popularity metric (views, purchases, etc.)
-            return sorted;
-        default:
-            return sorted;
-    }
-}
-
-/**
  * Client-side collection page component
  * Handles interactivity: sorting, filtering, countdown timer
  */
-export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ collection }) => {
-    const [sortBy, setSortBy] = useState<ProductSortBy>('newest');
+export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ collection, products }) => {
+    // Note: Re-enabled basic sorting if needed later, but simplified for now
     const [timeRemaining, setTimeRemaining] = useState(
         collection.displaySettings.showCountdown && collection.endDate
             ? calculateTimeRemaining(collection.endDate)
             : null
-    );
-
-    // Memoize sorted products for performance
-    const sortedProducts = useMemo(
-        () => sortProducts(collection.products, sortBy),
-        [collection.products, sortBy]
     );
 
     // Update countdown timer every second
@@ -102,7 +76,7 @@ export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ coll
         <div className="min-h-screen bg-gray-50">
             {/* Hero Banner */}
             <section
-                className={`relative h-[400px] md:h-[500px] bg-gradient-to-r ${getThemeClasses()}`}
+                className={`relative h-[300px] md:h-[400px] bg-gradient-to-r ${getThemeClasses()}`}
             >
                 {collection.bannerImage && (
                     <>
@@ -111,52 +85,57 @@ export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ coll
                             alt={collection.bannerImage.alt || collection.name}
                             fill
                             priority
-                            className="object-cover opacity-80"
+                            className="object-cover opacity-60"
                             sizes="100vw"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     </>
                 )}
 
                 <div className="relative container-custom h-full flex flex-col justify-center text-white z-10">
-                    <div className="max-w-3xl">
+                    <div className="max-w-4xl">
                         {/* Collection Badge */}
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md mb-6">
-                            <Sparkles className="w-4 h-4" />
-                            <span className="text-sm font-medium">Collection</span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md mb-4 border border-white/30">
+                            <Sparkles className="w-4 h-4 text-yellow-300" />
+                            <span className="text-sm font-semibold tracking-wide uppercase">Wholesale Collection</span>
                         </div>
 
                         {/* Title */}
-                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 tracking-tight">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-3 tracking-tight leading-tight">
                             {collection.name}
                         </h1>
 
                         {/* Tagline */}
                         {collection.tagline && (
-                            <p className="text-xl md:text-2xl lg:text-3xl mb-6 text-white/90">
+                            <p className="text-lg md:text-2xl font-light text-white/90 mb-4 leading-relaxed">
                                 {collection.tagline}
                             </p>
                         )}
 
-                        {/* Description */}
+                        {/* Description - truncated if too long */}
                         {collection.description && (
-                            <p className="text-base md:text-lg text-white/80 max-w-2xl mb-8">
+                            <p className="text-sm md:text-base text-white/80 max-w-2xl mb-6 line-clamp-2">
                                 {collection.description}
                             </p>
                         )}
 
                         {/* Countdown Timer */}
                         {timeRemaining && (
-                            <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-md px-6 py-4 rounded-full">
-                                <Clock className="w-5 h-5" />
-                                <div className="flex items-center gap-2 font-mono text-lg font-semibold">
-                                    <span>{String(timeRemaining.hours).padStart(2, '0')}</span>
-                                    <span>:</span>
-                                    <span>{String(timeRemaining.minutes).padStart(2, '0')}</span>
-                                    <span>:</span>
-                                    <span>{String(timeRemaining.seconds).padStart(2, '0')}</span>
+                            <div className="inline-flex items-center gap-4 bg-white/10 backdrop-blur-md px-6 py-3 rounded-xl border border-white/20">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-2xl font-bold font-mono leading-none">{String(timeRemaining.hours).padStart(2, '0')}</span>
+                                    <span className="text-[10px] uppercase opacity-70">Hrs</span>
                                 </div>
-                                <span className="text-sm">left</span>
+                                <span className="text-2xl font-bold -mt-3">:</span>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-2xl font-bold font-mono leading-none">{String(timeRemaining.minutes).padStart(2, '0')}</span>
+                                    <span className="text-[10px] uppercase opacity-70">Mins</span>
+                                </div>
+                                <span className="text-2xl font-bold -mt-3">:</span>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-2xl font-bold font-mono leading-none">{String(timeRemaining.seconds).padStart(2, '0')}</span>
+                                    <span className="text-[10px] uppercase opacity-70">Secs</span>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -167,69 +146,40 @@ export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ coll
             <section className="section py-12">
                 <div className="container-custom">
                     {/* Toolbar */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 pb-4 border-b border-gray-200">
                         <div>
-                            <p className="text-lg font-medium text-gray-900">
-                                {sortedProducts.length} {sortedProducts.length === 1 ? 'Product' : 'Products'}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                                Showing all available items
+                            <h2 className="text-xl font-bold text-gray-900">Available Bundles</h2>
+                            <p className="text-sm text-gray-500">
+                                {products.length} {products.length === 1 ? 'bundle' : 'bundles'} listed
                             </p>
                         </div>
-
-                        {/* Sorting temporarily disabled for wholesale */}
-                        {/* <ProductSort sortBy={sortBy} onSortChange={setSortBy} /> */}
                     </div>
 
                     {/* Empty State */}
-                    {sortedProducts.length === 0 && (
-                        <div className="text-center py-16">
-                            <div className="inline-block p-6 bg-gray-100 rounded-full mb-4">
-                                <Sparkles className="w-12 h-12 text-gray-400" />
+                    {products.length === 0 && (
+                        <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+                            <div className="inline-block p-4 bg-gray-50 rounded-full mb-4">
+                                <Sparkles className="w-10 h-10 text-gray-300" />
                             </div>
                             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                No Products Available
+                                No Bundles Found
                             </h3>
-                            <p className="text-gray-600">
-                                This collection doesn't have any products yet. Check back soon!
+                            <p className="text-gray-500 max-w-sm mx-auto">
+                                This collection doesn't have any wholesale bundles yet. Please check back later or browse other categories.
                             </p>
                         </div>
                     )}
 
                     {/* Products Grid */}
-                    {sortedProducts.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {sortedProducts.map(product => (
-                                <ProductCard key={product.id} product={product} />
+                    {products.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {products.map(product => (
+                                <WholesaleProductCard key={product.id} product={product} />
                             ))}
                         </div>
                     )}
                 </div>
             </section>
-
-            {/* Associated Coupon Banner */}
-            {collection.associatedCoupon && (
-                <section className="section py-8 bg-gradient-to-r from-primary/10 to-primary-dark/10">
-                    <div className="container-custom">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white rounded-2xl shadow-sm border border-primary/20">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                    💰 Exclusive Discount Available!
-                                </h3>
-                                <p className="text-gray-600">
-                                    Use code <span className="font-mono font-bold text-primary">{collection.associatedCoupon}</span> at checkout
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => navigator.clipboard.writeText(collection.associatedCoupon!)}
-                                className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
-                            >
-                                Copy Code
-                            </button>
-                        </div>
-                    </div>
-                </section>
-            )}
         </div>
     );
 };

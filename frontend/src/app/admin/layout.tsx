@@ -152,7 +152,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
             </aside>
 
-            <main className="lg:ml-64 p-4 md:p-6 lg:p-8">{children}</main>
+            <main className="lg:ml-64 p-4 md:p-6 lg:p-8">
+                <div className="container-custom">
+                    {children}
+                </div>
+            </main>
         </div>
     );
 }

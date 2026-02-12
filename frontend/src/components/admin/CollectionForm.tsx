@@ -92,10 +92,7 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
             const setUploading = type === 'banner' ? setUploadingBanner : setUploadingThumbnail;
             setUploading(true);
 
-            const formData = new FormData();
-            formData.append('image', file);
-
-            const { url, publicId } = await uploadApi.uploadImage(formData);
+            const { url, publicId } = await uploadApi.uploadImage(file);
 
             setFormData(prev => ({
                 ...prev,

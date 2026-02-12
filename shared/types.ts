@@ -103,6 +103,7 @@ export interface WholesaleProduct {
     title: string;
     description: string;
     category: string;
+    tags?: string[]; // Secondary classification for filtering (e.g. "Jubba", "Rompers")
 
     // Bundle configuration
     bundleQty: number;                           // Total pieces per bundle (default: 20)
@@ -530,29 +531,12 @@ export interface ShippingCheckResponse {
 // ============================================================================
 
 export type CollectionStatus = 'draft' | 'scheduled' | 'active' | 'expired' | 'archived';
-export type CollectionSelectionType = 'manual' | 'automatic' | 'hybrid';
 export type CollectionTheme = 'default' | 'winter' | 'summer' | 'flash' | 'clearance';
 
 export interface ImageAsset {
     url: string;
     publicId: string;
     alt?: string;
-}
-
-export interface AutoSelectionRules {
-    categories?: string[];           // ["Men", "Women"]
-    tags?: string[];                 // ["Winter", "Jackets"]
-    priceRange?: {
-        min?: number;
-        max?: number;
-    };
-    discountMin?: number;            // Products with >=20% discount
-    dateRange?: {                    // Products added within date range
-        from: Date;
-        to: Date;
-    };
-    inStock?: boolean;               // Only show in-stock items
-    styleCode?: string;              // Specific style variants
 }
 
 export interface Collection {
@@ -569,10 +553,8 @@ export interface Collection {
     bannerImage?: ImageAsset;
     thumbnailImage?: ImageAsset;     // For homepage cards
 
-    // Product Association Strategy
-    selectionType: CollectionSelectionType;
-    productIds?: string[];           // Manual selection
-    autoRules?: AutoSelectionRules;  // Automatic selection rules
+    // Product Association (Manual Selection Only)
+    productIds: string[];            // Array of wholesale product IDs
 
     // Scheduling & Validity
     status: CollectionStatus;

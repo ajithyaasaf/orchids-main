@@ -112,7 +112,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, priority = 
                         Ending Soon!
                     </div>
                 )}
-                {collection.displaySettings.theme !== 'default' && (
+                {collection.displaySettings.theme && collection.displaySettings.theme !== 'default' && (
                     <div className="inline-flex px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-semibold">
                         {collection.displaySettings.theme.charAt(0).toUpperCase() + collection.displaySettings.theme.slice(1)}
                     </div>

@@ -94,8 +94,8 @@ export default function AdminCollectionsPage() {
                         key={status}
                         onClick={() => setFilter(status)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === status
-                                ? 'bg-primary text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -192,9 +192,6 @@ export default function AdminCollectionsPage() {
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <Sparkles className="w-3 h-3" />
-                                            {collection.selectionType}
-                                        </div>
-                                        <div>
                                             {collection.productIds?.length || 0} products
                                         </div>
                                     </div>

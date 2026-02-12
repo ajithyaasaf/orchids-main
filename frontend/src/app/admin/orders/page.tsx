@@ -202,11 +202,23 @@ export default function AdminOrdersPage() {
                                 <div className="border-t border-border pt-4 mb-4">
                                     <h4 className="font-semibold mb-2">Items:</h4>
                                     <ul className="space-y-1">
-                                        {order.items.map((item, idx) => (
-                                            <li key={idx} className="text-sm text-text-secondary">
-                                                {item.productTitle} - Size {item.size} × {item.quantity}
-                                            </li>
-                                        ))}
+                                        {order.items.map((item, idx) => {
+                                            if ('size' in item) {
+                                                // Retail Item
+                                                return (
+                                                    <li key={idx} className="text-sm text-text-secondary">
+                                                        {item.productTitle} - Size {item.size} × {item.quantity}
+                                                    </li>
+                                                );
+                                            } else {
+                                                // Wholesale Item
+                                                return (
+                                                    <li key={idx} className="text-sm text-text-secondary">
+                                                        {item.productTitle} - {item.bundlesOrdered} Bundles ({item.bundleQty} pcs/bundle)
+                                                    </li>
+                                                );
+                                            }
+                                        })}
                                     </ul>
                                 </div>
 

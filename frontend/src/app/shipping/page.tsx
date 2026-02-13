@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { Truck, Package, MapPin, Clock } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Shipping & Delivery Policy - TNtrends',
-    description: 'Learn about TNtrends shipping rates, delivery timelines, and policies across India.',
+    title: 'Shipping & Delivery Policy - Wholesale Orchids',
+    description: 'Learn about Wholesale Orchids shipping rates, delivery timelines, and policies across India.',
 };
 
 export default function ShippingPage() {

@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { Mail, Phone, MapPin, Instagram, Clock } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Contact Us - TNtrends',
-    description: 'Get in touch with TNtrends. Contact us for any queries about our products, orders, or customer support.',
+    title: 'Contact Us - Wholesale Orchids',
+    description: 'Get in touch with Wholesale Orchids. Contact us for any queries about our products, orders, or customer support.',
 };
 
 export default function ContactPage() {
@@ -28,7 +28,7 @@ export default function ContactPage() {
                         <div className="space-y-6">
                             {/* Business Name */}
                             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                                <h3 className="text-xl font-semibold text-text-primary mb-2">TNtrends</h3>
+                                <h3 className="text-xl font-semibold text-text-primary mb-2">Wholesale Orchids</h3>
                                 <p className="text-text-secondary">Proprietary Concern of Riyaz Ahamad</p>
                             </div>
 

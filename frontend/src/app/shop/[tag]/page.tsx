@@ -17,12 +17,12 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     const category = searchParams.category;
 
     const title = category
-        ? `${tagName} for ${category} | TNtrends`
-        : `${tagName} Collection | TNtrends`;
+        ? `${tagName} for ${category} | Wholesale Orchids`
+        : `${tagName} Collection | Wholesale Orchids`;
 
     const description = category
-        ? `Shop ${tagName} for ${category} at TNtrends. Premium quality ${tagName.toLowerCase()} collection.`
-        : `Shop the latest ${tagName} collection at TNtrends. Discover premium quality styles for men, women, and kids.`;
+        ? `Shop ${tagName} for ${category} at Wholesale Orchids. Premium quality ${tagName.toLowerCase()} collection.`
+        : `Shop the latest ${tagName} collection at Wholesale Orchids. Discover premium quality styles for men, women, and kids.`;
 
     return { title, description };
 }

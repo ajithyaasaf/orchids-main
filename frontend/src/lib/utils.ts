@@ -59,7 +59,7 @@ export const generateProductJsonLd = (product: Product) => {
         image: product.images.map((img: any) => img.url),
         brand: {
             '@type': 'Brand',
-            name: 'TNtrends',
+            name: 'Wholesale Orchids',
         },
         offers: {
             '@type': 'Offer',

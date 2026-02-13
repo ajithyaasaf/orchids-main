@@ -2,8 +2,8 @@ import React from 'react';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Terms & Conditions - TNtrends',
-    description: 'Read our terms and conditions for using TNtrends online store and making purchases.',
+    title: 'Terms & Conditions - Wholesale Orchids',
+    description: 'Read our terms and conditions for using Wholesale Orchids online store and making purchases.',
 };
 
 export default function TermsPage() {
@@ -24,7 +24,7 @@ export default function TermsPage() {
                         {/* Introduction */}
                         <section className="mb-8">
                             <p className="text-text-secondary leading-relaxed">
-                                Welcome to TNtrends. By accessing and using our website, you agree to be bound by these Terms and Conditions.
+                                Welcome to Wholesale Orchids. By accessing and using our website, you agree to be bound by these Terms and Conditions.
                                 Please read them carefully before making any purchase.
                             </p>
                         </section>
@@ -33,7 +33,7 @@ export default function TermsPage() {
                         <section className="mb-8">
                             <h2 className="text-2xl font-bold text-text-primary mb-4">1. Business Information</h2>
                             <div className="bg-gray-50 p-6 rounded-lg">
-                                <p className="text-text-secondary mb-2"><strong>Business Name:</strong> TNtrends</p>
+                                <p className="text-text-secondary mb-2"><strong>Business Name:</strong> Wholesale Orchids</p>
                                 <p className="text-text-secondary mb-2"><strong>Proprietor:</strong> Riyaz Ahamad</p>
                                 <p className="text-text-secondary mb-2"><strong>Address:</strong> 18/44, Kongu Nagar, 3rd Street, Kongu Main Road, Tiruppur – 641607, Tamil Nadu, India</p>
                                 <p className="text-text-secondary mb-2"><strong>Email:</strong> tntrendsdigital@gmail.com</p>
@@ -114,9 +114,9 @@ export default function TermsPage() {
                         <section className="mb-8">
                             <h2 className="text-2xl font-bold text-text-primary mb-4">7. Intellectual Property</h2>
                             <ul className="list-disc pl-6 space-y-2 text-text-secondary">
-                                <li>All content on this website, including text, images, logos, and design, is owned by TNtrends</li>
+                                <li>All content on this website, including text, images, logos, and design, is owned by Wholesale Orchids</li>
                                 <li>You may not reproduce, distribute, or create derivative works without written permission</li>
-                                <li>TNtrends and our logo are trademarks of our business</li>
+                                <li>Wholesale Orchids and our logo are trademarks of our business</li>
                                 <li>Unauthorized use of our intellectual property may result in legal action</li>
                             </ul>
                         </section>

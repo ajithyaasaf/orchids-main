@@ -123,19 +123,11 @@ export default function AdminCollectionsPage() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                         {filter === 'all' ? 'No Collections Yet' : `No ${filter} Collections`}
                     </h3>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-gray-600">
                         {filter === 'all'
-                            ? 'Create your first collection to showcase products'
+                            ? 'Click "New Collection" above to create your first collection'
                             : `No collections with status "${filter}"`}
                     </p>
-                    {filter === 'all' && (
-                        <Link href="/admin/collections/new">
-                            <Button>
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create Collection
-                            </Button>
-                        </Link>
-                    )}
                 </div>
             )}
 

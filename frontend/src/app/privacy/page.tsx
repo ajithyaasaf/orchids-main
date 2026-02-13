@@ -2,8 +2,8 @@ import React from 'react';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Privacy Policy - TNtrends',
-    description: 'Learn how TNtrends collects, uses, and protects your personal information.',
+    title: 'Privacy Policy - Wholesale Orchids',
+    description: 'Learn how Wholesale Orchids collects, uses, and protects your personal information.',
 };
 
 export default function PrivacyPage() {
@@ -24,7 +24,7 @@ export default function PrivacyPage() {
                         {/* Introduction */}
                         <section className="mb-8">
                             <p className="text-text-secondary leading-relaxed">
-                                At TNtrends, we respect your privacy and are committed to protecting your personal information.
+                                At Wholesale Orchids, we respect your privacy and are committed to protecting your personal information.
                                 This Privacy Policy explains how we collect, use, disclose, and safeguard your data when you visit
                                 our website or make a purchase.
                             </p>
@@ -210,7 +210,7 @@ export default function PrivacyPage() {
                                 If you have questions about this Privacy Policy or how we handle your data, please contact us:
                             </p>
                             <div className="bg-primary/5 p-6 rounded-lg border border-primary/20">
-                                <p className="text-text-secondary"><strong>TNtrends</strong></p>
+                                <p className="text-text-secondary"><strong>Wholesale Orchids</strong></p>
                                 <p className="text-text-secondary"><strong>Proprietor:</strong> Riyaz Ahamad</p>
                                 <p className="text-text-secondary mt-2"><strong>Email:</strong> <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a></p>
                                 <p className="text-text-secondary"><strong>Phone:</strong> <a href="tel:+919150673839" className="text-primary hover:underline">+91 9150673839</a></p>

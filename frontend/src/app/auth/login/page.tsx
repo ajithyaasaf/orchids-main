@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -45,7 +46,15 @@ export default function LoginPage() {
             <div className="max-w-md w-full">
 
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-gradient mb-2">TNtrends</h1>
+                    <div className="relative w-64 h-20 mx-auto mb-4">
+                        <Image
+                            src="/images/logo.png"
+                            alt="ORCHID Wholesale"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                     <h2 className="text-2xl font-semibold text-text-primary">Welcome Back</h2>
                 </div>
 

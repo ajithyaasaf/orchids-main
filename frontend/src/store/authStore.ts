@@ -432,7 +432,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `tntrends-data-${user.uid}.json`;
+        a.download = `wholesale-orchids-data-${user.uid}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

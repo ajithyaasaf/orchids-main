@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { collectionApi, uploadApi } from '@/lib/api';
-import { Collection, CollectionSelectionType, CollectionTheme, CollectionStatus } from '@tntrends/shared';
+import { Collection, CollectionTheme, CollectionStatus } from '@tntrends/shared';
 import { Button } from '@/components/ui/Button';
 import { Upload, X, Loader2, Save, ArrowLeft } from 'lucide-react';
-import { ProductPicker } from '@/components/admin/ProductPicker';
-import { AutoRulesBuilder } from '@/components/admin/AutoRulesBuilder';
+import { WholesaleProductPicker } from '@/components/admin/WholesaleProductPicker';
 
 interface CollectionFormProps {
     /**
@@ -27,8 +26,7 @@ interface CollectionFormProps {
  * Features:
  * - Form validation
  * - Image upload with preview
- * - Product selection (manual/automatic/hybrid)
- * - Auto-rules builder
+ * - Manual wholesale product selection
  * - SEO fields
  * - Status management
  */
@@ -44,9 +42,7 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
         slug: existingCollection?.slug || '',
         tagline: existingCollection?.tagline || '',
         description: existingCollection?.description || '',
-        selectionType: existingCollection?.selectionType || 'manual',
         productIds: existingCollection?.productIds || [],
-        autoRules: existingCollection?.autoRules || {},
         status: existingCollection?.status || 'draft',
         startDate: existingCollection?.startDate || new Date() as any,
         endDate: existingCollection?.endDate || undefined,
@@ -119,13 +115,8 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
             return;
         }
 
-        if (formData.selectionType === 'manual' && (!formData.productIds || formData.productIds.length === 0)) {
-            alert('Please select at least one product for manual selection');
-            return;
-        }
-
-        if (formData.selectionType === 'automatic' && !formData.autoRules) {
-            alert('Please configure auto-selection rules');
+        if (!formData.productIds || formData.productIds.length === 0) {
+            alert('Please select at least one wholesale product');
             return;
         }
 
@@ -336,57 +327,15 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
 
             {/* Product Selection */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Product Selection</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Wholesale Products *</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                    Select wholesale products to feature in this collection. Products will be displayed in the order they are added.
+                </p>
 
-                <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Selection Type *
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {(['manual', 'automatic', 'hybrid'] as CollectionSelectionType[]).map(type => (
-                            <label
-                                key={type}
-                                className={`relative flex items-center p-4 cursor-pointer border-2 rounded-lg transition-all ${formData.selectionType === type
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                    }`}
-                            >
-                                <input
-                                    type="radio"
-                                    name="selectionType"
-                                    value={type}
-                                    checked={formData.selectionType === type}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, selectionType: e.target.value as CollectionSelectionType }))}
-                                    className="mr-3"
-                                />
-                                <div>
-                                    <div className="font-medium text-gray-900 capitalize">{type}</div>
-                                    <div className="text-xs text-gray-600">
-                                        {type === 'manual' && 'Pick products manually'}
-                                        {type === 'automatic' && 'Rule-based selection'}
-                                        {type === 'hybrid' && 'Manual + automatic'}
-                                    </div>
-                                </div>
-                            </label>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Manual/Hybrid Product Picker */}
-                {(formData.selectionType === 'manual' || formData.selectionType === 'hybrid') && (
-                    <ProductPicker
-                        selectedProductIds={formData.productIds || []}
-                        onProductsChange={(productIds) => setFormData(prev => ({ ...prev, productIds }))}
-                    />
-                )}
-
-                {/* Automatic/Hybrid Rules Builder */}
-                {(formData.selectionType === 'automatic' || formData.selectionType === 'hybrid') && (
-                    <AutoRulesBuilder
-                        rules={formData.autoRules || {}}
-                        onRulesChange={(autoRules) => setFormData(prev => ({ ...prev, autoRules }))}
-                    />
-                )}
+                <WholesaleProductPicker
+                    selectedProductIds={formData.productIds || []}
+                    onProductsChange={(productIds) => setFormData(prev => ({ ...prev, productIds }))}
+                />
             </div>
 
             {/* Schedule & Status */}

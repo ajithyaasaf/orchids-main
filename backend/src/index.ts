@@ -109,7 +109,7 @@ app.use('/api/shipping', shippingRoutes);       // RETAIL: Shipping calculator (
 // app.use('/api/checkout', checkoutRoutes);       // RETAIL: Checkout flow
 // app.use('/api/coupons', couponRoutes);          // RETAIL: Coupon system 
 // app.use('/api/combos', comboRoutes);            // RETAIL: Product combos 
-// app.use('/api/collections', collectionRoutes);  // RETAIL: Product collections (Disabled for wholesale-only)
+app.use('/api/collections', collectionRoutes);  // WHOLESALE: Product collections (Manual selection)
 // app.use('/api/customers', customersRoutes);     // RETAIL: Customer analytics
 // app.use('/api/dashboard', dashboardRoutes);     // RETAIL: Dashboard analytics
 

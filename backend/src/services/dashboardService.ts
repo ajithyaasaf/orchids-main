@@ -1,7 +1,12 @@
 import { collections, db } from '../config/firebase';
-import type { DashboardAnalytics, Order } from '@tntrends/shared';
+import type { DashboardAnalytics, Order, WholesaleBundleItem } from '@tntrends/shared';
 
-const ANALYTICS_DOC_ID = 'dashboard_cache';
+const ANALYTICS_DOC_ID = 'wholesale_dashboard_cache';
+
+// Type Guard for Wholesale Items
+const isWholesaleItem = (item: any): item is WholesaleBundleItem => {
+    return item.bundlesOrdered !== undefined;
+};
 
 /**
  * Get comprehensive dashboard analytics (CACHED VERSION - 1 read instead of 10,000+)
@@ -12,26 +17,19 @@ export const getDashboardAnalytics = async (): Promise<DashboardAnalytics> => {
     const cacheDoc = await collections.analytics.doc(ANALYTICS_DOC_ID).get();
 
     if (!cacheDoc.exists) {
-        // First time - initialize cache from orders
         console.log('Analytics cache not found, rebuilding...');
         return await rebuildAnalyticsCache();
     }
 
     const cached = cacheDoc.data() as DashboardAnalytics;
 
-    // Get fresh customer metrics (lightweight - just counts)
+    // Get fresh customer metrics
     const usersSnapshot = await collections.users.where('role', '==', 'customer').get();
     const totalCustomers = usersSnapshot.size;
-    const returningCustomers = usersSnapshot.docs.filter(
-        d => (d.data().totalOrders || 0) > 1
-    ).length;
 
     return {
         ...cached,
         totalCustomers,
-        returningCustomerRate: totalCustomers > 0
-            ? (returningCustomers / totalCustomers) * 100
-            : 0,
     };
 };
 
@@ -42,7 +40,10 @@ export const getDashboardAnalytics = async (): Promise<DashboardAnalytics> => {
  * Performance: Single transactional update instead of re-aggregating all orders
  */
 export const updateAnalyticsCache = async (order: Order): Promise<void> => {
-    if (order.paymentStatus !== 'paid') return; // Only count paid orders
+    // Note: order passed here should be WholesaleOrder (casted as Order for signature compatibility)
+    const wOrder = order as any;
+
+    if (wOrder.paymentStatus !== 'paid') return;
 
     const analyticsRef = collections.analytics.doc(ANALYTICS_DOC_ID);
     const now = new Date();
@@ -54,85 +55,67 @@ export const updateAnalyticsCache = async (order: Order): Promise<void> => {
         const doc = await transaction.get(analyticsRef);
 
         if (!doc.exists) {
-            // Initialize cache if doesn't exist
-            console.log('Analytics cache not found during update, rebuilding...');
             await rebuildAnalyticsCache();
             return;
         }
 
         const cached = doc.data() as DashboardAnalytics;
 
-        // Determine if order is today/month/year
-        const isToday = order.createdAt >= today;
-        const isThisMonth = order.createdAt >= thisMonth;
-        const isThisYear = order.createdAt >= thisYear;
+        const isToday = wOrder.createdAt.toDate() >= today;
+        const isThisMonth = wOrder.createdAt.toDate() >= thisMonth;
+        const isThisYear = wOrder.createdAt.toDate() >= thisYear;
 
-        // Update totals
-        const newTotalRevenue = cached.totalRevenue + order.totalAmount;
+        const newTotalRevenue = cached.totalRevenue + wOrder.totalAmount;
         const newTotalOrders = cached.totalOrders + 1;
 
         // Update top products
         const productMap = new Map<string, { productId: string; productTitle: string; unitsSold: number; revenue: number }>();
+        cached.topProducts.forEach(p => productMap.set(p.productId, { ...p }));
 
-        // Load existing top products into map
-        cached.topProducts.forEach(p => {
-            productMap.set(p.productId, { ...p });
-        });
+        wOrder.items.forEach((item: any) => {
+            if (isWholesaleItem(item)) {
+                const existing = productMap.get(item.productId);
+                const units = item.bundlesOrdered || 0;
+                const revenue = item.lineTotal || 0;
 
-        // Update with new order items
-        order.items.forEach(item => {
-            const existing = productMap.get(item.productId);
-            if (existing) {
-                existing.unitsSold += item.quantity;
-                existing.revenue += item.price * item.quantity;
-            } else {
-                productMap.set(item.productId, {
-                    productId: item.productId,
-                    productTitle: item.productTitle || 'Unknown',
-                    unitsSold: item.quantity,
-                    revenue: item.price * item.quantity,
-                });
+                if (existing) {
+                    existing.unitsSold += units;
+                    existing.revenue += revenue;
+                } else {
+                    productMap.set(item.productId, {
+                        productId: item.productId,
+                        productTitle: item.productTitle || 'Unknown',
+                        unitsSold: units,
+                        revenue: revenue,
+                    });
+                }
             }
         });
 
         // Update top states
         const stateMap = new Map<string, { state: string; orderCount: number; revenue: number }>();
+        cached.topStates.forEach(s => stateMap.set(s.state, { ...s }));
 
-        // Load existing top states into map
-        cached.topStates.forEach(s => {
-            stateMap.set(s.state, { ...s });
-        });
-
-        // Update with new order
-        const state = order.address.state;
+        const state = wOrder.address.state;
         const existingState = stateMap.get(state);
         if (existingState) {
             existingState.orderCount++;
-            existingState.revenue += order.totalAmount;
+            existingState.revenue += wOrder.totalAmount;
         } else {
-            stateMap.set(state, {
-                state,
-                orderCount: 1,
-                revenue: order.totalAmount,
-            });
+            stateMap.set(state, { state, orderCount: 1, revenue: wOrder.totalAmount });
         }
 
-        // Update transaction
         transaction.update(analyticsRef, {
             totalRevenue: newTotalRevenue,
-            revenueToday: isToday ? cached.revenueToday + order.totalAmount : cached.revenueToday,
-            revenueThisMonth: isThisMonth ? cached.revenueThisMonth + order.totalAmount : cached.revenueThisMonth,
-            revenueThisYear: isThisYear ? cached.revenueThisYear + order.totalAmount : cached.revenueThisYear,
+            revenueToday: isToday ? cached.revenueToday + wOrder.totalAmount : cached.revenueToday,
+            revenueThisMonth: isThisMonth ? cached.revenueThisMonth + wOrder.totalAmount : cached.revenueThisMonth,
+            revenueThisYear: isThisYear ? cached.revenueThisYear + wOrder.totalAmount : cached.revenueThisYear,
             totalOrders: newTotalOrders,
             ordersToday: isToday ? cached.ordersToday + 1 : cached.ordersToday,
             ordersThisMonth: isThisMonth ? cached.ordersThisMonth + 1 : cached.ordersThisMonth,
             averageOrderValue: newTotalRevenue / newTotalOrders,
-            topProducts: Array.from(productMap.values())
-                .sort((a, b) => b.revenue - a.revenue)
-                .slice(0, 10),
-            topStates: Array.from(stateMap.values())
-                .sort((a, b) => b.revenue - a.revenue)
-                .slice(0, 10),
+            topProducts: Array.from(productMap.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 10),
+            topStates: Array.from(stateMap.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 10),
             lastUpdated: new Date(),
         });
     });
@@ -153,8 +136,7 @@ export const rebuildAnalyticsCache = async (): Promise<DashboardAnalytics> => {
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const thisYear = new Date(now.getFullYear(), 0, 1);
 
-    // Fetch all paid orders (expensive - only for rebuild)
-    const ordersSnapshot = await collections.orders
+    const ordersSnapshot = await collections.wholesaleOrders
         .where('paymentStatus', '==', 'paid')
         .where('orderStatus', '!=', 'cancelled')
         .get();
@@ -163,9 +145,9 @@ export const rebuildAnalyticsCache = async (): Promise<DashboardAnalytics> => {
         ...d.data(),
         createdAt: d.data().createdAt?.toDate(),
         updatedAt: d.data().updatedAt?.toDate(),
-    })) as Order[];
+    })) as any[];
 
-    console.log(`Processing ${orders.length} orders...`);
+    console.log(`Processing ${orders.length} wholesale orders...`);
 
     // Calculate metrics
     const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -187,32 +169,27 @@ export const rebuildAnalyticsCache = async (): Promise<DashboardAnalytics> => {
     // Customer metrics
     const usersSnapshot = await collections.users.where('role', '==', 'customer').get();
     const totalCustomers = usersSnapshot.size;
-    const newCustomersToday = usersSnapshot.docs.filter(
-        d => d.data().createdAt?.toDate() >= today
-    ).length;
-    const newCustomersThisMonth = usersSnapshot.docs.filter(
-        d => d.data().createdAt?.toDate() >= thisMonth
-    ).length;
-    const returningCustomers = usersSnapshot.docs.filter(
-        d => (d.data().totalOrders || 0) > 1
-    ).length;
-    const returningCustomerRate = totalCustomers > 0
-        ? (returningCustomers / totalCustomers) * 100
-        : 0;
+    const newCustomersToday = usersSnapshot.docs.filter(d => d.data().createdAt?.toDate() >= today).length;
+    const newCustomersThisMonth = usersSnapshot.docs.filter(d => d.data().createdAt?.toDate() >= thisMonth).length;
+
+    const returningCustomers = usersSnapshot.docs.filter(d => (d.data().totalOrders || 0) > 1).length;
+    const returningCustomerRate = totalCustomers > 0 ? (returningCustomers / totalCustomers) * 100 : 0;
 
     // Top products
     const productRevenue: Record<string, { title: string; units: number; revenue: number }> = {};
     orders.forEach(order => {
-        order.items.forEach(item => {
-            if (!productRevenue[item.productId]) {
-                productRevenue[item.productId] = {
-                    title: item.productTitle || 'Unknown Product',
-                    units: 0,
-                    revenue: 0,
-                };
+        order.items.forEach((item: any) => {
+            if (isWholesaleItem(item)) {
+                if (!productRevenue[item.productId]) {
+                    productRevenue[item.productId] = {
+                        title: item.productTitle || 'Unknown Bundle',
+                        units: 0,
+                        revenue: 0,
+                    };
+                }
+                productRevenue[item.productId].units += (item.bundlesOrdered || 0);
+                productRevenue[item.productId].revenue += (item.lineTotal || 0);
             }
-            productRevenue[item.productId].units += item.quantity;
-            productRevenue[item.productId].revenue += item.price * item.quantity;
         });
     });
 
@@ -253,9 +230,7 @@ export const rebuildAnalyticsCache = async (): Promise<DashboardAnalytics> => {
         const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
 
-        const dayOrders = orders.filter(
-            o => o.createdAt >= dayStart && o.createdAt < dayEnd
-        );
+        const dayOrders = orders.filter(o => o.createdAt >= dayStart && o.createdAt < dayEnd);
 
         revenueTrend.push({
             date: dayStart,
@@ -282,9 +257,7 @@ export const rebuildAnalyticsCache = async (): Promise<DashboardAnalytics> => {
         revenueTrend,
     };
 
-    // Save to cache
     await collections.analytics.doc(ANALYTICS_DOC_ID).set(analytics);
-
     console.log(`Analytics cache rebuilt successfully. Total revenue: ₹${totalRevenue}, Total orders: ${totalOrders}`);
 
     return analytics;

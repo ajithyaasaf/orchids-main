@@ -1,7 +1,10 @@
 import express, { Request, Response } from 'express';
 import { verifyToken } from '../middleware/auth';
 import { requireAdmin } from '../middleware/roleCheck';
-import { getDashboardAnalytics, rebuildAnalyticsCache } from '../services/dashboardService';
+import {
+    getDashboardAnalytics,
+    rebuildAnalyticsCache
+} from '../services/dashboardService';
 
 const router = express.Router();
 

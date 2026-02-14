@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { productApi, orderApi, dashboardApi } from '@/lib/api';
+import { wholesaleProductsApi, wholesaleOrdersApi, wholesaleDashboardApi } from '@/lib/api/wholesaleApi';
 import { Package, ShoppingBag, TrendingUp, DollarSign, Users, BarChart3 } from 'lucide-react';
 import type { DashboardAnalytics } from '@tntrends/shared';
 
@@ -18,14 +18,11 @@ export default function AdminDashboard() {
     useEffect(() => {
         const loadStats = async () => {
             try {
-                const [productsRes, ordersRes, analyticsRes] = await Promise.all([
-                    productApi.getAll({ limit: 1000 }),
-                    orderApi.getAll({ limit: 1000 }),
-                    dashboardApi.getAnalytics().catch(() => null), // Don't fail if analytics not ready
+                const [products, orders, analyticsData] = await Promise.all([
+                    wholesaleProductsApi.getAll(),
+                    wholesaleOrdersApi.getAll(),
+                    wholesaleDashboardApi.getAnalytics().catch(() => null), // Don't fail if analytics not ready
                 ]);
-
-                const products = productsRes.data;
-                const orders = ordersRes.data;
 
                 const pendingOrders = orders.filter(
                     (o: any) => o.orderStatus === 'placed' || o.orderStatus === 'confirmed'
@@ -42,8 +39,8 @@ export default function AdminDashboard() {
                     revenue: totalRevenue,
                 });
 
-                if (analyticsRes?.success) {
-                    setAnalytics(analyticsRes.data);
+                if (analyticsData) {
+                    setAnalytics(analyticsData);
                 }
             } catch (error) {
                 console.error('Failed to load stats:', error);
@@ -102,7 +99,7 @@ export default function AdminDashboard() {
 
     return (
         <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-6 md:mb-8">Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-6 md:mb-8">Wholesale Dashboard</h1>
 
             {loading ? (
                 <div className="text-center py-12">
@@ -152,14 +149,14 @@ export default function AdminDashboard() {
                         <h2 className="text-lg md:text-xl font-bold text-text-primary mb-4">Quick Actions</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                             <a
-                                href="/admin/products/new"
+                                href="/admin/wholesale/products/new"
                                 className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
                             >
                                 <Package className="w-8 h-8 mx-auto mb-2 text-primary" />
-                                <p className="font-semibold">Add New Product</p>
+                                <p className="font-semibold">Add Whls Product</p>
                             </a>
                             <a
-                                href="/admin/orders"
+                                href="/admin/wholesale/orders"
                                 className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
                             >
                                 <ShoppingBag className="w-8 h-8 mx-auto mb-2 text-primary" />

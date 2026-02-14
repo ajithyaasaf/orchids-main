@@ -133,6 +133,125 @@ export const wholesaleProductsApi = {
 };
 
 /**
+ * Wholesale Orders API Client
+ */
+export const wholesaleOrdersApi = {
+    /**
+     * Get all wholesale orders (with optional status filter)
+     */
+    getAll: async (status?: string) => {
+        const token = await getAuthToken();
+        const query = status ? `?status=${status}` : '';
+
+        const response = await fetch(`${API_BASE}/wholesale/orders${query}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch orders');
+        }
+
+        return data.data;
+    },
+
+    /**
+     * Get single order by ID
+     */
+    getById: async (id: string) => {
+        const token = await getAuthToken();
+
+        const response = await fetch(`${API_BASE}/wholesale/orders/${id}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch order');
+        }
+
+        return data.data;
+    },
+
+    /**
+     * Update order status
+     */
+    updateStatus: async (id: string, orderStatus: string, notes?: string) => {
+        const token = await getAuthToken();
+
+        const response = await fetch(`${API_BASE}/wholesale/orders/${id}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ orderStatus, notes }),
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to update order status');
+        }
+
+        return data.data;
+    },
+};
+
+/**
+ * Wholesale Dashboard API Client
+ */
+export const wholesaleDashboardApi = {
+    /**
+     * Get comprehensive business analytics
+     */
+    getAnalytics: async () => {
+        const token = await getAuthToken();
+
+        const response = await fetch(`${API_BASE}/dashboard/analytics`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch analytics');
+        }
+
+        return data.data;
+    },
+
+    /**
+     * Rebuild analytics cache (admin only)
+     */
+    rebuildCache: async () => {
+        const token = await getAuthToken();
+
+        const response = await fetch(`${API_BASE}/dashboard/analytics/rebuild`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to rebuild analytics');
+        }
+
+        return data.data;
+    },
+};
+
+/**
  * Wholesale Checkout API Client
  */
 export const wholesaleCheckoutApi = {

@@ -1,25 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { WholesaleProduct } from '@tntrends/shared';
-import { useAuthToken } from '@/hooks/useAuthToken';
 import { useToast } from '@/context/ToastContext';
 import ImageUpload from './ImageUpload';
 
 /**
- * High-Speed Admin Product Entry Form
- * Optimized for rapid manual product entry with:
- * - Smart defaults (bundleQty: 20, mixedColors: true)
- * - Composition presets for common size splits
- * - Real-time validation feedback
- * - "Save & Add Another" workflow
- * - Image upload with Cloudinary integration
- * - Authentication token handling
- * - Toast notifications
+ * Wholesale Product Form Component
+ * 
+ * Reusable form for creating and editing wholesale products.
+ * Handles:
+ * - State management for product fields
+ * - Validation
+ * - Bundle configuration presets
+ * - Image management
+ * - Unsaved changes warning
  */
 
-interface ProductForm {
+export interface WholesaleJobFormData {
     title: string;
     description: string;
     category: string;
@@ -29,72 +28,49 @@ interface ProductForm {
     availableBundles: number;
     colorDescription: string;
     images: string[];
+    mixedColors: boolean;
 }
 
-const INITIAL_FORM: ProductForm = {
+interface WholesaleProductFormProps {
+    initialData?: Partial<WholesaleProduct>;
+    onSubmit: (data: WholesaleJobFormData) => Promise<void>;
+    isEditing?: boolean;
+    isLoading?: boolean;
+}
+
+const INITIAL_FORM: WholesaleJobFormData = {
     title: '',
     description: '',
-    category: 'Girls - T-Shirts',  // Default to most common category
+    category: 'Girls - T-Shirts',
     bundleQty: 20,
     bundleComposition: {},
     bundlePrice: 0,
     availableBundles: 0,
     colorDescription: 'Assorted colors',
     images: [],
+    mixedColors: true,
 };
 
 // Available product categories (Wholesale Clothing Business)
 const CATEGORIES = [
     // Newborn (0-12 months)
-    'Newborn - Jubba',
-    'Newborn - Gift Box',
-    'Newborn - Cord Sets',
-    'Newborn - Frocks',
-    'Newborn - Rompers',
-    'Newborn - Jumpsuits',
-    'Newborn - Diapers',
-    'Newborn - Underwear',
-    'Newborn - Towels',
-    'Newborn - Napkins',
-    'Newborn - Socks',
-    'Newborn - Gloves',
-    'Newborn - Caps',
-    'Newborn - Bibs',
-    'Newborn - Baby Beds',
-    'Newborn - Bed Sheets',
+    'Newborn - Jubba', 'Newborn - Gift Box', 'Newborn - Cord Sets', 'Newborn - Frocks',
+    'Newborn - Rompers', 'Newborn - Jumpsuits', 'Newborn - Diapers', 'Newborn - Underwear',
+    'Newborn - Towels', 'Newborn - Napkins', 'Newborn - Socks', 'Newborn - Gloves',
+    'Newborn - Caps', 'Newborn - Bibs', 'Newborn - Baby Beds', 'Newborn - Bed Sheets',
 
     // Girls
-    'Girls - T-Shirts',
-    'Girls - Frocks',
-    'Girls - Skirts',
-    'Girls - Pants',
-    'Girls - Leggings',
-    'Girls - Tights',
-    'Girls - Palazzo Pants',
-    'Girls - Slips',
-    'Girls - Underwear',
-    'Girls - Shorts',
-    'Girls - 3/4 Pants',
+    'Girls - T-Shirts', 'Girls - Frocks', 'Girls - Skirts', 'Girls - Pants', 'Girls - Leggings',
+    'Girls - Tights', 'Girls - Palazzo Pants', 'Girls - Slips', 'Girls - Underwear',
+    'Girls - Shorts', 'Girls - 3/4 Pants',
 
     // Boys
-    'Boys - T-Shirts',
-    'Boys - Pants',
-    'Boys - Shorts',
-    'Boys - Underwear',
-    'Boys - 3/4 Pants',
+    'Boys - T-Shirts', 'Boys - Pants', 'Boys - Shorts', 'Boys - Underwear', 'Boys - 3/4 Pants',
 
     // Women
-    'Women - T-Shirts',
-    'Women - Pants',
-    'Women - Shorts',
-    'Women - Leggings',
-    'Women - 3/4 Pants',
-    'Women - Long Polos',
-    'Women - Feeding Dresses',
-    'Women - Dresses',
-    'Women - Underwear',
-    'Women - Tights',
-    'Women - Bed Sheets',
+    'Women - T-Shirts', 'Women - Pants', 'Women - Shorts', 'Women - Leggings', 'Women - 3/4 Pants',
+    'Women - Long Polos', 'Women - Feeding Dresses', 'Women - Dresses', 'Women - Underwear',
+    'Women - Tights', 'Women - Bed Sheets',
 ];
 
 // Composition presets for common size distributions
@@ -107,15 +83,56 @@ const PRESETS = {
 
 const SIZES = ['S', 'M', 'L', 'XL', '2XL'];
 
-export default function WholesaleProductForm() {
+export default function WholesaleProductForm({
+    initialData,
+    onSubmit,
+    isEditing = false,
+    isLoading = false
+}: WholesaleProductFormProps) {
     const router = useRouter();
-    const { authenticatedFetch, loading: authLoading } = useAuthToken();
     const { showToast } = useToast();
 
-    const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    // Form State
+    const [form, setForm] = useState<WholesaleJobFormData>(INITIAL_FORM);
+    const [isDirty, setIsDirty] = useState(false);
     const [error, setError] = useState<string>('');
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+    // Initialize with data
+    useEffect(() => {
+        if (initialData) {
+            setForm({
+                title: initialData.title || '',
+                description: initialData.description || '',
+                category: initialData.category || INITIAL_FORM.category,
+                bundleQty: initialData.bundleQty || 20,
+                bundleComposition: initialData.bundleComposition || {},
+                bundlePrice: initialData.bundlePrice || 0,
+                availableBundles: initialData.availableBundles || 0,
+                colorDescription: initialData.colorDescription || '',
+                images: initialData.images || [],
+                mixedColors: initialData.mixedColors ?? true,
+            });
+        }
+    }, [initialData]);
+
+    // Warn on unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
+
+    const handleFieldChange = (updates: Partial<WholesaleJobFormData>) => {
+        setForm(prev => ({ ...prev, ...updates }));
+        setIsDirty(true);
+        setError('');
+    };
 
     // Calculate total pieces in composition
     const totalPcs = Object.values(form.bundleComposition).reduce((a, b) => a + b, 0);
@@ -123,13 +140,12 @@ export default function WholesaleProductForm() {
 
     // Apply composition preset
     const applyPreset = (presetKey: keyof typeof PRESETS) => {
-        setForm({ ...form, bundleComposition: PRESETS[presetKey] });
+        handleFieldChange({ bundleComposition: PRESETS[presetKey] });
     };
 
     // Update single size quantity
     const updateSize = (size: string, qty: number) => {
-        setForm({
-            ...form,
+        handleFieldChange({
             bundleComposition: {
                 ...form.bundleComposition,
                 [size]: Math.max(0, qty),
@@ -137,8 +153,7 @@ export default function WholesaleProductForm() {
         });
     };
 
-    // Submit product
-    const handleSubmit = async (e: React.FormEvent, addAnother: boolean = false) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
@@ -152,42 +167,22 @@ export default function WholesaleProductForm() {
             return;
         }
 
-        setIsSubmitting(true);
+        if (form.images.length === 0) {
+            setFieldErrors({ images: 'At least one image is required' });
+            return;
+        }
 
         try {
-            const response = await authenticatedFetch('/api/wholesale/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...form,
-                    mixedColors: true,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.error || 'Failed to create product');
-            }
-
-            if (addAnother) {
-                // Reset form for next product
-                setForm(INITIAL_FORM);
-                alert('Product created successfully! Ready for next entry.');
-            } else {
-                // Navigate back
-                router.push('/admin/wholesale/products');
-            }
+            await onSubmit(form);
+            setIsDirty(false); // Reset dirty state on success
         } catch (err: any) {
-            setError(err.message || 'Failed to create product');
-        } finally {
-            setIsSubmitting(false);
+            setError(err.message || 'Failed to save product');
         }
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-6">Add Wholesale Product</h1>
+        <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-soft">
+            <h1 className="text-3xl font-bold mb-6">{isEditing ? 'Edit Wholesale Product' : 'Add Wholesale Product'}</h1>
 
             {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -195,7 +190,7 @@ export default function WholesaleProductForm() {
                 </div>
             )}
 
-            <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Info */}
                 <div>
                     <label className="block text-sm font-medium mb-1">
@@ -204,10 +199,10 @@ export default function WholesaleProductForm() {
                     <input
                         type="text"
                         value={form.title}
-                        onChange={(e) => setForm({ ...form, title: e.target.value })}
+                        onChange={(e) => handleFieldChange({ title: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="e.g., Girls Cotton T-Shirt Mix"
-                        autoFocus
+                        disabled={isLoading}
                         required
                     />
                 </div>
@@ -216,10 +211,11 @@ export default function WholesaleProductForm() {
                     <label className="block text-sm font-medium mb-1">Description</label>
                     <textarea
                         value={form.description}
-                        onChange={(e) => setForm({ ...form, description: e.target.value })}
+                        onChange={(e) => handleFieldChange({ description: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         rows={3}
                         placeholder="Product description..."
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -230,8 +226,9 @@ export default function WholesaleProductForm() {
                     </label>
                     <select
                         value={form.category}
-                        onChange={(e) => setForm({ ...form, category: e.target.value })}
+                        onChange={(e) => handleFieldChange({ category: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        disabled={isLoading}
                         required
                     >
                         {CATEGORIES.map((cat) => (
@@ -243,14 +240,16 @@ export default function WholesaleProductForm() {
                 </div>
 
                 {/* Image Upload */}
-                <ImageUpload
-                    images={form.images}
-                    onImagesChange={(images) => setForm({ ...form, images })}
-                    maxImages={5}
-                />
-                {fieldErrors.images && (
-                    <p className="text-sm text-red-600 -mt-2">{fieldErrors.images}</p>
-                )}
+                <div>
+                    <ImageUpload
+                        images={form.images}
+                        onImagesChange={(images) => handleFieldChange({ images })}
+                        maxImages={5}
+                    />
+                    {fieldErrors.images && (
+                        <p className="text-sm text-red-600 mt-1">{fieldErrors.images}</p>
+                    )}
+                </div>
 
                 {/* Bundle Configuration */}
                 <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
@@ -270,6 +269,7 @@ export default function WholesaleProductForm() {
                                     type="button"
                                     onClick={() => applyPreset(preset as keyof typeof PRESETS)}
                                     className="px-4 py-2 bg-white border-2 border-blue-300 rounded-lg hover:bg-blue-100 hover:border-blue-400 transition-colors font-medium text-blue-900"
+                                    disabled={isLoading}
                                 >
                                     {preset} Split
                                 </button>
@@ -285,9 +285,10 @@ export default function WholesaleProductForm() {
                         <input
                             type="number"
                             value={form.bundleQty}
-                            onChange={(e) => setForm({ ...form, bundleQty: Number(e.target.value) })}
+                            onChange={(e) => handleFieldChange({ bundleQty: Number(e.target.value) })}
                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             min={1}
+                            disabled={isLoading}
                         />
                     </div>
 
@@ -308,6 +309,7 @@ export default function WholesaleProductForm() {
                                         onChange={(e) => updateSize(size, Number(e.target.value))}
                                         className="w-full px-2 py-2 border rounded-lg text-center text-lg font-semibold"
                                         min={0}
+                                        disabled={isLoading}
                                     />
                                 </div>
                             ))}
@@ -339,11 +341,12 @@ export default function WholesaleProductForm() {
                             type="number"
                             value={form.bundlePrice}
                             onChange={(e) =>
-                                setForm({ ...form, bundlePrice: Number(e.target.value) })
+                                handleFieldChange({ bundlePrice: Number(e.target.value) })
                             }
                             className="flex-1 px-4 py-3 border-2 rounded-lg text-2xl font-semibold focus:ring-2 focus:ring-green-500"
                             placeholder="0"
                             step="0.01"
+                            disabled={isLoading}
                             required
                         />
                     </div>
@@ -363,10 +366,11 @@ export default function WholesaleProductForm() {
                         type="number"
                         value={form.availableBundles}
                         onChange={(e) =>
-                            setForm({ ...form, availableBundles: Number(e.target.value) })
+                            handleFieldChange({ availableBundles: Number(e.target.value) })
                         }
                         className="w-full px-4 py-2 border rounded-lg"
                         min={0}
+                        disabled={isLoading}
                     />
                     {form.availableBundles > 0 && (
                         <p className="text-sm text-gray-500 mt-1">
@@ -381,9 +385,10 @@ export default function WholesaleProductForm() {
                     <input
                         type="text"
                         value={form.colorDescription}
-                        onChange={(e) => setForm({ ...form, colorDescription: e.target.value })}
+                        onChange={(e) => handleFieldChange({ colorDescription: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg"
                         placeholder="e.g., Assorted vibrant colors"
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -391,25 +396,17 @@ export default function WholesaleProductForm() {
                 <div className="flex gap-4 pt-4 border-t">
                     <button
                         type="submit"
-                        disabled={isSubmitting || !isValidComposition}
+                        disabled={isLoading || !isValidComposition}
                         className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                     >
-                        {isSubmitting ? 'Saving...' : '💾 Save Product'}
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={(e) => handleSubmit(e as any, true)}
-                        disabled={isSubmitting || !isValidComposition}
-                        className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                    >
-                        {isSubmitting ? 'Saving...' : '⚡ Save & Add Another'}
+                        {isLoading ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
                     </button>
 
                     <button
                         type="button"
                         onClick={() => router.back()}
                         className="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                        disabled={isLoading}
                     >
                         Cancel
                     </button>

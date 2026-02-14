@@ -11,7 +11,7 @@ const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/wholesale/products', label: 'Products', icon: Package },
     { href: '/admin/collections', label: 'Collections', icon: Sparkles },
-    { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/admin/wholesale/orders', label: 'Orders', icon: ShoppingBag },
     { href: '/admin/customers', label: 'Customers', icon: Users },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/combos', label: 'Combos', icon: Gift },

@@ -111,7 +111,7 @@ app.use('/api/shipping', shippingRoutes);       // RETAIL: Shipping calculator (
 // app.use('/api/combos', comboRoutes);            // RETAIL: Product combos 
 app.use('/api/collections', collectionRoutes);  // WHOLESALE: Product collections (Manual selection)
 // app.use('/api/customers', customersRoutes);     // RETAIL: Customer analytics
-// app.use('/api/dashboard', dashboardRoutes);     // RETAIL: Dashboard analytics
+app.use('/api/dashboard', dashboardRoutes);     // RETAIL: Dashboard analytics (Now includes Wholesale endpoints)
 
 // SHARED INFRASTRUCTURE (Keep for wholesale)
 app.use('/api/payment', paymentRoutes);           // Shared: Razorpay payment gateway

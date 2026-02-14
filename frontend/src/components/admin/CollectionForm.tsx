@@ -90,6 +90,8 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
 
             const { url, publicId } = await uploadApi.uploadImage(file);
 
+            console.log(`${type} uploaded:`, { url, publicId });
+
             setFormData(prev => ({
                 ...prev,
                 [type === 'banner' ? 'bannerImage' : 'thumbnailImage']: {
@@ -99,6 +101,7 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
                 }
             }));
         } catch (error: any) {
+            console.error(`Failed to upload ${type}:`, error);
             alert(`Failed to upload ${type}: ` + error.message);
         } finally {
             const setUploading = type === 'banner' ? setUploadingBanner : setUploadingThumbnail;
@@ -405,6 +408,35 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
                         <p className="text-xs text-gray-500 mt-1">
                             Leave empty for permanent collection
                         </p>
+
+                        {/* Quick Duration Buttons */}
+                        <div className="flex flex-wrap gap-2 mt-3">
+                            {[1, 2, 3, 7].map(days => (
+                                <button
+                                    key={days}
+                                    type="button"
+                                    onClick={() => {
+                                        const start = formData.startDate ? new Date(formData.startDate) : new Date();
+                                        const end = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
+                                        setFormData(prev => ({ ...prev, endDate: end }));
+                                    }}
+                                    className="px-2 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors border border-gray-200"
+                                >
+                                    +{days} {days === 1 ? 'Day' : 'Days'}
+                                </button>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const now = new Date();
+                                    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59); // Last day of current month
+                                    setFormData(prev => ({ ...prev, endDate: end }));
+                                }}
+                                className="px-2 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors border border-gray-200"
+                            >
+                                End of Month
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

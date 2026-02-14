@@ -9,16 +9,24 @@ class CollectionService {
     /**
      * Get all active collections for homepage showcase
      * Returns only collections that should be displayed on homepage
+     * 
+     * Best Practice: Simplified query to avoid complex Firestore composite index
+     * Filtering and sorting done in application layer for better performance
      */
     async getActiveCollections(): Promise<Collection[]> {
         const now = new Date();
 
+        // Helper to safely convert Firestore Timestamp to Date
+        const toDate = (timestamp: any): Date | null => {
+            if (!timestamp) return null;
+            if (timestamp.toDate) return timestamp.toDate(); // Firestore Timestamp
+            if (timestamp instanceof Date) return timestamp; // Already a Date
+            return new Date(timestamp); // Try to parse as date string/number
+        };
+
+        // Simplified query - only filter by status to avoid index requirement
         const snapshot = await this.collectionRef
             .where('status', '==', 'active')
-            .where('startDate', '<=', now)
-            .where('displaySettings.showOnHomepage', '==', true)
-            .orderBy('startDate', 'asc')
-            .orderBy('displaySettings.homepageOrder', 'asc')
             .get();
 
         const collections = snapshot.docs.map(doc => ({
@@ -26,11 +34,33 @@ class CollectionService {
             ...doc.data()
         })) as Collection[];
 
-        // Filter out expired collections (client-side since Firestore can't do multiple inequalities)
-        const active = collections.filter(c => {
-            if (!c.endDate) return true; // No end date = permanent
-            return c.endDate.toDate() > now;
-        });
+        // Filter and sort in memory (best practice for complex queries)
+        const active = collections
+            .filter(c => {
+                // Must be set to show on homepage
+                if (!c.displaySettings?.showOnHomepage) return false;
+
+                // Must have started
+                const startDate = toDate(c.startDate);
+                if (startDate && startDate > now) return false;
+
+                // Must not be expired
+                const endDate = toDate(c.endDate);
+                if (endDate && endDate <= now) return false;
+
+                return true;
+            })
+            .sort((a, b) => {
+                // Sort by homepage order first
+                const orderA = a.displaySettings?.homepageOrder || 999;
+                const orderB = b.displaySettings?.homepageOrder || 999;
+                if (orderA !== orderB) return orderA - orderB;
+
+                // Then by start date (newest first)
+                const dateA = toDate(a.startDate)?.getTime() || 0;
+                const dateB = toDate(b.startDate)?.getTime() || 0;
+                return dateB - dateA;
+            });
 
         return active;
     }
@@ -55,12 +85,23 @@ class CollectionService {
             ...doc.data()
         } as Collection;
 
+        // Helper to safely convert Firestore Timestamp to Date
+        const toDate = (timestamp: any): Date | null => {
+            if (!timestamp) return null;
+            if (timestamp.toDate) return timestamp.toDate(); // Firestore Timestamp
+            if (timestamp instanceof Date) return timestamp; // Already a Date
+            return new Date(timestamp); // Try to parse as date string/number
+        };
+
         // Check if collection is within valid date range
         const now = new Date();
-        if (collection.startDate.toDate() > now) {
+        const startDate = toDate(collection.startDate);
+        if (startDate && startDate > now) {
             return null; // Not started yet
         }
-        if (collection.endDate && collection.endDate.toDate() < now) {
+
+        const endDate = toDate(collection.endDate);
+        if (endDate && endDate < now) {
             return null; // Expired
         }
 

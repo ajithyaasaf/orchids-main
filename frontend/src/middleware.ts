@@ -35,11 +35,13 @@ export function middleware(request: NextRequest) {
     }
 
     // ========================================================================
-    // Collections Redirect (Not applicable to wholesale)
+    // Collections Redirect (Using Collections Now!)
     // ========================================================================
-    if (pathname.startsWith('/collection/')) {
-        return NextResponse.redirect(new URL('/products', request.url));
-    }
+    // Removing redirect logic since collections are now supported
+
+    // if (pathname.startsWith('/collection/')) {
+    //    return NextResponse.redirect(new URL('/products', request.url));
+    // }
 
     // ========================================================================
     // Duplicate Product URL Prevention (/products/[id] → /product/[id])

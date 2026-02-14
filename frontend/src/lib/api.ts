@@ -137,13 +137,15 @@ export const uploadApi = {
             body: formData,
         });
 
-        const data = await response.json();
+        const responseData = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || 'Upload failed');
+            throw new Error(responseData.error || 'Upload failed');
         }
 
-        return data;
+        // Backend returns { success: true, data: { url, publicId }, message }
+        // Extract url and publicId from the nested data property
+        return responseData.data;
     },
 };
 

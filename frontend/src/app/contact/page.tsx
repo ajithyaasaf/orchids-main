@@ -27,13 +27,13 @@ export default function ContactPage() {
 
                         <div className="space-y-6">
                             {/* Business Name */}
-                            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="bg-white rounded-xl p-8 shadow-soft">
                                 <h3 className="text-xl font-semibold text-text-primary mb-2">Wholesale Orchids</h3>
                                 <p className="text-text-secondary">Proprietary Concern of Riyaz Ahamad</p>
                             </div>
 
                             {/* Address */}
-                            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="bg-white rounded-xl p-8 shadow-soft">
                                 <div className="flex items-start gap-4">
                                     <div className="bg-primary/10 p-3 rounded-lg">
                                         <MapPin className="w-6 h-6 text-primary" />
@@ -51,7 +51,7 @@ export default function ContactPage() {
                             </div>
 
                             {/* Email */}
-                            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="bg-white rounded-xl p-8 shadow-soft">
                                 <div className="flex items-start gap-4">
                                     <div className="bg-primary/10 p-3 rounded-lg">
                                         <Mail className="w-6 h-6 text-primary" />
@@ -72,7 +72,7 @@ export default function ContactPage() {
                             </div>
 
                             {/* Phone */}
-                            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="bg-white rounded-xl p-8 shadow-soft">
                                 <div className="flex items-start gap-4">
                                     <div className="bg-primary/10 p-3 rounded-lg">
                                         <Phone className="w-6 h-6 text-primary" />
@@ -94,7 +94,7 @@ export default function ContactPage() {
                             </div>
 
                             {/* Social Media */}
-                            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="bg-white rounded-xl p-8 shadow-soft">
                                 <div className="flex items-start gap-4">
                                     <div className="bg-primary/10 p-3 rounded-lg">
                                         <Instagram className="w-6 h-6 text-primary" />
@@ -122,7 +122,7 @@ export default function ContactPage() {
                     <div>
                         <h2 className="text-3xl font-bold text-text-primary mb-8">Quick Help</h2>
 
-                        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+                        <div className="bg-white rounded-xl p-8 shadow-soft">
                             <h3 className="text-xl font-semibold text-text-primary mb-6">Frequently Asked Questions</h3>
 
                             <div className="space-y-6">

@@ -188,7 +188,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     // 'sticky top-24' keeps it in view. 
                     // 'rounded-xl' and 'border' for the card look.
                     "md:translate-x-0 md:static md:w-64 md:sticky md:top-28 md:z-30",
-                    "md:border md:border-gray-100 md:rounded-xl md:shadow-sm",
+                    "md:rounded-xl md:shadow-soft",
                     className
                 )}
             >
@@ -281,7 +281,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                                     >
                                                         {/* Custom Checkbox */}
                                                         <div className={cn(
-                                                            "w-4 h-4 rounded border flex items-center justify-center transition-all bg-white shadow-sm",
+                                                            "w-4 h-4 rounded border flex items-center justify-center transition-all bg-white shadow-soft",
                                                             isChecked
                                                                 ? "border-primary bg-primary text-white"
                                                                 : "border-gray-300 text-transparent group-hover/item:border-gray-400"

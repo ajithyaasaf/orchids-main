@@ -66,7 +66,7 @@ export function AddToCartSection({ product }: AddToCartSectionProps) {
     }
 
     return (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-xl shadow-soft p-6">
             <div className="flex items-center justify-between mb-6">
                 <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Quantity</span>
                 <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">

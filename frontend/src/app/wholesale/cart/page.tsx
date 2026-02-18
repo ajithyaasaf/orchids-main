@@ -71,7 +71,7 @@ export default function WholesaleCartPage() {
                         {items.map((item) => (
                             <div
                                 key={item.product.id}
-                                className="bg-white border boundary-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow flex gap-6"
+                                className="bg-white rounded-xl p-6 shadow-soft hover:shadow-soft-lg transition-shadow flex gap-6"
                             >
                                 {/* Product Image */}
                                 <div className="w-32 h-40 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden relative border border-gray-100">
@@ -159,7 +159,7 @@ export default function WholesaleCartPage() {
 
                     {/* Order Summary Sidebar */}
                     <div className="lg:col-span-4">
-                        <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm sticky top-24">
+                        <div className="bg-white rounded-xl p-6 shadow-soft sticky top-24">
                             <h2 className="text-xl font-heading font-bold text-gray-900 mb-6">Order Summary</h2>
 
                             {/* Stats */}

@@ -170,7 +170,7 @@ export default async function HomePage() {
                     <div className="container-custom">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {/* Bundle Pricing */}
-                            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100">
+                            <div className="text-center p-8 bg-white rounded-xl shadow-soft">
                                 <div className="inline-block p-4 bg-blue-100 rounded-full mb-6">
                                     <Package className="w-8 h-8 text-blue-600" />
                                 </div>
@@ -182,7 +182,7 @@ export default async function HomePage() {
                             </div>
 
                             {/* GST Included */}
-                            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100">
+                            <div className="text-center p-8 bg-white rounded-xl shadow-soft">
                                 <div className="inline-block p-4 bg-green-100 rounded-full mb-6">
                                     <ShieldCheck className="w-8 h-8 text-green-600" />
                                 </div>
@@ -193,7 +193,7 @@ export default async function HomePage() {
                             </div>
 
                             {/* Fast Delivery */}
-                            <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100">
+                            <div className="text-center p-8 bg-white rounded-xl shadow-soft">
                                 <div className="inline-block p-4 bg-orange-100 rounded-full mb-6">
                                     <Truck className="w-8 h-8 text-orange-600" />
                                 </div>

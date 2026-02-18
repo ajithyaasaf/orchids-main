@@ -83,7 +83,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, priority = 
     return (
         <Link
             href={`/collection/${collection.slug}`}
-            className="group relative rounded-3xl overflow-hidden bg-white shadow-sm hover:shadow-2xl transition-all duration-500 h-[450px] md:h-[500px]"
+            className="group relative rounded-3xl overflow-hidden bg-white shadow-soft hover:shadow-soft-lg transition-all duration-500 h-[450px] md:h-[500px]"
         >
             {/* Background Image */}
             {collection.thumbnailImage ? (

@@ -416,7 +416,7 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Shipping Address Form */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div className="bg-white rounded-xl p-6 shadow-soft">
                         <h2 className="text-xl font-bold text-text-primary mb-6">Shipping Address</h2>
 
                         {/* Address Selector (for logged-in users with saved addresses) */}
@@ -503,7 +503,7 @@ export default function CheckoutPage() {
 
                 {/* Order Summary */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 sticky top-24">
+                    <div className="bg-white rounded-xl p-6 shadow-soft sticky top-24">
                         <h2 className="text-xl font-bold text-text-primary mb-6">Order Summary</h2>
 
                         {/* Loading State */}

@@ -1,5 +1,5 @@
 import { WholesaleProduct, WholesaleBundleItem } from '@tntrends/shared';
-import { getSettings } from './settingsService';
+import { getSettings, calculateShipping } from './settingsService';
 
 /**
  * Wholesale Pricing Service
@@ -43,6 +43,7 @@ export const calculateOrderTotal = async (
     subtotal: number;
     gstRate: number;
     gst: number;
+    shipping: number;
     adminDiscount: number;
     totalAmount: number;
 }> => {
@@ -51,12 +52,17 @@ export const calculateOrderTotal = async (
 
     const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
     const gst = subtotal * gstRate;
-    const totalAmount = subtotal + gst - adminDiscount;
+
+    // Calculate shipping based on subtotal
+    const shipping = await calculateShipping(subtotal);
+
+    const totalAmount = subtotal + gst + shipping - adminDiscount;
 
     return {
         subtotal,
         gstRate,
         gst,
+        shipping,
         adminDiscount,
         totalAmount: Math.max(0, totalAmount),
     };

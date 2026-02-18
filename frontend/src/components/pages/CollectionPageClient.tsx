@@ -157,7 +157,7 @@ export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ coll
 
                     {/* Empty State */}
                     {products.length === 0 && (
-                        <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+                        <div className="text-center py-20 bg-white rounded-2xl shadow-soft">
                             <div className="inline-block p-4 bg-gray-50 rounded-full mb-4">
                                 <Sparkles className="w-10 h-10 text-gray-300" />
                             </div>

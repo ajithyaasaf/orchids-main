@@ -20,7 +20,7 @@ export const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
 
     return (
         <div>
-            <div className="aspect-product bg-gray-100 rounded-xl overflow-hidden mb-4 relative shadow-sm">
+            <div className="aspect-product bg-gray-100 rounded-xl overflow-hidden mb-4 relative shadow-soft">
                 <Image
                     src={images[selectedImageIndex]?.url || '/placeholder-product.jpg'}
                     alt={productTitle}

@@ -246,7 +246,7 @@ function ProductImageGallery({ images, title }: { images: string[]; title: strin
             )}
 
             {/* Main Image */}
-            <div className="relative flex-grow aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+            <div className="relative flex-grow aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden shadow-soft">
                 <Image
                     src={images[0]}
                     alt={`${title} - wholesale clothing bundle`}

@@ -102,7 +102,7 @@ export default function ShippingPage() {
                     </div>
 
                     {/* Main Content */}
-                    <div className="bg-white rounded-xl p-8 md:p-12 shadow-sm border border-gray-100">
+                    <div className="bg-white rounded-xl p-8 md:p-12 shadow-soft">
                         <div className="prose prose-lg max-w-none">
                             {/* Shipping Policy */}
                             <section className="mb-8">

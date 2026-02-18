@@ -15,6 +15,7 @@ interface CalculatedOrder {
     subtotal: number;
     gstRate: number;
     gst: number;
+    shipping: number;
     totalAmount: number;
 }
 
@@ -86,6 +87,7 @@ export default function WholesaleCheckoutPage() {
                     subtotal: calculatedOrder.subtotal,
                     gstRate: calculatedOrder.gstRate,
                     gst: calculatedOrder.gst,
+                    shipping: calculatedOrder.shipping,
                     totalAmount: calculatedOrder.totalAmount,
                 }),
             });
@@ -200,7 +202,7 @@ export default function WholesaleCheckoutPage() {
                         )}
 
                         {/* Delivery Address */}
-                        <div className="bg-white border border-gray-100 rounded-xl p-8 shadow-sm">
+                        <div className="bg-white rounded-xl p-8 shadow-soft">
                             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                                 <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm">1</span>
                                 Delivery Address
@@ -291,7 +293,7 @@ export default function WholesaleCheckoutPage() {
 
                     {/* Right Column: Order Summary */}
                     <div className="lg:col-span-5 relative">
-                        <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm sticky top-24">
+                        <div className="bg-white rounded-xl p-6 shadow-soft sticky top-24">
                             <h2 className="text-xl font-heading font-bold text-gray-900 mb-6">Order Summary</h2>
 
                             {/* Mini Cart Items */}
@@ -327,6 +329,16 @@ export default function WholesaleCheckoutPage() {
                                         <div className="flex justify-between text-sm text-gray-600">
                                             <span>GST ({(calculatedOrder.gstRate * 100).toFixed(0)}%)</span>
                                             <span className="font-medium text-gray-900">₹{calculatedOrder.gst.toLocaleString('en-IN')}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm text-gray-600">
+                                            <span>Shipping</span>
+                                            <span className="font-medium text-gray-900">
+                                                {calculatedOrder.shipping === 0 ? (
+                                                    <span className="text-green-600">FREE</span>
+                                                ) : (
+                                                    `₹${calculatedOrder.shipping.toLocaleString('en-IN')}`
+                                                )}
+                                            </span>
                                         </div>
                                         <div className="border-t border-gray-200 pt-3 flex justify-between items-end">
                                             <span className="text-base font-bold text-gray-900">Total Pay</span>

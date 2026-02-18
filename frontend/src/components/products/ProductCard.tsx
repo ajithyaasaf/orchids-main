@@ -22,7 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     return (
         <Link href={`/product/${product.id}`} className="group block h-full">
-            <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col border border-gray-100 group-hover:border-primary/20 relative ${!inStock ? 'opacity-75' : ''}`}>
+            <div className={`bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col relative ${!inStock ? 'opacity-75' : ''}`}>
 
                 {/* Image Container */}
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">
@@ -56,12 +56,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
                         {hasDiscount && inStock && (
-                            <span className="bg-error text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                            <span className="bg-error text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-soft">
                                 {product.discountType === 'percentage' ? `-${product.discountValue}%` : `-₹${product.discountValue}`}
                             </span>
                         )}
                         {isLowStock && (
-                            <span className="bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                            <span className="bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-soft">
                                 Only {totalStock} left!
                             </span>
                         )}

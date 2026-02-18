@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useCartStore } from '@/store/cartStore';
+import { useCartStore } from '@/store/wholesaleCartStore';
 import { useAuthStore } from '@/store/authStore';
 import { ShoppingCart, User, Search, Menu, LogOut, ChevronDown } from 'lucide-react';
 
@@ -168,7 +168,7 @@ const MOBILE_NAV_ITEMS = [
 // ============================================================================
 
 export const Header: React.FC = () => {
-    const { getTotalItems } = useCartStore();
+    const { getTotalBundles } = useCartStore();
     const { user, logout } = useAuthStore();
 
     // ========================================
@@ -215,7 +215,7 @@ export const Header: React.FC = () => {
     // Computed Values
     // ========================================
 
-    const cartItemsCount = getTotalItems();
+    const cartItemsCount = getTotalBundles();
 
     // ========================================
     // Render

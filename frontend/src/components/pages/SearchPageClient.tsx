@@ -164,7 +164,7 @@ export function SearchPageClient({ initialQuery = '' }: SearchPageClientProps) {
             {/* =================================== */}
             {/* SEARCH BAR */}
             {/* =================================== */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+            <div className="bg-white rounded-xl shadow-soft p-6 mb-8">
                 <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
                     {/* Search Input */}
                     <div className="flex-1 relative">

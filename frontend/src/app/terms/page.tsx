@@ -19,7 +19,7 @@ export default function TermsPage() {
 
             {/* Content */}
             <div className="container-custom py-16">
-                <div className="max-w-4xl mx-auto bg-white rounded-xl p-8 md:p-12 shadow-sm border border-gray-100">
+                <div className="max-w-4xl mx-auto bg-white rounded-xl p-8 md:p-12 shadow-soft">
                     <div className="prose prose-lg max-w-none">
                         {/* Introduction */}
                         <section className="mb-8">

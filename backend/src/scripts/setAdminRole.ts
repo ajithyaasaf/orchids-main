@@ -62,5 +62,5 @@ const setAdminRole = async (email: string) => {
 };
 
 // Get email from command line or use default
-const targetEmail = process.argv[2] || 'tntrendsdigital@gmail.com'; // Default from env
+const targetEmail = process.argv[2] || 'contact@orchids.store'; // Default from env
 setAdminRole(targetEmail);

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { collectionApi, uploadApi } from '@/lib/api';
-import { Collection, CollectionTheme, CollectionStatus } from '@tntrends/shared';
+import { Collection, CollectionTheme, CollectionStatus } from '@orchids/shared';
 import { Button } from '@/components/ui/Button';
 import { Upload, X, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { WholesaleProductPicker } from '@/components/admin/WholesaleProductPicker';
@@ -555,7 +555,7 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
                                 ...prev,
                                 seo: { ...prev.seo!, metaTitle: e.target.value }
                             }))}
-                            placeholder="Winter Sale 2024 - Up to 70% OFF | TNtrends"
+                            placeholder="Winter Sale 2024 - Up to 70% OFF | Orchid"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
                         <p className="text-xs text-gray-500 mt-1">

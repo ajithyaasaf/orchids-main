@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
+import { PRODUCT_CATEGORIES } from '@orchids/shared';
 
 /**
  * Dynamic Sitemap Generation for ORCHID Wholesale Clothing
@@ -19,36 +20,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 1,
         },
         {
+            url: `${baseUrl}/wholesale`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.9,
+        },
+        {
             url: `${baseUrl}/products`,
             lastModified: new Date(),
             changeFrequency: 'daily',
             priority: 0.9,
-        },
-        {
-            url: `${baseUrl}/category/newborn`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.8,
-        },
-        {
-            url: `${baseUrl}/category/girls`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.8,
-        },
-        {
-            url: `${baseUrl}/category/boys`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.8,
-        },
-        {
-            url: `${baseUrl}/category/women`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.8,
-        },
+        }
     ];
+
+    // Dynamic product category routes
+    const categoryRoutes: MetadataRoute.Sitemap = PRODUCT_CATEGORIES.map(category => ({
+        url: `${baseUrl}/products?category=${category.id}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly',
+        priority: 0.8,
+    }));
 
     // Dynamic product routes
     let productRoutes: MetadataRoute.Sitemap = [];
@@ -57,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         const products = await wholesaleProductsApi.getAll();
 
         productRoutes = products.map((product) => ({
-            url: `${baseUrl}/product/${product.id}`,
+            url: `${baseUrl}/product/${product.slug || product.id}`,
             lastModified: product.updatedAt ? new Date(product.updatedAt) : new Date(),
             changeFrequency: 'weekly' as const,
             priority: 0.7,
@@ -67,5 +58,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // Continue with empty product list if API fails
     }
 
-    return [...staticRoutes, ...productRoutes];
+    return [...staticRoutes, ...categoryRoutes, ...productRoutes];
 }

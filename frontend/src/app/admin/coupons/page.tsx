@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { couponApi } from '@/lib/api';
-import { Coupon } from '@tntrends/shared';
+import { Coupon } from '@orchids/shared';
 import { Plus, Edit2, Trash2, Tag, Calendar, Users, TrendingUp, X } from 'lucide-react';
 
 export default function AdminCouponsPage() {

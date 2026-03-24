@@ -1,5 +1,5 @@
 import { collections, auth } from '../config/firebase';
-import { User, UserRole } from '@tntrends/shared';
+import { User, UserRole } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
 
 /**

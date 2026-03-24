@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct, PRODUCT_CATEGORIES, CategoryTag } from '@orchids/shared';
 import { useToast } from '@/context/ToastContext';
 import ImageUpload from './ImageUpload';
 
@@ -22,6 +22,7 @@ export interface WholesaleJobFormData {
     title: string;
     description: string;
     category: string;
+    tags: string[];
     bundleQty: number;
     bundleComposition: Record<string, number>;
     bundlePrice: number;
@@ -41,7 +42,8 @@ interface WholesaleProductFormProps {
 const INITIAL_FORM: WholesaleJobFormData = {
     title: '',
     description: '',
-    category: 'Girls - T-Shirts',
+    category: PRODUCT_CATEGORIES[0]?.id || '',
+    tags: [],
     bundleQty: 20,
     bundleComposition: {},
     bundlePrice: 0,
@@ -51,27 +53,7 @@ const INITIAL_FORM: WholesaleJobFormData = {
     mixedColors: true,
 };
 
-// Available product categories (Wholesale Clothing Business)
-const CATEGORIES = [
-    // Newborn (0-12 months)
-    'Newborn - Jubba', 'Newborn - Gift Box', 'Newborn - Cord Sets', 'Newborn - Frocks',
-    'Newborn - Rompers', 'Newborn - Jumpsuits', 'Newborn - Diapers', 'Newborn - Underwear',
-    'Newborn - Towels', 'Newborn - Napkins', 'Newborn - Socks', 'Newborn - Gloves',
-    'Newborn - Caps', 'Newborn - Bibs', 'Newborn - Baby Beds', 'Newborn - Bed Sheets',
-
-    // Girls
-    'Girls - T-Shirts', 'Girls - Frocks', 'Girls - Skirts', 'Girls - Pants', 'Girls - Leggings',
-    'Girls - Tights', 'Girls - Palazzo Pants', 'Girls - Slips', 'Girls - Underwear',
-    'Girls - Shorts', 'Girls - 3/4 Pants',
-
-    // Boys
-    'Boys - T-Shirts', 'Boys - Pants', 'Boys - Shorts', 'Boys - Underwear', 'Boys - 3/4 Pants',
-
-    // Women
-    'Women - T-Shirts', 'Women - Pants', 'Women - Shorts', 'Women - Leggings', 'Women - 3/4 Pants',
-    'Women - Long Polos', 'Women - Feeding Dresses', 'Women - Dresses', 'Women - Underwear',
-    'Women - Tights', 'Women - Bed Sheets',
-];
+// Removed hardcoded CATEGORIES array, using PRODUCT_CATEGORIES from @orchids/shared
 
 // Composition presets for common size distributions
 const PRESETS = {
@@ -105,6 +87,7 @@ export default function WholesaleProductForm({
                 title: initialData.title || '',
                 description: initialData.description || '',
                 category: initialData.category || INITIAL_FORM.category,
+                tags: initialData.tags || [],
                 bundleQty: initialData.bundleQty || 20,
                 bundleComposition: initialData.bundleComposition || {},
                 bundlePrice: initialData.bundlePrice || 0,
@@ -132,6 +115,18 @@ export default function WholesaleProductForm({
         setForm(prev => ({ ...prev, ...updates }));
         setIsDirty(true);
         setError('');
+    };
+
+    // Derived tags for selected category
+    const activeCategoryConfig = PRODUCT_CATEGORIES.find(c => c.id === form.category);
+    const availableTags = activeCategoryConfig ? activeCategoryConfig.subcategories : [];
+
+    // Toggle Tag selection
+    const handleTagToggle = (tagValue: string) => {
+        const newTags = form.tags.includes(tagValue)
+            ? form.tags.filter(t => t !== tagValue)
+            : [...form.tags, tagValue];
+        handleFieldChange({ tags: newTags });
     };
 
     // Calculate total pieces in composition
@@ -226,18 +221,41 @@ export default function WholesaleProductForm({
                     </label>
                     <select
                         value={form.category}
-                        onChange={(e) => handleFieldChange({ category: e.target.value })}
+                        onChange={(e) => handleFieldChange({ category: e.target.value, tags: [] })}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         disabled={isLoading}
                         required
                     >
-                        {CATEGORIES.map((cat) => (
-                            <option key={cat} value={cat}>
-                                {cat}
+                        {PRODUCT_CATEGORIES.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                                {cat.label}
                             </option>
                         ))}
                     </select>
                 </div>
+
+                {/* Tags Details (Multi-Select checkboxes based on category) */}
+                {availableTags.length > 0 && (
+                    <div className="bg-gray-50 p-4 border rounded-lg">
+                        <label className="block text-sm font-medium mb-2">
+                            Product Tags (Select all that apply)
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {availableTags.map((tag) => (
+                                <label key={tag.value} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-all">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.tags.includes(tag.value)}
+                                        onChange={() => handleTagToggle(tag.value)}
+                                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                                        disabled={isLoading}
+                                    />
+                                    <span className="text-sm text-gray-700">{tag.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Image Upload */}
                 <div>

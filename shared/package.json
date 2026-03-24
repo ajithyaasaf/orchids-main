@@ -1,8 +1,8 @@
 {
-  "name": "@tntrends/shared",
+  "name": "@orchids/shared",
   "version": "1.0.0",
   "private": true,
-  "description": "Shared TypeScript types for TNtrends e-commerce platform",
+  "description": "Shared TypeScript types for Orchid e-commerce platform",
   "main": "index.ts",
   "types": "index.ts",
   "keywords": [
@@ -10,7 +10,7 @@
     "types",
     "shared"
   ],
-  "author": "TNtrends",
+  "author": "Orchid",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.3.3"

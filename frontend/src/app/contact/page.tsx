@@ -59,10 +59,10 @@ export default function ContactPage() {
                                     <div>
                                         <h3 className="font-semibold text-text-primary mb-2">Email Us</h3>
                                         <a
-                                            href="mailto:tntrendsdigital@gmail.com"
+                                            href="mailto:contact@orchids.store"
                                             className="text-primary hover:underline"
                                         >
-                                            tntrendsdigital@gmail.com
+                                            contact@orchids.store
                                         </a>
                                         <p className="text-sm text-text-secondary mt-1">
                                             We'll respond within 24-48 hours
@@ -102,12 +102,12 @@ export default function ContactPage() {
                                     <div>
                                         <h3 className="font-semibold text-text-primary mb-2">Follow Us</h3>
                                         <a
-                                            href="https://www.instagram.com/tntrends_/"
+                                            href="https://www.instagram.com/orchids_/"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-primary hover:underline"
                                         >
-                                            @tntrends_
+                                            @orchids_official
                                         </a>
                                         <p className="text-sm text-text-secondary mt-1">
                                             Stay updated with our latest collections
@@ -171,7 +171,7 @@ export default function ContactPage() {
                             <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/20">
                                 <p className="text-sm text-text-secondary">
                                     <strong className="text-text-primary">Still have questions?</strong><br />
-                                    Email us at <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a> or
+                                    Email us at <a href="mailto:contact@orchids.store" className="text-primary hover:underline">contact@orchids.store</a> or
                                     call <a href="tel:+919150673839" className="text-primary hover:underline">+91 9150673839</a>
                                 </p>
                             </div>

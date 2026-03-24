@@ -5,10 +5,10 @@
  * with payment status gates and credit note support
  */
 
-import { Order, OrderRefund } from '@tntrends/shared';
+import { WholesaleOrder, OrderRefund } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
 import { collections } from '../config/firebase';
-import { getOrderById } from './orderService';
+import { getWholesaleOrderById } from './wholesaleOrderService';
 import { generateInvoiceNumber, generateCreditNoteNumber, hasInvoice } from './invoiceNumberService';
 
 /**
@@ -23,7 +23,7 @@ import { generateInvoiceNumber, generateCreditNoteNumber, hasInvoice } from './i
  * @param order - Order to check
  * @returns boolean - True if invoice can be generated
  */
-export const canGenerateInvoice = (order: Order): boolean => {
+export const canGenerateInvoice = (order: WholesaleOrder): boolean => {
     // RULE 1: Only paid orders
     if (order.paymentStatus !== 'paid') {
         return false;
@@ -43,7 +43,7 @@ export const canGenerateInvoice = (order: Order): boolean => {
  * @param order - Order to check
  * @returns boolean - True if invoice should be generated
  */
-export const needsInvoiceGeneration = (order: Order): boolean => {
+export const needsInvoiceGeneration = (order: WholesaleOrder): boolean => {
     return canGenerateInvoice(order) && !hasInvoice(order);
 };
 
@@ -55,7 +55,7 @@ export const needsInvoiceGeneration = (order: Order): boolean => {
  * @throws AppError if order not found or not eligible
  */
 export const generateInvoice = async (orderId: string): Promise<string> => {
-    const order = await getOrderById(orderId);
+    const order = await getWholesaleOrderById(orderId);
 
     if (!order) {
         throw new AppError('Order not found', 404);
@@ -78,7 +78,7 @@ export const generateInvoice = async (orderId: string): Promise<string> => {
     const invoiceNumber = await generateInvoiceNumber();
 
     // Update order with invoice metadata
-    await collections.orders.doc(orderId).update({
+    await collections.wholesaleOrders.doc(orderId).update({
         invoiceNumber,
         invoiceGeneratedAt: new Date(),
     });
@@ -92,7 +92,7 @@ export const generateInvoice = async (orderId: string): Promise<string> => {
  * @param orderId - ID of the order
  */
 export const markInvoiceSent = async (orderId: string): Promise<void> => {
-    await collections.orders.doc(orderId).update({
+    await collections.wholesaleOrders.doc(orderId).update({
         invoiceSent: true,
         updatedAt: new Date(),
     });
@@ -104,7 +104,7 @@ export const markInvoiceSent = async (orderId: string): Promise<void> => {
  * @param orderId - ID of the order
  */
 export const markPackingSlipPrinted = async (orderId: string): Promise<void> => {
-    await collections.orders.doc(orderId).update({
+    await collections.wholesaleOrders.doc(orderId).update({
         packingSlipPrinted: true,
         updatedAt: new Date(),
     });
@@ -126,7 +126,7 @@ export const generateCreditNote = async (
     refundReason: string,
     refundMethod: 'razorpay' | 'bank_transfer' | 'store_credit' = 'razorpay'
 ): Promise<string> => {
-    const order = await getOrderById(orderId);
+    const order = await getWholesaleOrderById(orderId);
 
     if (!order) {
         throw new AppError('Order not found', 404);
@@ -138,7 +138,7 @@ export const generateCreditNote = async (
 
     // Validate refund amount
     const existingRefunds = order.refunds || [];
-    const totalRefunded = existingRefunds.reduce((sum, r) => sum + r.refundAmount, 0);
+    const totalRefunded = existingRefunds.reduce((sum: number, r: OrderRefund) => sum + r.refundAmount, 0);
 
     if (totalRefunded + refundAmount > order.totalAmount) {
         throw new AppError('Refund amount exceeds order total', 400);
@@ -158,7 +158,7 @@ export const generateCreditNote = async (
     };
 
     // Update order with refund
-    await collections.orders.doc(orderId).update({
+    await collections.wholesaleOrders.doc(orderId).update({
         refunds: [...existingRefunds, refund],
         updatedAt: new Date(),
     });
@@ -173,7 +173,7 @@ export const generateCreditNote = async (
  * @returns Promise<OrderRefund[]> - Array of refunds
  */
 export const getOrderCreditNotes = async (orderId: string): Promise<OrderRefund[]> => {
-    const order = await getOrderById(orderId);
+    const order = await getWholesaleOrderById(orderId);
 
     if (!order) {
         throw new AppError('Order not found', 404);

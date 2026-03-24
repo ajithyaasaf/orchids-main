@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/store/wholesaleCartStore';
 import { useAuthStore } from '@/store/authStore';
 import { ShoppingCart, User, Search, Menu, LogOut, ChevronDown } from 'lucide-react';
+import { PRODUCT_CATEGORIES } from '@orchids/shared';
 
 /**
  * Main Header Component - Wholesale Platform
@@ -23,135 +24,38 @@ import { ShoppingCart, User, Search, Menu, LogOut, ChevronDown } from 'lucide-re
 // ============================================================================
 
 /**
- * Wholesale category navigation items
- * Aligned with ORCHID business categories: Newborn, Girls, Boys, Women's Apparel
+ * Wholesale category navigation items dynamically generated from shared config
+ * This ensures the frontend navigation is always perfectly in sync with the actual product data structure
  */
-const WHOLESALE_NAVIGATION = [
-    {
-        name: 'Newborn',
-        href: '/products?category=newborn',
-        sections: [
-            {
-                title: 'Clothing',
-                items: [
-                    { label: 'Jubba Sets', href: '/products?category=newborn&tag=jubba' },
-                    { label: 'Rompers', href: '/products?category=newborn&tag=rompers' },
-                    { label: 'Frocks', href: '/products?category=newborn&tag=frocks' },
-                    { label: 'Cord Sets', href: '/products?category=newborn&tag=cord-sets' },
-                ]
-            },
-            {
-                title: 'Essentials',
-                items: [
-                    { label: 'Cloth Diapers', href: '/products?category=newborn&tag=diapers' },
-                    { label: 'Gift Boxes', href: '/products?category=newborn&tag=gift-box' },
-                    { label: 'Towels & Wipes', href: '/products?category=newborn&tag=towels' },
-                    { label: 'Bibs & Caps', href: '/products?category=newborn&tag=bibs' },
-                ]
-            },
-            {
-                title: 'Bedding',
-                items: [
-                    { label: 'Baby Beds', href: '/products?category=newborn&tag=beds' },
-                    { label: 'Bed Sheets', href: '/products?category=newborn&tag=sheets' },
-                    { label: 'Mosquito Nets', href: '/products?category=newborn&tag=nets' },
-                ]
-            }
-        ]
-    },
-    {
-        name: 'Girls',
-        href: '/products?category=girls',
-        sections: [
-            {
-                title: 'Apparel',
-                items: [
-                    { label: 'Frocks & Dresses', href: '/products?category=girls&tag=frocks' },
-                    { label: 'T-Shirts & Tops', href: '/products?category=girls&tag=t-shirts' },
-                    { label: 'Sets & Combos', href: '/products?category=girls&tag=sets' },
-                ]
-            },
-            {
-                title: 'Bottoms',
-                items: [
-                    { label: 'Leggings', href: '/products?category=girls&tag=leggings' },
-                    { label: 'Skirts', href: '/products?category=girls&tag=skirts' },
-                    { label: 'Pants & Palazzo', href: '/products?category=girls&tag=pants' },
-                    { label: 'Shorts', href: '/products?category=girls&tag=shorts' },
-                ]
-            },
-            {
-                title: 'Innerwear',
-                items: [
-                    { label: 'Slips & Camisoles', href: '/products?category=girls&tag=slips' },
-                    { label: 'Panties', href: '/products?category=girls&tag=panties' },
-                    { label: 'Bloomers', href: '/products?category=girls&tag=bloomers' },
-                ]
-            }
-        ]
-    },
-    {
-        name: 'Boys',
-        href: '/products?category=boys',
-        sections: [
-            {
-                title: 'Top Wear',
-                items: [
-                    { label: 'T-Shirts', href: '/products?category=boys&tag=t-shirts' },
-                    { label: 'Shirts', href: '/products?category=boys&tag=shirts' },
-                    { label: 'Sets', href: '/products?category=boys&tag=sets' },
-                ]
-            },
-            {
-                title: 'Bottom Wear',
-                items: [
-                    { label: 'Shorts', href: '/products?category=boys&tag=shorts' },
-                    { label: 'Track Pants', href: '/products?category=boys&tag=pants' },
-                    { label: 'Jeans', href: '/products?category=boys&tag=jeans' },
-                    { label: '3/4 Pants', href: '/products?category=boys&tag=capris' },
-                ]
-            },
-            {
-                title: 'Essentials',
-                items: [
-                    { label: 'Briefs & Trunks', href: '/products?category=boys&tag=underwear' },
-                    { label: 'Vests', href: '/products?category=boys&tag=vests' },
-                    { label: 'Nightwear', href: '/products?category=boys&tag=nightwear' },
-                ]
-            }
-        ]
-    },
-    {
-        name: 'Women',
-        href: '/products?category=women',
-        sections: [
-            {
-                title: 'Maternity',
-                items: [
-                    { label: 'Feeding Dresses', href: '/products?category=women&tag=feeding' },
-                    { label: 'Maternity Tops', href: '/products?category=women&tag=maternity' },
-                    { label: 'Nighties', href: '/products?category=women&tag=nighties' },
-                ]
-            },
-            {
-                title: 'Comfy Wear',
-                items: [
-                    { label: 'T-Shirts', href: '/products?category=women&tag=t-shirts' },
-                    { label: 'Leggings', href: '/products?category=women&tag=leggings' },
-                    { label: 'Pants & Pyjamas', href: '/products?category=women&tag=pants' },
-                ]
-            },
-            {
-                title: 'Essentials',
-                items: [
-                    { label: 'Bed Sheets', href: '/products?category=women&tag=sheets' },
-                    { label: 'Bath Towels', href: '/products?category=women&tag=towels' },
-                    { label: 'Innerwear', href: '/products?category=women&tag=innerwear' },
-                ]
-            }
-        ]
+const WHOLESALE_NAVIGATION = PRODUCT_CATEGORIES.map(category => {
+    // Generate a simple short name for the navigation tab
+    let navName = category.label;
+    if (category.id === 'newborn') navName = 'Newborn';
+    else if (category.id === 'girls') navName = 'Girls';
+    else if (category.id === 'boys') navName = 'Boys';
+    else if (category.id === 'women') navName = 'Women';
+    else if (category.id === 'mens') navName = 'Mens';
+    else navName = navName.replace(' Collection', '').replace(' Apparel', '').replace(' Wear', '');
+
+    // Divvy the subcategories into columns of max 7 items for the mega menu styling
+    const maxItemsPerColumn = 7;
+    const columns = [];
+    for (let i = 0; i < category.subcategories.length; i += maxItemsPerColumn) {
+        columns.push(category.subcategories.slice(i, i + maxItemsPerColumn));
     }
-];
+
+    return {
+        name: navName,
+        href: `/products?category=${category.id}`,
+        sections: columns.map((column, index) => ({
+            title: index === 0 ? 'Categories' : `More ${navName}`,
+            items: column.map(tag => ({
+                label: tag.label,
+                href: `/products?category=${category.id}&tag=${tag.value}`
+            }))
+        }))
+    };
+});
 
 /**
  * Mobile menu navigation items

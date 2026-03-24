@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { wholesaleProductsApi, wholesaleOrdersApi, wholesaleDashboardApi } from '@/lib/api/wholesaleApi';
 import { Package, ShoppingBag, TrendingUp, DollarSign, Users, BarChart3 } from 'lucide-react';
-import type { DashboardAnalytics } from '@tntrends/shared';
+import type { DashboardAnalytics } from '@orchids/shared';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({

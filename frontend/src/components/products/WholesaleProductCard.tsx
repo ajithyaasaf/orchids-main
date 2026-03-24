@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Package, ArrowRight, AlertCircle } from 'lucide-react';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct } from '@orchids/shared';
 
 interface WholesaleProductCardProps {
     product: WholesaleProduct;
@@ -36,7 +36,7 @@ export const WholesaleProductCard: React.FC<WholesaleProductCardProps> = ({
 
     return (
         <Link
-            href={`/product/${product.id}`}
+            href={`/product/${product.slug || product.id}`}
             className={`group flex flex-col h-full bg-white transition-all duration-300 ${className}`}
         >
             {/* Image Container */}

@@ -162,39 +162,41 @@ export default function WholesaleCartPage() {
                         <div className="bg-white rounded-xl p-6 shadow-soft sticky top-24">
                             <h2 className="text-xl font-heading font-bold text-gray-900 mb-6">Order Summary</h2>
 
-                            {/* Stats */}
-                            <div className="grid grid-cols-2 gap-4 mb-6">
-                                <div className="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
-                                    <span className="block text-2xl font-bold text-gray-900">{getTotalBundles()}</span>
-                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Bundles</span>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
-                                    <span className="block text-2xl font-bold text-gray-900">{getTotalPieces()}</span>
-                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Px Total</span>
+                            {/* Total Items Count (Subtle) */}
+                            <div className="flex justify-between items-center mb-6 pb-6 border-b border-gray-100">
+                                <span className="text-gray-500 font-medium">Order Composition</span>
+                                <div className="text-right">
+                                    <span className="block text-sm font-bold text-gray-900">
+                                        {getTotalBundles()} {getTotalBundles() === 1 ? 'Bundle' : 'Bundles'}
+                                    </span>
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+                                        {getTotalPieces()} Pieces total
+                                    </span>
                                 </div>
                             </div>
 
                             {/* Totals */}
                             <div className="space-y-3 mb-6 pb-6 border-b border-gray-100">
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Subtotal</span>
-                                    <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
+                                <div className="flex justify-between text-gray-500 text-sm">
+                                    <span>Subtotal (Taxable Value)</span>
+                                    <span className="font-semibold text-gray-900">₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                 </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span>GST ({(gstRate * 100).toFixed(0)}%)</span>
-                                    <span className="font-medium text-gray-900">₹{gst.toFixed(2)}</span>
+                                <div className="flex justify-between text-gray-500 text-sm">
+                                    <span>GST Extra ({(gstRate * 100).toFixed(0)}%)</span>
+                                    <span className="font-semibold text-gray-900">₹{gst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                 </div>
-                                <div className="flex justify-between items-end pt-2">
-                                    <span className="text-lg font-bold text-gray-900">Total</span>
+                                <div className="flex justify-between items-end pt-4">
+                                    <span className="text-lg font-bold text-gray-900">Total Payable</span>
                                     <span className="text-3xl font-heading font-bold text-primary">₹{total.toLocaleString('en-IN')}</span>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => router.push('/wholesale/checkout')}
-                                className="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all mb-4"
+                                className="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all mb-4 flex items-center justify-center gap-2"
                             >
                                 Proceed to Checkout
+                                <span className="text-xl">🔒</span>
                             </button>
 
                             <button

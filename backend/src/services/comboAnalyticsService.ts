@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { ComboAnalyticsEvent, ComboAnalyticsEventType, ComboAnalytics } from '@tntrends/shared';
+import { ComboAnalyticsEvent, ComboAnalyticsEventType, ComboAnalytics } from '@orchids/shared';
 
 /**
  * Combo Analytics Service - Event tracking and aggregation

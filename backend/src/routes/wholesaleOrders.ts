@@ -1,9 +1,8 @@
 import express from 'express';
-import { verifyToken } from '../middleware/auth';
+import { verifyToken, AuthRequest, requireOwnerOrAdmin } from '../middleware/auth';
 import { requireAdmin, requireSuperAdmin } from '../middleware/roleCheck';
 import { collections } from '../config/firebase';
-import { WholesaleOrder } from '@tntrends/shared';
-import { AppError } from '../middleware/errorHandler';
+import { WholesaleOrder } from '@orchids/shared';
 import admin from 'firebase-admin';
 
 const router = express.Router();
@@ -22,6 +21,51 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
     cancelled: [],  // Terminal state
 };
 
+import { createWholesaleOrder } from '../services/wholesaleOrderService';
+
+/**
+ * POST /api/wholesale/orders
+ * Create a new wholesale order (Zero Trust, server-side calculation)
+ *
+ * ✅ Server re-calculates all prices — client cannot manipulate totals
+ * ✅ Atomic Firestore transaction — prevents overselling in race conditions
+ * ✅ Idempotency key — prevents double orders from retries
+ * ✅ Address re-validated on the backend
+ */
+router.post('/', verifyToken, async (req: AuthRequest, res, next) => {
+    try {
+        const { cartItems, address, expectedTotalAmount, idempotencyKey, isTestMode } = req.body;
+        const userId = req.user!.uid;
+
+        if (!cartItems || !address || !idempotencyKey) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: cartItems, address, idempotencyKey',
+            });
+        }
+
+        const result = await createWholesaleOrder({
+            userId,
+            address,
+            cartItems,
+            expectedTotalAmount,
+            idempotencyKey,
+            isTestMode, // Passed to service for dummy test bypass
+        });
+
+        res.status(201).json({
+            success: true,
+            data: {
+                orderId: result.orderId,
+                order: result.order,
+            },
+            message: 'Order created successfully',
+        });
+    } catch (error) {
+        next(error); // AppError will be handled by the global error handler
+    }
+});
+
 /**
  * PATCH /api/wholesale/orders/:id/status
  * Update order status with enforced transitions
@@ -33,7 +77,7 @@ router.patch('/:id/status', verifyToken, requireAdmin, async (req, res, next) =>
         const adminId = (req as any).user.uid;
 
         // Get current order
-        const orderDoc = await collections.orders.doc(orderId).get();
+        const orderDoc = await collections.wholesaleOrders.doc(orderId).get();
         if (!orderDoc.exists) {
             return res.status(404).json({
                 success: false,
@@ -62,7 +106,7 @@ router.patch('/:id/status', verifyToken, requireAdmin, async (req, res, next) =>
             notes: notes || '',
         };
 
-        await collections.orders.doc(orderId).update({
+        await collections.wholesaleOrders.doc(orderId).update({
             orderStatus,
             statusHistory: admin.firestore.FieldValue.arrayUnion(statusEntry),
             updatedAt: new Date(),
@@ -97,7 +141,7 @@ router.patch('/:id/discount', verifyToken, requireSuperAdmin, async (req, res, n
         }
 
         // Get order
-        const orderDoc = await collections.orders.doc(orderId).get();
+        const orderDoc = await collections.wholesaleOrders.doc(orderId).get();
         if (!orderDoc.exists) {
             return res.status(404).json({
                 success: false,
@@ -126,7 +170,7 @@ router.patch('/:id/discount', verifyToken, requireSuperAdmin, async (req, res, n
         // Recalculate total
         const newTotal = order.subtotal + order.gst - discount;
 
-        await collections.orders.doc(orderId).update({
+        await collections.wholesaleOrders.doc(orderId).update({
             adminDiscount: discount,
             adminDiscountHistory: admin.firestore.FieldValue.arrayUnion(discountEntry),
             totalAmount: newTotal,
@@ -147,12 +191,109 @@ router.patch('/:id/discount', verifyToken, requireSuperAdmin, async (req, res, n
 });
 
 /**
+ * PATCH /api/wholesale/orders/:id/tracking
+ * Add shipping tracking number (admin only)
+ */
+router.patch('/:id/tracking', verifyToken, requireAdmin, async (req, res, next) => {
+    try {
+        const { trackingNumber, courierName } = req.body;
+        const orderId = req.params.id;
+
+        if (!trackingNumber || !courierName) {
+            return res.status(400).json({
+                success: false,
+                error: 'trackingNumber and courierName are required',
+            });
+        }
+
+        const orderDoc = await collections.wholesaleOrders.doc(orderId).get();
+        if (!orderDoc.exists) {
+            return res.status(404).json({ success: false, error: 'Order not found' });
+        }
+
+        await collections.wholesaleOrders.doc(orderId).update({
+            trackingNumber,
+            courierName,
+            updatedAt: new Date(),
+        });
+
+        res.json({ success: true, message: 'Tracking info added successfully' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * PATCH /api/wholesale/orders/:id/notes
+ * Add admin internal note to order
+ */
+router.patch('/:id/notes', verifyToken, requireAdmin, async (req, res, next) => {
+    try {
+        const { note } = req.body;
+        const orderId = req.params.id;
+        const adminId = (req as any).user.uid;
+
+        if (!note || note.trim().length === 0) {
+            return res.status(400).json({ success: false, error: 'Note cannot be empty' });
+        }
+
+        const noteEntry = {
+            text: note.trim(),
+            addedBy: adminId,
+            addedAt: new Date(),
+        };
+
+        await collections.wholesaleOrders.doc(orderId).update({
+            adminNotes: admin.firestore.FieldValue.arrayUnion(noteEntry),
+            updatedAt: new Date(),
+        });
+
+        res.json({ success: true, message: 'Note added successfully' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * GET /api/wholesale/orders/stats/summary
+ * Get order stats for admin dashboard
+ */
+router.get('/stats/summary', verifyToken, requireAdmin, async (req, res, next) => {
+    try {
+        const snapshot = await collections.wholesaleOrders.get();
+        const orders = snapshot.docs.map((d: any) => d.data() as WholesaleOrder);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const stats = {
+            total: orders.length,
+            pending: orders.filter((o) => o.orderStatus === 'placed').length,
+            processing: orders.filter((o) => o.orderStatus === 'processing').length,
+            shipped: orders.filter((o) => o.orderStatus === 'shipped').length,
+            delivered: orders.filter((o) => o.orderStatus === 'delivered').length,
+            cancelled: orders.filter((o) => o.orderStatus === 'cancelled').length,
+            unpaidAmount: orders
+                .filter((o) => o.paymentStatus === 'pending')
+                .reduce((sum, o) => sum + o.totalAmount, 0),
+            totalRevenue: orders
+                .filter((o) => o.paymentStatus === 'paid')
+                .reduce((sum, o) => sum + o.totalAmount, 0),
+        };
+
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * GET /api/wholesale/orders/:id
  * Get order details
  */
 router.get('/:id', verifyToken, async (req, res, next) => {
     try {
-        const orderDoc = await collections.orders.doc(req.params.id).get();
+        const orderDoc = await collections.wholesaleOrders.doc(req.params.id).get();
 
         if (!orderDoc.exists) {
             return res.status(404).json({
@@ -169,20 +310,47 @@ router.get('/:id', verifyToken, async (req, res, next) => {
 });
 
 /**
+ * GET /api/wholesale/orders/user/:userId
+ * Get orders for a specific user
+ * Protected: Resource owner or admin only
+ */
+router.get('/user/:userId', verifyToken, requireOwnerOrAdmin, async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const { limit = 50 } = req.query;
+
+        const snapshot = await collections.wholesaleOrders
+            .where('userId', '==', userId)
+            .orderBy('createdAt', 'desc')
+            .limit(Number(limit))
+            .get();
+
+        const orders = snapshot.docs.map((doc: any) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+
+        res.json({ success: true, data: orders });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * GET /api/wholesale/orders
- * Get all orders (with optional filters)
+ * Get all orders (with optional filters) - Admin only
  */
 router.get('/', verifyToken, requireAdmin, async (req, res, next) => {
     try {
         const { status, limit = 50 } = req.query;
 
-        let query: any = collections.orders.orderBy('createdAt', 'desc');
+        let query: any = collections.wholesaleOrders;
 
         if (status) {
             query = query.where('orderStatus', '==', status);
         }
 
-        query = query.limit(Number(limit));
+        query = query.orderBy('createdAt', 'desc').limit(Number(limit));
 
         const snapshot = await query.get();
         const orders = snapshot.docs.map((doc: any) => ({

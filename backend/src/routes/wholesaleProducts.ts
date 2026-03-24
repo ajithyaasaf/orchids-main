@@ -5,6 +5,7 @@ import {
     createWholesaleProduct,
     updateWholesaleProduct,
     getWholesaleProductById,
+    getWholesaleProductBySlug,
     getAllWholesaleProducts,
     deleteWholesaleProduct,
 } from '../services/wholesaleProductService';
@@ -32,11 +33,24 @@ router.get('/', async (req, res, next) => {
 
 /**
  * GET /api/wholesale/products/:id
- * Get single wholesale product
+ * Get single wholesale product by ID
  */
 router.get('/:id', async (req, res, next) => {
     try {
         const product = await getWholesaleProductById(req.params.id);
+        res.json({ success: true, data: product });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * GET /api/wholesale/products/slug/:slug
+ * Get single wholesale product by slug for SEO URLs
+ */
+router.get('/slug/:slug', async (req, res, next) => {
+    try {
+        const product = await getWholesaleProductBySlug(req.params.slug);
         res.json({ success: true, data: product });
     } catch (error) {
         next(error);

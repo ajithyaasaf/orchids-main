@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
-import { ProductsGrid } from '@/components/products/ProductsGrid';
-import type { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProductCard } from '@/components/products/WholesaleProductCard';
+import { type WholesaleProduct, PRODUCT_CATEGORIES } from '@orchids/shared';
 import { Search, Filter } from 'lucide-react';
 
 /**
@@ -23,6 +23,7 @@ import { Search, Filter } from 'lucide-react';
 
 interface SearchPageClientProps {
     initialQuery?: string;
+    initialProducts: WholesaleProduct[];
 }
 
 // ============================================================================
@@ -87,40 +88,15 @@ const sortProducts = (
 // MAIN COMPONENT
 // ============================================================================
 
-export function SearchPageClient({ initialQuery = '' }: SearchPageClientProps) {
+export function SearchPageClient({ initialQuery = '', initialProducts = [] }: SearchPageClientProps) {
     // ========================================
     // State Management
     // ========================================
 
     const [searchTerm, setSearchTerm] = useState(initialQuery);
-    const [allProducts, setAllProducts] = useState<WholesaleProduct[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [allProducts, setAllProducts] = useState<WholesaleProduct[]>(initialProducts);
+    const [loading, setLoading] = useState(false);
     const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_asc' | 'price_desc'>('newest');
-
-    // ========================================
-    // Data Fetching
-    // ========================================
-
-    /**
-     * Load all wholesale products on component mount
-     * Search is performed client-side for instant results
-     */
-    useEffect(() => {
-        const loadProducts = async () => {
-            setLoading(true);
-            try {
-                const products = await wholesaleProductsApi.getAll();
-                setAllProducts(products);
-            } catch (error) {
-                console.error('Failed to load products for search:', error);
-                setAllProducts([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadProducts();
-    }, []); // Run once on mount
 
     // ========================================
     // Computed Values
@@ -248,7 +224,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchTerm, products }) =
 
         {/* Products Grid or Empty State */}
         {products.length > 0 ? (
-            <ProductsGrid products={products} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product) => (
+                    <WholesaleProductCard key={product.id} product={product} />
+                ))}
+            </div>
         ) : (
             <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -259,13 +239,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchTerm, products }) =
                     Try different keywords or browse our categories
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 mt-6">
-                    {['Newborn', 'Girls', 'Boys', 'Women'].map(category => (
+                    {PRODUCT_CATEGORIES.map(category => (
                         <a
-                            key={category}
-                            href={`/products?category=${category.toLowerCase()}`}
+                            key={category.id}
+                            href={`/products?category=${category.id}`}
                             className="px-4 py-2 bg-primary-light text-primary rounded-lg hover:bg-pink-100 transition-colors text-sm font-medium"
                         >
-                            Browse {category}
+                            Browse {category.label}
                         </a>
                     ))}
                 </div>
@@ -295,15 +275,15 @@ const EmptySearchState: React.FC<EmptySearchStateProps> = ({ totalProducts }) =>
             <p className="text-sm text-gray-700 mb-2 font-medium">💡 Search Examples:</p>
             <div className="flex flex-wrap justify-center gap-2">
                 {[
-                    'newborn',
-                    'girls dress',
-                    'boys shirt',
-                    'women kurti',
+                    PRODUCT_CATEGORIES[0]?.label.split(' ')[0].toLowerCase() || 'newborn',
+                    (PRODUCT_CATEGORIES[1]?.label.split(' ')[0].toLowerCase() || 'girls') + ' ' + (PRODUCT_CATEGORIES[1]?.subcategories[0]?.label.split(' ')[0].toLowerCase() || 'dress'),
+                    (PRODUCT_CATEGORIES[2]?.label.split(' ')[0].toLowerCase() || 'boys') + ' ' + (PRODUCT_CATEGORIES[2]?.subcategories[0]?.label.split(' ')[0].toLowerCase() || 'shirt'),
+                    (PRODUCT_CATEGORIES[3]?.label.split(' ')[0].toLowerCase() || 'women') + ' ' + (PRODUCT_CATEGORIES[3]?.subcategories[0]?.label.split(' ')[0].toLowerCase() || 'kurti'),
                     'size M',
                     '3-6 months'
-                ].map(example => (
+                ].filter(Boolean).map((example, index) => (
                     <button
-                        key={example}
+                        key={`${example}-${index}`}
                         onClick={() => {
                             const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
                             if (searchInput) {

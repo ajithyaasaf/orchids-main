@@ -3,12 +3,14 @@ import {
     createRazorpayOrder,
     verifyPaymentSignature,
 } from '../services/paymentService';
-import { updatePaymentStatus, deductOrderStock, getOrderById } from '../services/orderService';
 import { deductBundleStock } from '../services/wholesaleStockService';
 import { verifyToken, AuthRequest } from '../middleware/auth';
 import { paymentLimiter } from '../middleware/rateLimiter';
 import { collections } from '../config/firebase';
+import { WholesaleOrder } from '@orchids/shared';
+import admin from 'firebase-admin';
 import logger from '../utils/logger';
+import { getWholesaleOrderById, updateWholesalePaymentStatus } from '../services/wholesaleOrderService';
 
 const router = express.Router();
 
@@ -37,8 +39,8 @@ router.post(
                 return;
             }
 
-            // SECURITY: Fetch order from database (single source of truth)
-            const order = await getOrderById(orderId);
+            // SECURITY: Fetch wholesale order from database (single source of truth)
+            const order = await getWholesaleOrderById(orderId);
 
             if (!order) {
                 res.status(404).json({
@@ -75,7 +77,7 @@ router.post(
             const razorpayOrder = await createRazorpayOrder(order.totalAmount);
 
             // SECURITY: Store Razorpay order ID in our order for verification
-            await collections.orders.doc(orderId).update({
+            await collections.wholesaleOrders.doc(orderId).update({
                 razorpayOrderId: razorpayOrder.orderId,
             });
 
@@ -133,7 +135,7 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
         }
 
         // SECURITY: Check if this payment ID was already used (replay attack prevention)
-        const existingPayments = await collections.orders
+        const existingPayments = await collections.wholesaleOrders
             .where('razorpayPaymentId', '==', razorpayPaymentId)
             .get();
 
@@ -151,7 +153,7 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
         }
 
         // SECURITY: Verify the razorpayOrderId matches our order's expected order ID
-        const order = await getOrderById(orderId);
+        const order = await getWholesaleOrderById(orderId);
 
         if (!order) {
             res.status(404).json({
@@ -198,21 +200,13 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
 
         if (isValid && orderId) {
             // 1. Update order payment status to paid
-            const updatedOrder = await updatePaymentStatus(orderId, 'paid', razorpayPaymentId);
+            const updatedOrder = await updateWholesalePaymentStatus(orderId, 'paid', razorpayPaymentId);
 
             // 2. CRITICAL STEP: Deduct bundle inventory atomically
             // This also handles product price locking after first paid order
             try {
-                // Check if this is a wholesale order (has bundlesOrdered field)
-                if (updatedOrder.items?.[0]?.bundlesOrdered !== undefined) {
-                    // Wholesale order - use bundle stock deduction
-                    await deductBundleStock(orderId, updatedOrder.items);
-                    logger.info(`Bundle stock deducted for wholesale order: ${orderId}`);
-                } else {
-                    // Retail order - use regular stock deduction
-                    await deductOrderStock(orderId);
-                    logger.info(`Regular stock deducted for retail order: ${orderId}`);
-                }
+                await deductBundleStock(orderId, updatedOrder.items);
+                logger.info(`Bundle stock deducted for wholesale order: ${orderId}`);
             } catch (stockError) {
                 logger.error('Stock deduction failed after payment', stockError);
                 // Payment succeeded but stock deduction failed - requires manual intervention
@@ -222,7 +216,7 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
             // 3. AUTO-GENERATE INVOICE for paid orders
             try {
                 const { generateInvoice, needsInvoiceGeneration } = await import('../services/invoiceService');
-                if (needsInvoiceGeneration(updatedOrder)) {
+                if (needsInvoiceGeneration(updatedOrder as any)) {
                     await generateInvoice(orderId);
                     logger.info(`Invoice auto-generated for order: ${orderId}`);
                 }
@@ -268,7 +262,7 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
         } else {
             // Mark payment as failed
             if (orderId) {
-                await updatePaymentStatus(orderId, 'failed');
+                await updateWholesalePaymentStatus(orderId, 'failed');
             }
 
             logger.warn(`Payment verification failed for order: ${orderId}`);

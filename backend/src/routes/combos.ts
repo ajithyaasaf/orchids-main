@@ -10,8 +10,8 @@ import {
 import { calculateBestPrice, validateComboAtCheckout } from '../services/comboPricingService';
 import { getComboAnalytics, getAllCombosAnalytics, trackComboEvent } from '../services/comboAnalyticsService';
 import { verifyToken, optionalAuth } from '../middleware/auth';
+import { WholesaleCheckoutBundle } from '../services/comboPricingService';
 import { requireAdmin, requireSuperAdmin } from '../middleware/roleCheck';
-import { CartItem } from '@tntrends/shared';
 
 const router = express.Router();
 
@@ -46,7 +46,7 @@ router.get('/active', async (req: Request, res: Response) => {
  */
 router.post('/calculate', async (req: Request, res: Response) => {
     try {
-        const { cartItems } = req.body as { cartItems: CartItem[] };
+        const { cartItems } = req.body as { cartItems: WholesaleCheckoutBundle[] };
 
         if (!cartItems || !Array.isArray(cartItems)) {
             res.status(400).json({
@@ -62,7 +62,7 @@ router.post('/calculate', async (req: Request, res: Response) => {
         if (bestPrice.type === 'combo' && bestPrice.appliedCombo) {
             await trackComboEvent('view', bestPrice.appliedCombo.comboId, {
                 cartValue: bestPrice.total,
-                itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+                itemCount: cartItems.reduce((sum, item) => sum + item.bundlesOrdered, 0),
             });
         }
 
@@ -85,7 +85,7 @@ router.post('/calculate', async (req: Request, res: Response) => {
 router.post('/validate', async (req: Request, res: Response) => {
     try {
         const { cartItems, comboId } = req.body as {
-            cartItems: CartItem[];
+            cartItems: WholesaleCheckoutBundle[];
             comboId: string;
         };
 

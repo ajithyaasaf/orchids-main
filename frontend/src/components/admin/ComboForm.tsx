@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { ComboOffer, ComboType } from '@tntrends/shared';
+import { ComboOffer, ComboType } from '@orchids/shared';
 import { useToast } from '@/context/ToastContext';
 
 interface ComboFormProps {

@@ -81,9 +81,9 @@ export default function RegisterPage() {
         <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full">
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-primary mb-2">TNtrends</h1>
+                    <h1 className="text-4xl font-bold text-primary mb-2">Orchid</h1>
                     <h2 className="text-2xl font-semibold text-slate-900">Create Account</h2>
-                    <p className="text-slate-500 mt-2">Join TNtrends today</p>
+                    <p className="text-slate-500 mt-2">Join Orchid today</p>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 border border-slate-100">

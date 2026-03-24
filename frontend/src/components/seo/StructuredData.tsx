@@ -3,7 +3,7 @@
 import Script from 'next/script';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct } from '@orchids/shared';
 
 /**
  * SEO Structured Data Components
@@ -77,7 +77,7 @@ export function ProductSchema({ product }: ProductSchemaProps) {
         },
         offers: {
             '@type': 'Offer',
-            url: `${siteUrl}/product/${product.id}`,
+            url: `${siteUrl}/product/${product.slug || product.id}`,
             priceCurrency: 'INR',
             price: product.bundlePrice,
             priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now

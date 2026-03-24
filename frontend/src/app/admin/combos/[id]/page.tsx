@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { comboApi } from '@/lib/api';
 import ComboForm from '@/components/admin/ComboForm';
-import { ComboOffer } from '@tntrends/shared';
+import { ComboOffer } from '@orchids/shared';
 
 export default function EditComboPage({ params }: { params: { id: string } }) {
     const router = useRouter();

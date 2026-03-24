@@ -1,7 +1,7 @@
 import razorpayInstance from '../config/razorpay';
 import crypto from 'crypto';
 import { AppError } from '../middleware/errorHandler';
-import { RazorpayOrderData, PaymentVerification } from '@tntrends/shared';
+import { RazorpayOrderData, PaymentVerification } from '@orchids/shared';
 
 /**
  * Create Razorpay order

@@ -6,12 +6,12 @@ import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { orderApi } from '@/lib/api';
 import { CheckCircle, Package } from 'lucide-react';
-import { Order } from '@tntrends/shared';
+import { WholesaleOrder } from '@orchids/shared';
 
 function OrderSuccessContent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get('orderId');
-    const [order, setOrder] = useState<Order | null>(null);
+    const [order, setOrder] = useState<WholesaleOrder | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

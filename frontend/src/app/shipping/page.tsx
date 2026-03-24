@@ -156,7 +156,7 @@ export default function ShippingPage() {
                                     <li>Track your order anytime from your account under "My Orders"</li>
                                     <li>Tracking information is updated regularly by our courier partners</li>
                                     <li>You'll receive email updates at key stages: Order Placed, Dispatched, Out for Delivery, Delivered</li>
-                                    <li>If you face any tracking issues, contact us at <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a></li>
+                                    <li>If you face any tracking issues, contact us at <a href="mailto:contact@orchids.store" className="text-primary hover:underline">contact@orchids.store</a></li>
                                 </ul>
                             </section>
 
@@ -200,14 +200,14 @@ export default function ShippingPage() {
                                 </div>
                                 <p className="text-text-secondary mt-4">
                                     <strong>Exception:</strong> If you receive a damaged or defective product, contact us within
-                                    48 hours of delivery at <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a> with
+                                    48 hours of delivery at <a href="mailto:contact@orchids.store" className="text-primary hover:underline">contact@orchids.store</a> with
                                     clear photos. We'll review each case individually and provide a suitable resolution.
                                 </p>
                                 <p className="text-text-secondary mb-4">
                                     For any shipping-related queries, feel free to reach out:
                                 </p>
                                 <div className="bg-primary/5 p-6 rounded-lg border border-primary/20">
-                                    <p className="text-text-secondary"><strong>Email:</strong> <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a></p>
+                                    <p className="text-text-secondary"><strong>Email:</strong> <a href="mailto:contact@orchids.store" className="text-primary hover:underline">contact@orchids.store</a></p>
                                     <p className="text-text-secondary"><strong>Phone:</strong> <a href="tel:+919150673839" className="text-primary hover:underline">+91 9150673839</a></p>
                                     <p className="text-text-secondary"><strong>Support Hours:</strong> Mon - Sat, 10 AM - 7 PM IST</p>
                                 </div>

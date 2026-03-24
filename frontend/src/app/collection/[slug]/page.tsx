@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { collectionApi } from '@/lib/api';
 import { CollectionPageClient } from '@/components/pages/CollectionPageClient';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct } from '@orchids/shared';
 
 interface PageProps {
     params: { slug: string };
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 
         return {
-            title: collection.seo.metaTitle || `${collection.name} | TNtrends`,
+            title: collection.seo.metaTitle || `${collection.name} | Orchid`,
             description: collection.seo.metaDescription || collection.description,
             keywords: collection.seo.keywords,
             openGraph: {
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         };
     } catch (error) {
         return {
-            title: 'Collection Not Found | TNtrends',
+            title: 'Collection Not Found | Orchid',
             description: 'The requested collection could not be found.',
         };
     }

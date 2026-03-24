@@ -3,9 +3,9 @@ import type {
     CustomerInsight,
     CustomerMetadata,
     CustomerFilters,
-    Order,
+    WholesaleOrder as Order,
     User
-} from '@tntrends/shared';
+} from '@orchids/shared';
 
 /**
  * CRITICAL: Update customer cache when order is created
@@ -226,7 +226,7 @@ const calculateFavoriteProducts = (orders: Order[]): string[] => {
     const productCounts: Record<string, number> = {};
 
     orders.forEach(order => {
-        order.items.forEach(item => {
+        order.items.forEach((item: any) => {
             productCounts[item.productId] = (productCounts[item.productId] || 0) + item.quantity;
         });
     });

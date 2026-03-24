@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct } from '@orchids/shared';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 
 /**

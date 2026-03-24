@@ -1,4 +1,4 @@
-import { Address } from '@tntrends/shared';
+import { Address } from '@orchids/shared';
 
 /**
  * Logistics Service

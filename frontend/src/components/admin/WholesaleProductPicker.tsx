@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct } from '@orchids/shared';
 import { Search, X, Check, Loader2, Package } from 'lucide-react';
 
 interface WholesaleProductPickerProps {
@@ -159,7 +159,7 @@ export const WholesaleProductPicker: React.FC<WholesaleProductPickerProps> = ({
                                 <div className="flex-shrink-0">
                                     {product.images && product.images.length > 0 ? (
                                         <img
-                                            src={product.images[0].url}
+                                            src={product.images[0]}
                                             alt={product.title}
                                             className="w-16 h-16 rounded-lg object-cover"
                                         />
@@ -232,7 +232,7 @@ export const WholesaleProductPicker: React.FC<WholesaleProductPickerProps> = ({
                                 <div className="flex-shrink-0">
                                     {product.images && product.images.length > 0 ? (
                                         <img
-                                            src={product.images[0].url}
+                                            src={product.images[0]}
                                             alt={product.title}
                                             className="w-12 h-12 rounded object-cover"
                                         />

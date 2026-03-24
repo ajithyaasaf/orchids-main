@@ -1,0 +1,145 @@
+﻿
+> @tntrends/frontend@1.0.0 build
+> next build
+
+  Γû▓ Next.js 14.2.33
+  - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+node.exe : [baseline-br
+owser-mapping] The 
+data in this module is 
+over two months old.  
+To ensure accurate 
+Baseline data, please 
+update: `npm i baseline
+-browser-mapping@latest
+ -D`
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ([baseline-bro   
+ ws...ping@latest -    
+D`:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/29) ...
+   Generating static pages (7/29) 
+   Generating static pages (14/29) 
+
+Error occurred 
+prerendering page 
+"/sitemap.xml". Read 
+more: https://nextjs.or
+g/docs/messages/prerend
+er-error
+
+RangeError: Invalid 
+time value
+    at 
+Date.toISOString 
+(<anonymous>)
+    at o (C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\server\chunks\91.js
+:10:74)
+    at s (C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\server\chunks\91.js
+:13:134)
+    at y (C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\server\app\sitemap.
+xml\route.js:1:3282)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+compiled\next-server\ap
+p-route.runtime.prod.js
+:6:38411
+    at async 
+e_.execute 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+compiled\next-server\ap
+p-route.runtime.prod.js
+:6:27880)
+    at async e_.handle 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+compiled\next-server\ap
+p-route.runtime.prod.js
+:6:39943)
+    at async 
+exportAppRoute 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+export\routes\app-route
+.js:77:26)
+    at async 
+exportPageImpl 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+export\worker.js:175:20
+)
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20)
+   Generating static pages (21/29) 
+ Γ£ô Generating static pages (29/29)
+
+> Export encountered 
+errors on following 
+paths:
+	/sitemap.xml/route: 
+/sitemap.xml

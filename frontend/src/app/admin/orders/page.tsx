@@ -2,22 +2,22 @@
 
 import React, { useEffect, useState } from 'react';
 import { orderApi, invoiceApi } from '@/lib/api';
-import { Order } from '@tntrends/shared';
+import { WholesaleOrder } from '@orchids/shared';
 import { Package, Clock, Truck, CheckCircle, XCircle, FileText, Package as BoxIcon, Download, Eye } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useAuthStore } from '@/store/authStore';
 import { auth } from '@/lib/firebase';
 
-const statusConfig = {
+const statusConfig: Record<WholesaleOrder['orderStatus'], any> = {
     placed: { label: 'Placed', icon: Package, color: 'text-blue-500' },
-    confirmed: { label: 'Confirmed', icon: CheckCircle, color: 'text-green-500' },
+    processing: { label: 'Processing', icon: CheckCircle, color: 'text-green-500' },
     shipped: { label: 'Shipped', icon: Truck, color: 'text-purple-500' },
     delivered: { label: 'Delivered', icon: CheckCircle, color: 'text-success' },
     cancelled: { label: 'Cancelled', icon: XCircle, color: 'text-error' },
 };
 
 export default function AdminOrdersPage() {
-    const [orders, setOrders] = useState<Order[]>([]);
+    const [orders, setOrders] = useState<WholesaleOrder[]>([]);
     const { showToast } = useToast();
     const { user } = useAuthStore();
     const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ export default function AdminOrdersPage() {
         }
     };
 
-    const handleStatusUpdate = async (orderId: string, newStatus: Order['orderStatus']) => {
+    const handleStatusUpdate = async (orderId: string, newStatus: WholesaleOrder['orderStatus']) => {
         try {
             await orderApi.updateStatus(orderId, newStatus);
             setOrders(orders.map(o => o.id === orderId ? { ...o, orderStatus: newStatus } : o));
@@ -143,7 +143,7 @@ export default function AdminOrdersPage() {
             {/* Filter Tabs */}
             <div className="bg-white rounded-xl shadow-soft p-4 md:p-6 mb-4 md:mb-6">
                 <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 -mb-2 scrollbar-hide">
-                    {['all', 'placed', 'confirmed', 'shipped', 'delivered', 'cancelled'].map((status) => (
+                    {['all', 'placed', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
@@ -202,23 +202,11 @@ export default function AdminOrdersPage() {
                                 <div className="border-t border-border pt-4 mb-4">
                                     <h4 className="font-semibold mb-2">Items:</h4>
                                     <ul className="space-y-1">
-                                        {order.items.map((item, idx) => {
-                                            if ('size' in item) {
-                                                // Retail Item
-                                                return (
-                                                    <li key={idx} className="text-sm text-text-secondary">
-                                                        {item.productTitle} - Size {item.size} × {item.quantity}
-                                                    </li>
-                                                );
-                                            } else {
-                                                // Wholesale Item
-                                                return (
-                                                    <li key={idx} className="text-sm text-text-secondary">
-                                                        {item.productTitle} - {item.bundlesOrdered} Bundles ({item.bundleQty} pcs/bundle)
-                                                    </li>
-                                                );
-                                            }
-                                        })}
+                                        {order.items.map((item, idx) => (
+                                            <li key={idx} className="text-sm text-text-secondary">
+                                                {(item as any).productTitle} — {(item as any).bundlesOrdered} Bundle{(item as any).bundlesOrdered > 1 ? 's' : ''} ({(item as any).bundleQty} pcs/bundle)
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 

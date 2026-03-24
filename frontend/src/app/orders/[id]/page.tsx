@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { WholesaleOrder } from '@tntrends/shared';
+import { WholesaleOrder } from '@orchids/shared';
 import Link from 'next/link';
+import { Truck, Package, Calendar, MapPin, CreditCard, Tag, ArrowLeft } from 'lucide-react';
 
 /**
  * Order Status Page
@@ -12,8 +13,9 @@ import Link from 'next/link';
  */
 
 import { useAuthToken } from '@/hooks/useAuthToken';
+import { formatDateOnly, formatRelative } from '@/lib/dateUtils';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function OrderStatusPage() {
     const params = useParams();
@@ -126,77 +128,150 @@ export default function OrderStatusPage() {
             )}
 
             {/* Order Header */}
-            <div className="bg-white border rounded-lg p-6 mb-6">
-                <div className="flex justify-between items-start mb-4">
+            <div className="bg-white border-2 border-primary/10 rounded-2xl p-8 mb-8 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-6 opacity-5 select-none pointer-events-none">
+                    <Package size={120} className="text-primary -rotate-12" />
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 relative z-10">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Order Details</h1>
-                        <p className="text-gray-600">
-                            Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}
-                        </p>
-                    </div>
-                    <div className="text-right">
-                        <div className="mb-2">
-                            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(order.orderStatus)}`}>
-                                {order.orderStatus.toUpperCase()}
+                        <div className="flex items-center gap-2 text-primary mb-3">
+                            <span className="px-2 py-0.5 bg-primary/10 rounded text-[10px] font-black uppercase tracking-widest">
+                                Wholesale Order
                             </span>
                         </div>
-                        <div className={`text-sm font-semibold ${getPaymentStatusColor(order.paymentStatus)}`}>
-                            Payment: {order.paymentStatus.toUpperCase()}
+                        <h1 className="text-3xl md:text-5xl font-black text-gray-900 leading-none mb-4 flex flex-wrap items-center gap-3">
+                            {order.invoiceNumber ? `Invoice #${order.invoiceNumber}` : 'Order Confirmed'}
+                            {order.items.length > 1 && (
+                                <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/20 uppercase tracking-widest font-black">
+                                    {order.items.length} Products
+                                </span>
+                            )}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4">
+                            <div className="flex items-center gap-2 text-gray-600">
+                                <Calendar className="w-5 h-5 text-primary/60" />
+                                <span className="font-medium">{formatDateOnly(order.createdAt)}</span>
+                                <span className="text-xs text-gray-400">({formatRelative(order.createdAt)})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col items-start md:items-end gap-3 min-w-[180px]">
+                        <div className={`px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest text-center w-full shadow-sm ${getStatusColor(order.orderStatus)}`}>
+                            {order.orderStatus}
+                        </div>
+                        <div className="w-full p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Payment Status</p>
+                            <div className="flex items-center justify-between">
+                                <span className={`text-sm font-black ${getPaymentStatusColor(order.paymentStatus)}`}>
+                                    {order.paymentStatus === 'paid' ? '✓ PAID' : order.paymentStatus.toUpperCase()}
+                                </span>
+                                <CreditCard className="w-4 h-4 text-gray-300" />
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Order ID & Invoice */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                    <div>
-                        <p className="text-sm text-gray-600">Order ID</p>
-                        <p className="font-mono font-semibold">{order.id}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-gray-100">
+                    <div className="group">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5 group-hover:text-primary transition-colors">Order Reference</p>
+                        <p className="font-mono text-xs text-gray-800 break-all select-all">{order.id}</p>
                     </div>
                     {order.invoiceNumber && (
                         <div>
-                            <p className="text-sm text-gray-600">Invoice Number</p>
-                            <p className="font-mono font-semibold">{order.invoiceNumber}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Official Invoice</p>
+                            <p className="font-mono text-sm font-bold text-gray-900">#{order.invoiceNumber}</p>
                         </div>
                     )}
                     {order.razorpayPaymentId && (
                         <div>
-                            <p className="text-sm text-gray-600">Payment ID</p>
-                            <p className="font-mono text-sm">{order.razorpayPaymentId}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Transaction ID</p>
+                            <p className="font-mono text-xs text-gray-600 truncate">{order.razorpayPaymentId}</p>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Shipment Tracking (Visible to User) */}
+            {(order.trackingNumber || order.courierName) && (
+                <div className="bg-white border-2 border-primary/20 rounded-xl p-6 mb-6 shadow-sm overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <Truck size={80} className="text-primary rotate-12" />
+                    </div>
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <Truck className="w-6 h-6 text-primary" />
+                        Shipment Tracking
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <p className="text-xs uppercase tracking-wider text-gray-500 font-bold mb-1">Courier Partner</p>
+                            <p className="text-lg font-semibold text-gray-900">{order.courierName || 'Local Courier'}</p>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <p className="text-xs uppercase tracking-wider text-gray-500 font-bold mb-1">Tracking ID / Shipping ID</p>
+                            <div className="flex items-center gap-2">
+                                <p className="text-lg font-mono font-bold text-primary">{order.trackingNumber || 'N/A'}</p>
+                                {order.trackingNumber && (
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText(order.trackingNumber!)}
+                                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                        title="Copy Tracking ID"
+                                    >
+                                        <Tag className="w-4 h-4 text-gray-400" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                            <Package className="w-4 h-4 text-white" />
+                        </div>
+                        <p className="text-sm text-gray-700 font-medium">
+                            Your order is currently {order.orderStatus}. Use the Tracking ID above with {order.courierName || 'your courier'} to track the live status.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Order Items */}
             <div className="bg-white border rounded-lg p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4">Order Items</h2>
                 <div className="space-y-4">
                     {order.items.map((item: any, index: number) => (
-                        <div key={index} className="flex justify-between items-start pb-4 border-b last:border-0">
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{item.productTitle}</h3>
-                                <p className="text-sm text-gray-600 mt-1">
+                        <div key={index} className="flex gap-4 pb-6 border-b last:border-0 border-gray-100">
+                            <div className="w-20 h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                                {item.productImage ? (
+                                    <img
+                                        src={item.productImage}
+                                        alt={item.productTitle}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <Package className="w-8 h-8 text-gray-200" />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-gray-900 truncate">{item.productTitle}</h3>
+                                <p className="text-xs text-gray-500 mt-1">
                                     {item.bundlesOrdered} × {item.bundleQty} pcs bundle
                                 </p>
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-[10px] text-gray-400 mt-1 font-mono uppercase">
                                     Composition: {Object.entries(item.bundleComposition || {})
                                         .map(([size, qty]) => `${size}:${qty}`)
                                         .join(', ')}
                                 </p>
-                                <p className="text-sm text-gray-600 mt-1">
-                                    ₹{item.pricePerBundle.toFixed(2)} per bundle
+                                <p className="text-xs text-primary font-bold mt-2">
+                                    ₹{item.pricePerBundle.toLocaleString('en-IN', { minimumFractionDigits: 2 })} / bundle
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-lg font-semibold">₹{item.lineTotal.toFixed(2)}</p>
-                                <p className="text-xs text-gray-500">
-                                    Total: {item.bundlesOrdered * item.bundleQty} pieces
+                                <p className="text-lg font-black text-gray-900">₹{item.lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                                    TOTAL: {item.bundlesOrdered * item.bundleQty} PIECES
                                 </p>
                             </div>
                         </div>

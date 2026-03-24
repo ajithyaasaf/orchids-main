@@ -5,10 +5,38 @@ import type { NextRequest } from 'next/server';
  * Middleware for Wholesale-Only Site
  * Redirects retail URLs to wholesale equivalents
  * Prevents duplicate content and ensures consistent wholesale experience
+ * Also provides Edge-side Route Protection for authenticated areas
  */
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const session = request.cookies.get('session')?.value;
+
+    // ========================================================================
+    // Authentication & Route Protection
+    // ========================================================================
+    const protectedPaths = ['/admin', '/profile', '/wholesale/checkout', '/orders'];
+    const authPaths = ['/login', '/register', '/signup'];
+
+    const isProtectedRoute = protectedPaths.some(path =>
+        pathname === path || pathname.startsWith(`${path}/`)
+    );
+
+    const isAuthRoute = authPaths.some(path =>
+        pathname === path || pathname.startsWith(`${path}/`)
+    );
+
+    // Redirect to login if unauthenticated user tries to hit protected route
+    if (isProtectedRoute && !session) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(loginUrl);
+    }
+
+    // Redirect to profile if authenticated user tries to hit login/signup page
+    if (isAuthRoute && session) {
+        return NextResponse.redirect(new URL('/profile', request.url));
+    }
 
     // ========================================================================
     // Cart & Checkout Redirects (Retail → Wholesale)
@@ -35,22 +63,13 @@ export function middleware(request: NextRequest) {
     }
 
     // ========================================================================
-    // Collections Redirect (Using Collections Now!)
-    // ========================================================================
-    // Removing redirect logic since collections are now supported
-
-    // if (pathname.startsWith('/collection/')) {
-    //    return NextResponse.redirect(new URL('/products', request.url));
-    // }
-
-    // ========================================================================
-    // Duplicate Product URL Prevention (/products/[id] → /product/[id])
+    // Duplicate Product URL Prevention (/products/[slug] → /product/[slug])
     // SEO: Ensures only ONE product detail URL exists
     // ========================================================================
     if (pathname.match(/^\/products\/[^/]+$/)) {
-        // Extract product ID from /products/[id]
-        const productId = pathname.split('/').pop();
-        return NextResponse.redirect(new URL(`/product/${productId}`, request.url));
+        // Extract product slug from /products/[slug]
+        const productSlug = pathname.split('/').pop();
+        return NextResponse.redirect(new URL(`/product/${productSlug}`, request.url));
     }
 
     return NextResponse.next();
@@ -58,6 +77,16 @@ export function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
+        /* Protected Routes */
+        '/admin/:path*',
+        '/profile/:path*',
+        '/wholesale/checkout',
+        '/orders/:path*',
+        /* Auth Routes */
+        '/login',
+        '/register',
+        '/signup',
+        /* Retail Redirect Routes */
         '/cart',
         '/checkout',
         '/category/:path*',

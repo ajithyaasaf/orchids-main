@@ -62,6 +62,6 @@ if (!targetEmail) {
 promoteUser(targetEmail);
 
 `bash
-npx ts - node scripts / createSuperAdmin.ts owner @tntrends.com
+npx ts - node scripts / createSuperAdmin.ts owner @orchids.com
 Run it like this:`
 

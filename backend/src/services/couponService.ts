@@ -1,5 +1,5 @@
 import { collections } from '../config/firebase';
-import { Coupon, AppliedCoupon } from '@tntrends/shared';
+import { Coupon, AppliedCoupon } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
 import admin from 'firebase-admin';
 

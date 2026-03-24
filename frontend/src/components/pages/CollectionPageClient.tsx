@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { Collection, WholesaleProduct } from '@tntrends/shared';
+import { Collection, WholesaleProduct } from '@orchids/shared';
 import { WholesaleProductCard } from '@/components/products/WholesaleProductCard';
 import { Clock, Sparkles } from 'lucide-react';
 

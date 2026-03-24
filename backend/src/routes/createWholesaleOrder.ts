@@ -1,7 +1,7 @@
 import express from 'express';
 import { verifyToken, AuthRequest } from '../middleware/auth';
 import { collections } from '../config/firebase';
-import { WholesaleOrder } from '@tntrends/shared';
+import { WholesaleOrder } from '@orchids/shared';
 import admin from 'firebase-admin';
 
 const router = express.Router();

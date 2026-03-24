@@ -1,0 +1,300 @@
+import { WholesaleBundleItem, WholesaleOrder, Address } from '@orchids/shared';
+import * as admin from 'firebase-admin';
+import { collections, db } from '../config/firebase';
+import { calculateOrderTotal } from './wholesalePricingService';
+import { logisticsService } from './logisticsService';
+import { AppError } from '../middleware/errorHandler';
+import logger from '../utils/logger';
+
+/**
+ * Wholesale Order Service
+ * All business logic for order creation and management.
+ * Follows Zero-Trust principle: all prices are recalculated server-side.
+ */
+
+// How much the price can differ (in %) between what user expected vs DB value
+// before we reject the order. Set to 0 for strict mode.
+const PRICE_TOLERANCE_PERCENT = 0;
+
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
+
+export interface CreateOrderInput {
+    userId: string;
+    address: Address;
+    /** Items from cart — only IDs and quantities are trusted */
+    cartItems: Array<{
+        productId: string;
+        bundlesOrdered: number;
+    }>;
+    /**
+     * The totalAmount the client *expects* to pay. We validate this
+     * against our server-calculated value to detect stale-price scenarios.
+     */
+    expectedTotalAmount?: number;
+    /** Idempotency key to prevent double-orders on retry */
+    idempotencyKey: string;
+    /** TODO: REMOVE_AFTER_TESTING - Internal bypass flag */
+    isTestMode?: boolean;
+}
+
+export interface CreateOrderResult {
+    orderId: string;
+    order: WholesaleOrder & { id: string };
+}
+
+// ─────────────────────────────────────────────
+// Idempotency Guard
+// ─────────────────────────────────────────────
+
+/**
+ * Check if an order with this idempotency key was already created.
+ * Prevents double-orders from network retries or double-clicks.
+ */
+async function findExistingOrder(
+    userId: string,
+    idempotencyKey: string
+): Promise<(WholesaleOrder & { id: string }) | null> {
+    const snapshot = await collections.wholesaleOrders
+        .where('userId', '==', userId)
+        .where('idempotencyKey', '==', idempotencyKey)
+        .limit(1)
+        .get();
+
+    if (snapshot.empty) return null;
+
+    const doc = snapshot.docs[0];
+    const data = doc.data() as WholesaleOrder;
+    // Explicitly exclude any 'id' from data to avoid duplicate key
+    const { id: _ignored, ...rest } = data as any;
+    return { ...(rest as WholesaleOrder), id: doc.id };
+}
+
+// ─────────────────────────────────────────────
+// Core Order Creation
+// ─────────────────────────────────────────────
+
+/**
+ * Create a wholesale order with full server-side validation.
+ *
+ * Security Guarantees:
+ *  1. Prices are fetched from DB — the client cannot fake them.
+ *  2. Stock is reserved inside a Firestore Transaction (atomic, prevents race conditions).
+ *  3. The idempotency key ensures network retries don't create duplicate orders.
+ *  4. Address is re-validated on the backend before order is saved.
+ *
+ * @throws {AppError} with descriptive codes for each failure mode
+ */
+export async function createWholesaleOrder(
+    input: CreateOrderInput
+): Promise<CreateOrderResult> {
+    const { userId, address, cartItems, expectedTotalAmount, idempotencyKey, isTestMode } = input;
+
+    // ── 1. Idempotency Check ──────────────────────────────────────────────
+    const existingOrder = await findExistingOrder(userId, idempotencyKey);
+    if (existingOrder) {
+        logger.info(`[OrderService] Duplicate request for idempotency key ${idempotencyKey}. Returning existing order ${existingOrder.id}.`);
+        return { orderId: existingOrder.id, order: existingOrder };
+    }
+
+    // ── 2. Validate Request Shape ─────────────────────────────────────────
+    if (!cartItems || cartItems.length === 0) {
+        throw new AppError('Cart is empty', 400);
+    }
+
+    // ── 3. Validate Delivery Address ──────────────────────────────────────
+    const addressValidation = logisticsService.validateAddress(address);
+    if (!addressValidation.valid) {
+        throw new AppError(`Invalid address: ${addressValidation.message}`, 400);
+    }
+
+    // ── 4. Atomic Transaction: Verify Stock & Reserve ─────────────────────
+    // This is the critical section. Using a Firestore Transaction ensures that:
+    //   a) We read the LATEST stock values (not a stale cache)
+    //   b) Stock decrement and order creation are a single atomic operation
+    //   c) If two users buy the last bundle simultaneously, only one succeeds
+
+    const productRefs = cartItems.map((item) =>
+        collections.wholesaleProducts.doc(item.productId)
+    );
+
+    let serverCalculatedItems: WholesaleBundleItem[] = [];
+    let orderId: string;
+
+    await db.runTransaction(async (tx) => {
+        // Read all product docs atomically
+        const productSnapshots = await tx.getAll(...productRefs);
+
+        // Build verified line items using server-side prices
+        serverCalculatedItems = [];
+        const stockUpdates: Array<{ ref: admin.firestore.DocumentReference; newStock: number; newTotal: number }> = [];
+
+        for (let i = 0; i < cartItems.length; i++) {
+            const cartItem = cartItems[i];
+            const snap = productSnapshots[i];
+
+            if (!snap.exists) {
+                throw new AppError(`Product ${cartItem.productId} not found`, 404);
+            }
+
+            const product = snap.data() as any; // WholesaleProduct
+
+            // Stock validation
+            if (!product.inStock || product.availableBundles < cartItem.bundlesOrdered) {
+                throw new AppError(
+                    `"${product.title}" is low on stock. Only ${product.availableBundles} bundle(s) available.`,
+                    409 // 409 Conflict — stock issue
+                );
+            }
+
+            if (cartItem.bundlesOrdered <= 0) {
+                throw new AppError(`Invalid quantity for product "${product.title}"`, 400);
+            }
+
+            // ── Server-side price calculation (Zero Trust) ──
+            const lineTotal = product.bundlePrice * cartItem.bundlesOrdered;
+
+            serverCalculatedItems.push({
+                productId: product.id || snap.id,
+                productTitle: product.title,
+                productImage: product.images?.[0] ?? '',
+                bundleQty: product.bundleQty,
+                bundleComposition: product.bundleComposition,
+                bundlesOrdered: cartItem.bundlesOrdered,
+                pricePerBundle: product.bundlePrice, // Price locked at time of order
+                lineTotal,
+            });
+
+            // Prepare stock decrement
+            const newStock = product.availableBundles - cartItem.bundlesOrdered;
+            const newTotal = newStock * product.bundleQty;
+            stockUpdates.push({
+                ref: snap.ref,
+                newStock,
+                newTotal,
+            });
+        }
+
+        // ── 5. Server-Side Total Calculation (Zero Trust) ──────────────────
+        const totals = await calculateOrderTotal(serverCalculatedItems);
+
+        // ── 6. Price Integrity Check ────────────────────────────────────────
+        // Warn if the client expected a different price (e.g., price changed mid-session)
+        if (expectedTotalAmount !== undefined && PRICE_TOLERANCE_PERCENT === 0) {
+            if (Math.abs(totals.totalAmount - expectedTotalAmount) > 0.01) {
+                throw new AppError(
+                    `Price has changed. Expected ₹${expectedTotalAmount}, new total is ₹${totals.totalAmount.toFixed(2)}. Please review your order and try again.`,
+                    409
+                );
+            }
+        }
+
+        // ── 7. Create Order Document ────────────────────────────────────────
+        const orderRef = collections.wholesaleOrders.doc();
+        orderId = orderRef.id;
+
+        const newOrder: Omit<WholesaleOrder, 'id'> & { idempotencyKey: string; shipping: number } = {
+            items: serverCalculatedItems,
+            subtotal: totals.subtotal,
+            gstRate: totals.gstRate,
+            gst: totals.gst,
+            shipping: totals.shipping,
+            adminDiscount: 0,
+            totalAmount: totals.totalAmount,
+            adminDiscountHistory: [],
+
+            // Payment & Status Bypass (TODO: REMOVE_AFTER_TESTING)
+            paymentStatus: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'paid' : 'pending',
+            razorpayOrderId: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'test_bypass' : '',
+            razorpayPaymentId: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? `test_payment_${Date.now()}` : '',
+
+            // Order lifecycle
+            orderStatus: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'processing' : 'placed',
+            statusHistory: [
+                {
+                    status: 'placed',
+                    changedBy: userId,
+                    changedAt: new Date(),
+                    notes: 'Order placed by customer',
+                },
+                ...(isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? [{
+                    status: 'processing',
+                    changedBy: userId,
+                    changedAt: new Date(),
+                    notes: 'System: Test mode auto-confirm',
+                }] : [])
+            ],
+
+            // Metadata
+            userId,
+            address,
+            stockDeducted: true, // We are decrementing inside this transaction
+            idempotencyKey,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+
+        tx.set(orderRef, newOrder);
+
+        // ── 8. Decrement Stock Atomically ────────────────────────────────────
+        for (const { ref, newStock, newTotal } of stockUpdates) {
+            tx.update(ref, {
+                availableBundles: newStock,
+                totalPieces: newTotal,
+                inStock: newStock > 0,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
+    });
+
+    // ── 9. Post-Creation Bypass Logic (TODO: REMOVE_AFTER_TESTING) ─────────
+    if (isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true') {
+        try {
+            const { generateInvoice, needsInvoiceGeneration } = await import('./invoiceService');
+            const createdOrder = await getWholesaleOrderById(orderId!);
+            if (createdOrder && needsInvoiceGeneration(createdOrder as any)) {
+                await generateInvoice(orderId!);
+                logger.info(`[OrderService] Test Mode: Auto-generated invoice for order ${orderId!}`);
+            }
+        } catch (err) {
+            logger.error(`[OrderService] Test Mode: Failed to generate invoice`, err);
+        }
+    }
+
+    logger.info(`[OrderService] Created order ${orderId!} for user ${userId}`);
+
+    const created = await getWholesaleOrderById(orderId!);
+    return { orderId: orderId!, order: created! };
+}
+
+// ─────────────────────────────────────────────
+// Read / Update Helpers (existing, untouched)
+// ─────────────────────────────────────────────
+
+/** Fetch a wholesale order by ID */
+export async function getWholesaleOrderById(
+    orderId: string
+): Promise<(WholesaleOrder & { id: string }) | null> {
+    const doc = await collections.wholesaleOrders.doc(orderId).get();
+    if (!doc.exists) return null;
+    const data = doc.data() as WholesaleOrder;
+    return { ...data, id: doc.id };
+}
+
+/** Update wholesale order payment status (called from Razorpay webhook) */
+export async function updateWholesalePaymentStatus(
+    orderId: string,
+    status: 'paid' | 'failed',
+    paymentId?: string
+): Promise<WholesaleOrder & { id: string }> {
+    const updateData: any = {
+        paymentStatus: status,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    if (paymentId) updateData.razorpayPaymentId = paymentId;
+    await collections.wholesaleOrders.doc(orderId).update(updateData);
+    const updated = await getWholesaleOrderById(orderId);
+    if (!updated) throw new AppError('Order not found after update', 404);
+    return updated;
+}

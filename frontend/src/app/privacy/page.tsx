@@ -179,7 +179,7 @@ export default function PrivacyPage() {
                                 <li><strong>Withdraw Consent:</strong> Withdraw consent for data processing</li>
                             </ul>
                             <p className="text-text-secondary mt-4">
-                                To exercise these rights, contact us at <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a>
+                                To exercise these rights, contact us at <a href="mailto:contact@orchids.store" className="text-primary hover:underline">contact@orchids.store</a>
                             </p>
                         </section>
 
@@ -212,7 +212,7 @@ export default function PrivacyPage() {
                             <div className="bg-primary/5 p-6 rounded-lg border border-primary/20">
                                 <p className="text-text-secondary"><strong>Wholesale Orchids</strong></p>
                                 <p className="text-text-secondary"><strong>Proprietor:</strong> Riyaz Ahamad</p>
-                                <p className="text-text-secondary mt-2"><strong>Email:</strong> <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a></p>
+                                <p className="text-text-secondary mt-2"><strong>Email:</strong> <a href="mailto:contact@orchids.store" className="text-primary hover:underline">contact@orchids.store</a></p>
                                 <p className="text-text-secondary"><strong>Phone:</strong> <a href="tel:+919150673839" className="text-primary hover:underline">+91 9150673839</a></p>
                                 <p className="text-text-secondary"><strong>Address:</strong> 18/44, Kongu Nagar, 3rd Street, Tiruppur – 641607, Tamil Nadu, India</p>
                             </div>

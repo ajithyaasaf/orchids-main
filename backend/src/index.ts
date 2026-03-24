@@ -7,27 +7,21 @@ import './config/firebase'; // Initialize Firebase
 import './config/cloudinary'; // Initialize Cloudinary
 import './config/razorpay'; // Initialize Razorpay
 
-import productRoutes from './routes/products';
-import orderRoutes from './routes/orders';
 import paymentRoutes from './routes/payment';
 import uploadRoutes from './routes/upload';
 import settingsRoutes from './routes/settings';
 import comboRoutes from './routes/combos';
-import shippingRoutes from './routes/shipping';
-import checkoutRoutes from './routes/checkout';
 import webhookRoutes from './routes/webhook';
-import cartRoutes from './routes/cart';
 import couponRoutes from './routes/coupons';
-import customersRoutes from './routes/customers';
 import dashboardRoutes from './routes/dashboard';
 import invoiceRoutes from './routes/invoices';
 import collectionRoutes from './routes/collections';
+import authRoutes from './routes/auth';
 
-// Wholesale platform routes (greenfield)
+// Wholesale platform routes
 import wholesaleProductRoutes from './routes/wholesaleProducts';
 import wholesaleOrderRoutes from './routes/wholesaleOrders';
 import wholesaleCheckoutRoutes from './routes/wholesaleCheckout';
-import createWholesaleOrderRoute from './routes/createWholesaleOrder';
 
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
@@ -95,35 +89,28 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.get('/health', (req, res) => {
     res.json({
         success: true,
-        message: 'TNtrends API is running',
+        message: 'Orchid API is running',
         timestamp: new Date().toISOString(),
     });
 });
 
-// API routes
-// WHOLESALE-ONLY SYSTEM: Retail routes commented out (archived for potential reuse)
-// app.use('/api/products', productRoutes);        // RETAIL: Product catalog (Disabled for wholesale-only)
-// app.use('/api/orders', orderRoutes);            // RETAIL: Order management (Keep disabled if unused, check later)
-// app.use('/api/cart', cartRoutes);               // RETAIL: Shopping cart (Re-enable if retail cart needed)
-app.use('/api/shipping', shippingRoutes);       // RETAIL: Shipping calculator (Used by product page)
-// app.use('/api/checkout', checkoutRoutes);       // RETAIL: Checkout flow
-// app.use('/api/coupons', couponRoutes);          // RETAIL: Coupon system 
-// app.use('/api/combos', comboRoutes);            // RETAIL: Product combos 
-app.use('/api/collections', collectionRoutes);  // WHOLESALE: Product collections (Manual selection)
-// app.use('/api/customers', customersRoutes);     // RETAIL: Customer analytics
-app.use('/api/dashboard', dashboardRoutes);     // RETAIL: Dashboard analytics (Now includes Wholesale endpoints)
+// API Routes - Wholesale Platform
+app.use('/api/coupons', couponRoutes);           // Promotions: Coupon system (wholesale)
+app.use('/api/combos', comboRoutes);             // Promotions: Product combos (wholesale)
+app.use('/api/collections', collectionRoutes);   // Collections: Manual product grouping
+app.use('/api/dashboard', dashboardRoutes);      // Dashboard analytics
+app.use('/api/auth', authRoutes);                // Secure session cookie generation
 
-// SHARED INFRASTRUCTURE (Keep for wholesale)
-app.use('/api/payment', paymentRoutes);           // Shared: Razorpay payment gateway
-app.use('/api/payment', webhookRoutes);           // Shared: Webhook route (handles /api/payment/webhook)
-app.use('/api/upload', uploadRoutes);             // Shared: Cloudinary image upload
-app.use('/api/settings', settingsRoutes);         // Shared: System configuration (GST, etc.)
-app.use('/api/invoices', invoiceRoutes);          // Shared: Invoice generation
+// Shared Infrastructure
+app.use('/api/payment', paymentRoutes);          // Razorpay payment gateway
+app.use('/api/payment', webhookRoutes);          // Razorpay webhook (handles /api/payment/webhook)
+app.use('/api/upload', uploadRoutes);            // Cloudinary image upload
+app.use('/api/settings', settingsRoutes);        // System configuration (GST, etc.)
+app.use('/api/invoices', invoiceRoutes);         // Invoice generation
 
-// Wholesale platform routes
+// Wholesale Core Routes
 app.use('/api/wholesale/products', wholesaleProductRoutes);
 app.use('/api/wholesale/orders', wholesaleOrderRoutes);
-// app.use('/api/wholesale/orders', createWholesaleOrderRoute); // Merged into wholesaleOrderRoutes
 app.use('/api/wholesale/checkout', wholesaleCheckoutRoutes);
 
 // 404 handler
@@ -134,7 +121,7 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`\n🚀 TNtrends Backend API running on port ${PORT}`);
+    console.log(`\n🚀 Orchid Backend API running on port ${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}\n`);
 });

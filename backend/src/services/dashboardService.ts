@@ -1,5 +1,5 @@
 import { collections, db } from '../config/firebase';
-import type { DashboardAnalytics, Order, WholesaleBundleItem } from '@tntrends/shared';
+import type { DashboardAnalytics, WholesaleOrder, WholesaleBundleItem } from '@orchids/shared';
 
 const ANALYTICS_DOC_ID = 'wholesale_dashboard_cache';
 
@@ -39,9 +39,8 @@ export const getDashboardAnalytics = async (): Promise<DashboardAnalytics> => {
  * 
  * Performance: Single transactional update instead of re-aggregating all orders
  */
-export const updateAnalyticsCache = async (order: Order): Promise<void> => {
-    // Note: order passed here should be WholesaleOrder (casted as Order for signature compatibility)
-    const wOrder = order as any;
+export const updateAnalyticsCache = async (order: WholesaleOrder): Promise<void> => {
+    const wOrder = order;
 
     if (wOrder.paymentStatus !== 'paid') return;
 
@@ -61,9 +60,12 @@ export const updateAnalyticsCache = async (order: Order): Promise<void> => {
 
         const cached = doc.data() as DashboardAnalytics;
 
-        const isToday = wOrder.createdAt.toDate() >= today;
-        const isThisMonth = wOrder.createdAt.toDate() >= thisMonth;
-        const isThisYear = wOrder.createdAt.toDate() >= thisYear;
+        const orderDate: any = wOrder.createdAt;
+        const actualDate = typeof orderDate.toDate === 'function' ? orderDate.toDate() : new Date(orderDate);
+
+        const isToday = actualDate >= today;
+        const isThisMonth = actualDate >= thisMonth;
+        const isThisYear = actualDate >= thisYear;
 
         const newTotalRevenue = cached.totalRevenue + wOrder.totalAmount;
         const newTotalOrders = cached.totalOrders + 1;

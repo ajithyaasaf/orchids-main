@@ -7,10 +7,12 @@
 
 import { auth } from '../config/firebase';
 
-async function setAdmin() {
+const targetEmail = process.argv[2] || 'admin@gmail.com';
+
+async function setAdmin(email: string) {
     try {
-        console.log('🔍 Looking up user: ajith@gmail.com');
-        const user = await auth.getUserByEmail('ajith@gmail.com');
+        console.log(`🔍 Looking up user: ${email}`);
+        const user = await auth.getUserByEmail(email);
 
         console.log(`✅ Found user: ${user.uid}`);
         console.log('Current claims:', user.customClaims);
@@ -33,4 +35,4 @@ async function setAdmin() {
     }
 }
 
-setAdmin();
+setAdmin(targetEmail);

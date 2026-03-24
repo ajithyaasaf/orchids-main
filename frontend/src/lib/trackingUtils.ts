@@ -1,4 +1,4 @@
-import type { Product, CartItem } from '@tntrends/shared';
+import type { WholesaleProduct } from '@orchids/shared';
 
 /**
  * E-commerce Tracking Utilities for Google Tag Manager
@@ -14,35 +14,35 @@ const pushToDataLayer = (data: any) => {
 };
 
 // Helper to format product for GA4
-const formatProduct = (product: Product, quantity: number = 1, size?: string) => ({
+const formatProduct = (product: WholesaleProduct, quantity: number = 1, size?: string) => ({
     item_id: product.id,
     item_name: product.title,
     item_category: product.category,
     item_variant: size || undefined,
-    price: product.price,
+    price: product.bundlePrice,
     quantity: quantity,
 });
 
 // Helper to format cart item for GA4
-const formatCartItem = (item: CartItem) => ({
+const formatCartItem = (item: any) => ({
     item_id: item.product.id,
     item_name: item.product.title,
     item_category: item.product.category,
-    item_variant: item.size,
-    price: item.product.price,
-    quantity: item.quantity,
+    item_variant: undefined,
+    price: item.product.bundlePrice,
+    quantity: item.bundlesOrdered,
 });
 
 /**
  * Track product detail page view
  * Event: view_item
  */
-export const trackViewItem = (product: Product, selectedSize?: string) => {
+export const trackViewItem = (product: WholesaleProduct, selectedSize?: string) => {
     pushToDataLayer({
         event: 'view_item',
         ecommerce: {
             currency: 'INR',
-            value: product.price,
+            value: product.bundlePrice,
             items: [formatProduct(product, 1, selectedSize)],
         },
     });
@@ -52,7 +52,7 @@ export const trackViewItem = (product: Product, selectedSize?: string) => {
  * Track product list/category page view
  * Event: view_item_list
  */
-export const trackViewItemList = (products: Product[], listName: string) => {
+export const trackViewItemList = (products: WholesaleProduct[], listName: string) => {
     pushToDataLayer({
         event: 'view_item_list',
         ecommerce: {
@@ -69,12 +69,12 @@ export const trackViewItemList = (products: Product[], listName: string) => {
  * Track add to cart action
  * Event: add_to_cart
  */
-export const trackAddToCart = (product: Product, size: string, quantity: number = 1) => {
+export const trackAddToCart = (product: WholesaleProduct, size: string, quantity: number = 1) => {
     pushToDataLayer({
         event: 'add_to_cart',
         ecommerce: {
             currency: 'INR',
-            value: product.price * quantity,
+            value: product.bundlePrice * quantity,
             items: [formatProduct(product, quantity, size)],
         },
     });
@@ -84,12 +84,12 @@ export const trackAddToCart = (product: Product, size: string, quantity: number 
  * Track remove from cart action
  * Event: remove_from_cart
  */
-export const trackRemoveFromCart = (product: Product, size: string, quantity: number) => {
+export const trackRemoveFromCart = (product: WholesaleProduct, size: string, quantity: number) => {
     pushToDataLayer({
         event: 'remove_from_cart',
         ecommerce: {
             currency: 'INR',
-            value: product.price * quantity,
+            value: product.bundlePrice * quantity,
             items: [formatProduct(product, quantity, size)],
         },
     });
@@ -99,7 +99,7 @@ export const trackRemoveFromCart = (product: Product, size: string, quantity: nu
  * Track checkout initiation
  * Event: begin_checkout
  */
-export const trackBeginCheckout = (items: CartItem[], totalValue: number) => {
+export const trackBeginCheckout = (items: any[], totalValue: number) => {
     pushToDataLayer({
         event: 'begin_checkout',
         ecommerce: {
@@ -114,7 +114,7 @@ export const trackBeginCheckout = (items: CartItem[], totalValue: number) => {
  * Track payment info addition
  * Event: add_payment_info
  */
-export const trackAddPaymentInfo = (items: CartItem[], totalValue: number, paymentType: string = 'razorpay') => {
+export const trackAddPaymentInfo = (items: any[], totalValue: number, paymentType: string = 'razorpay') => {
     pushToDataLayer({
         event: 'add_payment_info',
         ecommerce: {
@@ -132,7 +132,7 @@ export const trackAddPaymentInfo = (items: CartItem[], totalValue: number, payme
  */
 export const trackPurchase = (
     orderId: string,
-    items: CartItem[],
+    items: any[],
     totalValue: number,
     shippingCost: number = 0,
     couponCode?: string

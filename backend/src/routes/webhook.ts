@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { verifyWebhookSignature, processWebhookEvent, RazorpayWebhookPayload } from '../services/webhookService';
-import { updatePaymentStatus, deductOrderStock, getOrderById } from '../services/orderService';
+import { getWholesaleOrderById, updateWholesalePaymentStatus } from '../services/wholesaleOrderService';
+import { deductBundleStock } from '../services/wholesaleStockService';
 import { collections } from '../config/firebase';
 import logger from '../utils/logger';
 
@@ -90,7 +91,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req: R
 
         const orderDoc = ordersSnapshot.docs[0];
         const orderId = orderDoc.id;
-        const order = await getOrderById(orderId);
+        const order = await getWholesaleOrderById(orderId);
 
         if (!order) {
             logger.error('Order document exists but cannot be retrieved', {
@@ -121,10 +122,10 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req: R
                 }
 
                 // Update payment status to paid
-                await updatePaymentStatus(orderId, 'paid', eventData.razorpayPaymentId);
+                const updatedOrder = await updateWholesalePaymentStatus(orderId, 'paid', eventData.razorpayPaymentId);
 
                 // Deduct stock (idempotent operation)
-                await deductOrderStock(orderId);
+                await deductBundleStock(orderId, updatedOrder.items);
 
                 // Track combo conversion if applicable
                 if (order.appliedCombo) {
@@ -148,7 +149,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req: R
             case 'payment.failed':
                 // IDEMPOTENCY: Only update if still pending
                 if (order.paymentStatus === 'pending') {
-                    await updatePaymentStatus(orderId, 'failed', eventData.razorpayPaymentId);
+                    await updateWholesalePaymentStatus(orderId, 'failed', eventData.razorpayPaymentId);
 
                     logger.warn('Payment failed via webhook', {
                         orderId,

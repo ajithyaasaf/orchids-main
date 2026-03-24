@@ -1,31 +1,34 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectPath = searchParams.get('redirect');
     const { signIn, user } = useAuthStore();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Redirect based on role AFTER login
+    // Redirect based on role AFTER login OR respect ?redirect=...
     useEffect(() => {
         if (!user) return;
 
-        // Both superadmin and admin go to /admin dashboard
-        if (user.role === 'superadmin' || user.role === 'admin') {
+        if (redirectPath) {
+            router.replace(redirectPath);
+        } else if (user.role === 'superadmin' || user.role === 'admin') {
             router.replace('/admin');
         } else {
             router.replace('/');
         }
-    }, [user]);
+    }, [user, redirectPath, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -97,5 +100,17 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }

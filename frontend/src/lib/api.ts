@@ -88,12 +88,12 @@ export const productApi = {
 
 // Orders API
 export const orderApi = {
-    create: (data: any) => apiFetch('/api/orders', {
+    create: (data: any) => apiFetch('/api/wholesale/orders', {
         method: 'POST',
         body: JSON.stringify(data),
     }),
-    getById: (id: string) => apiFetch(`/api/orders/${id}`),
-    getByUserId: (userId: string) => apiFetch(`/api/orders/user/${userId}`),
+    getById: (id: string) => apiFetch(`/api/wholesale/orders/${id}`),
+    getByUserId: (userId: string) => apiFetch(`/api/wholesale/orders/user/${userId}`),
     getAll: (params?: Record<string, any>) => {
         const query = params ? `?${new URLSearchParams(params).toString()}` : '';
         return apiFetch(`/api/orders/admin/all${query}`);
@@ -455,7 +455,7 @@ export const invoiceApi = {
 // COLLECTIONS API
 // ============================================================================
 
-import { Collection, CollectionWithProducts, CollectionQueryParams } from '@tntrends/shared';
+import { Collection, CollectionWithProducts, CollectionQueryParams } from '@orchids/shared';
 
 export const collectionApi = {
     /**

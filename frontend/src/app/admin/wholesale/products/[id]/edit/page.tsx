@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 import { useToast } from '@/context/ToastContext';
 import WholesaleProductForm, { WholesaleJobFormData } from '@/components/admin/WholesaleProductForm';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct } from '@orchids/shared';
 
 export default function EditWholesaleProductPage({ params }: { params: { id: string } }) {
     const router = useRouter();

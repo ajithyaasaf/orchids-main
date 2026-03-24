@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { uploadImage } from '../services/imageService';
-import { verifyToken } from '../middleware/auth';
+import { verifyToken, AuthRequest } from '../middleware/auth';
 import { requireAdmin } from '../middleware/roleCheck';
 
 const router = express.Router();
@@ -32,7 +32,7 @@ router.post(
     verifyToken,
     requireAdmin,
     upload.single('image'),
-    async (req: Request, res: Response) => {
+    async (req: AuthRequest, res: Response) => {
         try {
             console.log('📸 Upload request received');
             console.log('User:', req.user);

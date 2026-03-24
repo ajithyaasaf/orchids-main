@@ -36,8 +36,13 @@ export const verifyToken = async (
 
         const token = authHeader.split('Bearer ')[1];
 
-        // Verify the Firebase ID token (includes custom claims)
-        const decodedToken = await auth.verifyIdToken(token);
+        // CRITICAL FIX: Support both SSR Session Cookies and Client ID Tokens
+        let decodedToken;
+        try {
+            decodedToken = await auth.verifySessionCookie(token, true);
+        } catch (error) {
+            decodedToken = await auth.verifyIdToken(token);
+        }
 
         // CRITICAL FIX: Role is already in the token's custom claims
         // No need for additional getUser() API call (50% performance improvement)
@@ -81,7 +86,13 @@ export const optionalAuth = async (
 
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.split('Bearer ')[1];
-            const decodedToken = await auth.verifyIdToken(token);
+
+            let decodedToken;
+            try {
+                decodedToken = await auth.verifySessionCookie(token, true);
+            } catch (error) {
+                decodedToken = await auth.verifyIdToken(token);
+            }
 
             // Extract role from token custom claims (no extra API call)
             const role = (decodedToken as any).role || 'customer';
@@ -150,6 +161,38 @@ export const requireSuperAdmin = (
         res.status(403).json({
             success: false,
             error: 'Forbidden: Superadmin access required',
+        });
+        return;
+    }
+
+    next();
+};
+
+/**
+ * Middleware to require that the requester is the resource owner OR an admin
+ * Assumes :userId is present in the route params
+ */
+export const requireOwnerOrAdmin = (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+): void => {
+    if (!req.user) {
+        res.status(401).json({
+            success: false,
+            error: 'Unauthorized: Authentication required',
+        });
+        return;
+    }
+
+    const { userId } = req.params;
+    const isOwner = req.user.uid === userId;
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+
+    if (!isOwner && !isAdmin) {
+        res.status(403).json({
+            success: false,
+            error: 'Forbidden: You do not have permission to access this resource',
         });
         return;
     }

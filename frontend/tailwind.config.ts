@@ -33,6 +33,7 @@ const config: Config = {
                 'slide-up': 'slideUp 0.3s ease-out',
                 'accordion-down': 'accordion-down 0.2s ease-out',
                 'accordion-up': 'accordion-up 0.2s ease-out',
+                'marquee': 'marquee 30s linear infinite',
             },
             keyframes: {
                 'accordion-down': {
@@ -50,6 +51,10 @@ const config: Config = {
                 slideUp: {
                     '0%': { transform: 'translateY(10px)', opacity: '0' },
                     '100%': { transform: 'translateY(0)', opacity: '1' },
+                },
+                marquee: {
+                    '0%': { transform: 'translateX(0%)' },
+                    '100%': { transform: 'translateX(-50%)' },
                 },
             },
         },

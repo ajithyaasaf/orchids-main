@@ -11,7 +11,7 @@ import {
     useCoupon,
     getUserOrderCount,
 } from '../services/couponService';
-import { Coupon } from '@tntrends/shared';
+import { Coupon } from '@orchids/shared';
 
 const router = express.Router();
 

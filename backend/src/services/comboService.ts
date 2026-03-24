@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { ComboOffer, ComboType } from '@tntrends/shared';
+import { ComboOffer, ComboType } from '@orchids/shared';
 
 /**
  * Combo Service - CRUD operations for combo offers

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { customerApi } from '@/lib/api';
-import type { CustomerInsight } from '@tntrends/shared';
+import type { CustomerInsight } from '@orchids/shared';
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<CustomerInsight[]>([]);

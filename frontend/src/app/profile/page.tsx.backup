@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { orderApi } from '@/lib/api';
-import { Order } from '@tntrends/shared';
+import { Order } from '@orchids/shared';
 import { Package, User, LogOut, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AddressManager } from '@/components/ui/AddressManager';
@@ -195,7 +195,7 @@ export default function ProfilePage() {
                                                 import {useRouter} from 'next/navigation';
                                                 import {useAuthStore} from '@/store/authStore';
                                                 import {orderApi} from '@/lib/api';
-                                                import {Order} from '@tntrends/shared';
+                                                import {Order} from '@orchids/shared';
                                                 import {Package, User, LogOut, MapPin} from 'lucide-react';
                                                 import {Button} from '@/components/ui/Button';
                                                 import {AddressManager} from '@/components/ui/AddressManager';

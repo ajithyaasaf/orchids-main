@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Collection } from '@tntrends/shared';
+import { Collection } from '@orchids/shared';
 import { ArrowRight, Clock, Sparkles } from 'lucide-react';
 
 interface CollectionShowcaseProps {

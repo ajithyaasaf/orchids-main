@@ -198,7 +198,7 @@ export default function WholesaleCheckout() {
                             <div className="flex-1">
                                 <h3 className="font-semibold">{item.product.title}</h3>
                                 <p className="text-sm text-gray-600">
-                                    {item.bundlesOrdered} × {item.product.bundleQty} pcs bundle
+                                    {item.bundlesOrdered} {item.bundlesOrdered === 1 ? 'bundle' : 'bundles'} × {item.product.bundleQty} pcs
                                 </p>
                                 <p className="text-xs text-gray-500">
                                     ({Object.entries(item.product.bundleComposition)

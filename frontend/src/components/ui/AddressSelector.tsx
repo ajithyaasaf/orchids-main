@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { SavedAddress, Address } from '@tntrends/shared';
+import { SavedAddress, Address } from '@orchids/shared';
 import { useAuthStore } from '@/store/authStore';
 import { MapPin, Plus, Check } from 'lucide-react';
 import { formatAddressOneLine } from '@/lib/addressUtils';

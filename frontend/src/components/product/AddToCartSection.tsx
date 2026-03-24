@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct } from '@orchids/shared';
 import { useCartStore } from '@/store/wholesaleCartStore';
 import { useRouter } from 'next/navigation';
 

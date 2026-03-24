@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { encode as encodeHtml } from 'he';
-import { Order } from '@tntrends/shared';
+import { WholesaleOrder } from '@orchids/shared';
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -9,13 +9,13 @@ const resend = process.env.RESEND_API_KEY
 if (!resend) {
   console.warn('⚠️ Resend API key missing. Email features will not work.');
 }
-const FROM_EMAIL = process.env.FROM_EMAIL || 'orders@tntrends.shop';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'orders@orchids.store';
 
 /**
  * Send order confirmation email
  */
 export const sendOrderConfirmationEmail = async (
-  order: Order,
+  order: WholesaleOrder,
   customerEmail: string
 ): Promise<boolean> => {
   try {
@@ -45,20 +45,20 @@ export const sendOrderConfirmationEmail = async (
  * Generate order confirmation email HTML template
  * SECURITY: All user-provided data is HTML-escaped to prevent XSS
  */
-const generateOrderEmailTemplate = (order: Order): string => {
+const generateOrderEmailTemplate = (order: WholesaleOrder): string => {
   // SECURITY: Escape all user-controlled data
   const itemsHtml = order.items
     .map(
-      (item) => `
+      (item: any) => `
     <tr>
       <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
-        ${encodeHtml(item.productTitle || 'Product')} (Size: ${encodeHtml(item.size)})
+        ${encodeHtml(item.productTitle || 'Product')} (${item.bundlesOrdered} Bundle(s) of ${item.bundleQty} pcs)
       </td>
       <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">
-        ${item.quantity}
+        ${item.bundlesOrdered}
       </td>
       <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">
-        ₹${item.price}
+        ₹${item.pricePerBundle}
       </td>
     </tr>
   `
@@ -75,7 +75,7 @@ const generateOrderEmailTemplate = (order: Order): string => {
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background-color: #00b0b5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0; font-size: 28px;">TNtrends</h1>
+        <h1 style="margin: 0; font-size: 28px;">Orchid</h1>
         <p style="margin: 10px 0 0 0; font-size: 16px;">Order Confirmation</p>
       </div>
       
@@ -122,11 +122,11 @@ const generateOrderEmailTemplate = (order: Order): string => {
         <p style="margin-top: 30px;">We'll send you another email when your order ships.</p>
         <p>If you have any questions, please don't hesitate to contact us.</p>
         
-        <p style="margin-top: 30px;">Best regards,<br><strong>TNtrends Team</strong></p>
+        <p style="margin-top: 30px;">Best regards,<br><strong>Orchid Team</strong></p>
       </div>
       
       <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
-        <p>&copy; ${new Date().getFullYear()} TNtrends. All rights reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} Orchid. All rights reserved.</p>
       </div>
     </body>
     </html>

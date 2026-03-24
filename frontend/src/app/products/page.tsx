@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 import { Breadcrumbs } from '@/components/seo/StructuredData';
-import { ProductsGrid } from '@/components/products/ProductsGrid';
+import { WholesaleProductCard } from '@/components/products/WholesaleProductCard';
 import { Button } from '@/components/ui/Button';
 import { Filter, SlidersHorizontal } from 'lucide-react';
 import { FilterSidebarClient } from './FilterSidebarClient';
@@ -54,16 +54,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             if (tags.length > 0) {
                 if (!p.tags) return false;
 
-                // We need to normalize tags for comparison (jubba-sets vs Jubba Sets)
-                // Assuming API returns slugs or we normalize here.
-                // The FilterSidebar sends values like 'jubba', 'rompers'.
-                // The product tags might be 'Jubba Sets'.
-                // We need a robust matching strategy. For MVP, simple substring/includes check.
-
-                const lowerProductTags = p.tags.map(t => t.toLowerCase());
-                const matchesTag = tags.some(tag =>
-                    lowerProductTags.some(pt => pt.includes(tag.toLowerCase()))
-                );
+                // Exact safe matching, removing legacy substring includes
+                const matchesTag = tags.some(tag => p.tags?.includes(tag));
 
                 if (!matchesTag) return false;
             }
@@ -144,7 +136,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                                     </Link>
                                 </div>
                             ) : (
-                                <ProductsGrid products={products} />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {products.map((product) => (
+                                        <WholesaleProductCard key={product.id} product={product} />
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>

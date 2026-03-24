@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { auth } from '@/lib/firebase';
 
 /**
@@ -14,7 +14,7 @@ interface AuthTokenHook {
     token: string | null;
     loading: boolean;
     error: string | null;
-    getToken: () => Promise<string>;
+    getToken: (forceRefresh?: boolean) => Promise<string>;
     authenticatedFetch: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
@@ -44,17 +44,15 @@ export function useAuthToken(): AuthTokenHook {
         return () => unsubscribe();
     }, []);
 
-    const getToken = async (forceRefresh: boolean = true): Promise<string> => {
+    const getToken = useCallback(async (forceRefresh: boolean = false): Promise<string> => {
         const currentUser = auth.currentUser;
         if (!currentUser) {
             throw new Error('Not authenticated');
         }
-        const freshToken = await currentUser.getIdToken(forceRefresh);
-        setToken(freshToken);
-        return freshToken;
-    };
+        return await currentUser.getIdToken(forceRefresh);
+    }, []);
 
-    const authenticatedFetch = async (
+    const authenticatedFetch = useCallback(async (
         url: string,
         options: RequestInit = {}
     ): Promise<Response> => {
@@ -63,11 +61,18 @@ export function useAuthToken(): AuthTokenHook {
         return fetch(url, {
             ...options,
             headers: {
+                'Content-Type': 'application/json',
                 ...options.headers,
                 'Authorization': `Bearer ${token}`,
             },
         });
-    };
+    }, [getToken]);
 
-    return { token, loading, error, getToken, authenticatedFetch };
+    return useMemo(() => ({
+        token,
+        loading,
+        error,
+        getToken,
+        authenticatedFetch
+    }), [token, loading, error, getToken, authenticatedFetch]);
 }

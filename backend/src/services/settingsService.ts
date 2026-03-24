@@ -1,5 +1,5 @@
 import { collections } from '../config/firebase';
-import { Settings } from '@tntrends/shared';
+import { Settings } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
 
 const SETTINGS_DOC_ID = 'global';
@@ -21,8 +21,8 @@ export const getSettings = async (): Promise<Settings> => {
                 businessAddress: '',
                 gstin: '',
                 // Legacy fields (kept for compatibility)
-                shippingCharge: 0,
-                freeShippingAbove: 0,
+                shippingCharge: 50,
+                freeShippingAbove: 5000,
                 codEnabled: false,
                 returnPolicyDays: 7,
             };

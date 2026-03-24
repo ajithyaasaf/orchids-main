@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     >
                         <Menu className="w-6 h-6" />
                     </button>
-                    <span className="font-bold text-lg text-gradient">TNtrends Admin</span>
+                    <span className="font-bold text-lg text-gradient">Orchid Admin</span>
                 </div>
                 <button
                     onClick={handleLogout}
@@ -93,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-8">
-                        <h1 className="text-2xl font-bold text-gradient">TNtrends</h1>
+                        <h1 className="text-2xl font-bold text-gradient">Orchid</h1>
                         <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
                             <X className="w-6 h-6" />
                         </button>

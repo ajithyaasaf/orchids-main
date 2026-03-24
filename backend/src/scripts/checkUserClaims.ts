@@ -54,5 +54,5 @@ const checkUserClaims = async (email: string) => {
     }
 };
 
-const email = process.argv[2] || 'tntrendsdigital@gmail.com';
+const email = process.argv[2] || 'contact@orchids.store';
 checkUserClaims(email);

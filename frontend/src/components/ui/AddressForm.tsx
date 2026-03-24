@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Address, AddressError } from '@tntrends/shared';
+import { Address, AddressError } from '@orchids/shared';
 import { Input } from './Input';
 import { Button } from './Button';
 import { validateAddress } from '@/lib/addressUtils';

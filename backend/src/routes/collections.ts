@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { collectionService } from '../services/collectionService';
-import { verifyToken, requireSuperAdmin } from '../middleware/auth';
-import { Collection } from '@tntrends/shared';
+import { verifyToken, requireSuperAdmin, AuthRequest } from '../middleware/auth';
+import { Collection } from '@orchids/shared';
 
 const router = Router();
 
@@ -73,7 +73,7 @@ router.get('/:slug', async (req: Request, res: Response) => {
  * GET /api/collections/admin/all
  * Get all collections with optional filters (admin only)
  */
-router.get('/admin/all', verifyToken, requireSuperAdmin, async (req: Request, res: Response) => {
+router.get('/admin/all', verifyToken, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { status, showOnHomepage, limit } = req.query;
 
@@ -100,7 +100,7 @@ router.get('/admin/all', verifyToken, requireSuperAdmin, async (req: Request, re
  * GET /api/collections/admin/:id
  * Get collection by ID (admin only)
  */
-router.get('/admin/:id', verifyToken, requireSuperAdmin, async (req: Request, res: Response) => {
+router.get('/admin/:id', verifyToken, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
 
@@ -130,7 +130,7 @@ router.get('/admin/:id', verifyToken, requireSuperAdmin, async (req: Request, re
  * POST /api/collections/admin
  * Create new collection (admin only)
  */
-router.post('/admin', verifyToken, requireSuperAdmin, async (req: Request, res: Response) => {
+router.post('/admin', verifyToken, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const adminId = req.user!.uid;
         const collectionData = req.body as Partial<Collection>;
@@ -162,7 +162,7 @@ router.post('/admin', verifyToken, requireSuperAdmin, async (req: Request, res: 
  * PUT /api/collections/admin/:id
  * Update existing collection (admin only)
  */
-router.put('/admin/:id', verifyToken, requireSuperAdmin, async (req: Request, res: Response) => {
+router.put('/admin/:id', verifyToken, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const adminId = req.user!.uid;
@@ -187,7 +187,7 @@ router.put('/admin/:id', verifyToken, requireSuperAdmin, async (req: Request, re
  * DELETE /api/collections/admin/:id
  * Archive collection (soft delete, admin only)
  */
-router.delete('/admin/:id', verifyToken, requireSuperAdmin, async (req: Request, res: Response) => {
+router.delete('/admin/:id', verifyToken, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const adminId = req.user!.uid;

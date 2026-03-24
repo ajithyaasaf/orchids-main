@@ -36,7 +36,7 @@ export default function TermsPage() {
                                 <p className="text-text-secondary mb-2"><strong>Business Name:</strong> Wholesale Orchids</p>
                                 <p className="text-text-secondary mb-2"><strong>Proprietor:</strong> Riyaz Ahamad</p>
                                 <p className="text-text-secondary mb-2"><strong>Address:</strong> 18/44, Kongu Nagar, 3rd Street, Kongu Main Road, Tiruppur – 641607, Tamil Nadu, India</p>
-                                <p className="text-text-secondary mb-2"><strong>Email:</strong> tntrendsdigital@gmail.com</p>
+                                <p className="text-text-secondary mb-2"><strong>Email:</strong> contact@orchids.store</p>
                                 <p className="text-text-secondary"><strong>Phone:</strong> +91 9150673839</p>
                             </div>
                         </section>
@@ -105,7 +105,7 @@ export default function TermsPage() {
                             </div>
                             <p className="text-text-secondary mt-4">
                                 However, if you receive damaged or defective products, please contact us within 48 hours
-                                of delivery at <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a> with
+                                of delivery at <a href="mailto:contact@orchids.store" className="text-primary hover:underline">contact@orchids.store</a> with
                                 photos of the defect. We'll review each case individually.
                             </p>
                         </section>
@@ -173,7 +173,7 @@ export default function TermsPage() {
                                 If you have any questions about these Terms and Conditions, please contact us:
                             </p>
                             <div className="bg-primary/5 p-6 rounded-lg border border-primary/20">
-                                <p className="text-text-secondary"><strong>Email:</strong> <a href="mailto:tntrendsdigital@gmail.com" className="text-primary hover:underline">tntrendsdigital@gmail.com</a></p>
+                                <p className="text-text-secondary"><strong>Email:</strong> <a href="mailto:contact@orchids.store" className="text-primary hover:underline">contact@orchids.store</a></p>
                                 <p className="text-text-secondary"><strong>Phone:</strong> <a href="tel:+919150673839" className="text-primary hover:underline">+91 9150673839</a></p>
                                 <p className="text-text-secondary"><strong>Address:</strong> 18/44, Kongu Nagar, 3rd Street, Tiruppur – 641607, Tamil Nadu</p>
                             </div>

@@ -7,21 +7,21 @@
 
 import PDFDocument from 'pdfkit';
 import { Response } from 'express';
-import { InvoiceData, PackingSlipData, OrderRefund, Order } from '@tntrends/shared';
+import { InvoiceData, PackingSlipData, OrderRefund, WholesaleOrder } from '@orchids/shared';
 
 /**
  * Business details configuration
  * UPDATE THESE when you have your business registration
  */
 const BUSINESS_CONFIG = {
-    name: 'TNtrends',
+    name: 'Orchid',
     address: 'Your Business Address, City, State, PIN',  // UPDATE THIS
     phone: 'Your Phone Number',                           // UPDATE THIS
     email: 'your@email.com',                             // UPDATE THIS
     // Add these when registered:
     // gstin: 'Your GSTIN',
     // cin: 'Your CIN',
-    // legalEntityName: 'TNtrends Private Limited'
+    // legalEntityName: 'Orchid Export Surplus Store'
 };
 
 /**
@@ -108,12 +108,14 @@ export const generateInvoicePDF = (
     let position = tableTop + 20;
     doc.font('Helvetica');
 
-    invoice.order.items.forEach((item, index) => {
+    invoice.order.items.forEach((item: any, index: number) => {
+        const itemTotal = item.bundlesOrdered * item.pricePerBundle;
+        const bundleInfo = `${item.bundlesOrdered} Bundle(s) (${item.bundleQty} pcs)`;
         doc.text(item.productTitle || 'Product', 50, position, { width: 190 });
-        doc.text(item.size, 250, position);
-        doc.text(item.quantity.toString(), 320, position);
-        doc.text(`₹${item.price}`, 380, position);
-        doc.text(`₹${item.price * item.quantity}`, 480, position);
+        doc.text(bundleInfo, 250, position);
+        doc.text(item.bundlesOrdered.toString(), 320, position);
+        doc.text(`₹${item.pricePerBundle}`, 380, position);
+        doc.text(`₹${itemTotal}`, 480, position);
 
         position += 25;
 
@@ -267,11 +269,12 @@ export const generatePackingSlipPDF = (
     let position = tableTop + 20;
     doc.font('Helvetica');
 
-    packingSlip.items.forEach((item) => {
+    packingSlip.items.forEach((item: any) => {
+        const qtyInfo = `${item.bundlesOrdered * item.bundleQty} Total Pcs (in ${item.bundlesOrdered} bundles)`;
         doc.text('☐', 30, position);  // Checkbox for warehouse staff
         doc.text(item.productTitle || 'Product', 70, position, { width: 270 });
-        doc.text(item.size, 350, position);
-        doc.text(item.quantity.toString(), 450, position);
+        doc.text('-', 350, position); // no specific size for bundles in this view
+        doc.text(qtyInfo, 450, position);
 
         position += 25;
 
@@ -304,7 +307,7 @@ export const generatePackingSlipPDF = (
  * @param res - Express response object
  */
 export const generateCreditNotePDF = (
-    order: Order,
+    order: WholesaleOrder,
     creditNote: OrderRefund,
     options: { language?: string } = {},
     res: Response

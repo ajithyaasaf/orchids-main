@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { collectionApi } from '@/lib/api';
-import { Collection } from '@tntrends/shared';
+import { Collection } from '@orchids/shared';
 import { Button } from '@/components/ui/Button';
 import { Plus, Eye, Edit, Trash2, Globe, Calendar, Sparkles } from 'lucide-react';
 

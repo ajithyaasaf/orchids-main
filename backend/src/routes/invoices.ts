@@ -15,7 +15,7 @@
 import express, { Response } from 'express';
 import { verifyToken, AuthRequest } from '../middleware/auth';
 import { requireAdmin } from '../middleware/roleCheck';
-import { getOrderById } from '../services/orderService';
+import { getWholesaleOrderById } from '../services/wholesaleOrderService';
 import {
     canGenerateInvoice,
     generateInvoice,
@@ -28,7 +28,7 @@ import {
     generatePackingSlipPDF,
     generateCreditNotePDF,
 } from '../services/pdfGeneratorService';
-import { InvoiceData, PackingSlipData } from '@tntrends/shared';
+import { InvoiceData, PackingSlipData } from '@orchids/shared';
 
 const router = express.Router();
 
@@ -49,7 +49,7 @@ router.get('/:orderId', verifyToken, async (req: AuthRequest, res: Response) => 
         const { orderId } = req.params;
         const { download } = req.query;
 
-        const order = await getOrderById(orderId);
+        const order = await getWholesaleOrderById(orderId);
 
         if (!order) {
             res.status(404).json({ success: false, error: 'Order not found' });
@@ -76,7 +76,7 @@ router.get('/:orderId', verifyToken, async (req: AuthRequest, res: Response) => 
         if (!invoiceNumber) {
             invoiceNumber = await generateInvoice(orderId);
             // Refresh order to get updated data
-            const updatedOrder = await getOrderById(orderId);
+            const updatedOrder = await getWholesaleOrderById(orderId);
             if (updatedOrder) {
                 order.invoiceNumber = updatedOrder.invoiceNumber;
                 order.invoiceGeneratedAt = updatedOrder.invoiceGeneratedAt;
@@ -105,14 +105,14 @@ router.get('/:orderId', verifyToken, async (req: AuthRequest, res: Response) => 
             invoiceDate: order.invoiceGeneratedAt || new Date(),
             order,
             businessDetails: {
-                name: 'TNtrends',
+                name: 'Orchid',
                 address: 'Your Business Address, City, State, PIN',  // UPDATE THIS
                 phone: 'Your Phone',                                 // UPDATE THIS
                 email: 'your@email.com',                            // UPDATE THIS
                 // IMPROVEMENT #3: Add when registered
                 // gstin: 'Your GSTIN',
                 // cin: 'Your CIN',
-                // legalEntityName: 'TNtrends Private Limited'
+                // legalEntityName: 'Orchid Export Surplus Store'
             },
         };
 
@@ -141,7 +141,7 @@ router.get(
             const { orderId } = req.params;
             const { download } = req.query;
 
-            const order = await getOrderById(orderId);
+            const order = await getWholesaleOrderById(orderId);
 
             if (!order) {
                 res.status(404).json({ success: false, error: 'Order not found' });
@@ -172,7 +172,7 @@ router.get(
                 order,
                 items: order.items,
                 warehouse: {
-                    name: 'TNtrends Warehouse',
+                    name: 'Orchid Warehouse',
                     address: 'Warehouse Address',  // UPDATE THIS
                 },
             };
@@ -202,7 +202,7 @@ router.get(
             const { orderId, creditNoteNumber } = req.params;
             const { download } = req.query;
 
-            const order = await getOrderById(orderId);
+            const order = await getWholesaleOrderById(orderId);
 
             if (!order) {
                 res.status(404).json({ success: false, error: 'Order not found' });
@@ -343,7 +343,7 @@ router.get(
         try {
             const { orderId } = req.params;
 
-            const order = await getOrderById(orderId);
+            const order = await getWholesaleOrderById(orderId);
 
             if (!order) {
                 res.status(404).json({ success: false, error: 'Order not found' });

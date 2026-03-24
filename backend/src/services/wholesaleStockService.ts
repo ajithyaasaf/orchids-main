@@ -1,5 +1,5 @@
 import { collections, db } from '../config/firebase';
-import { WholesaleProduct, WholesaleBundleItem } from '@tntrends/shared';
+import { WholesaleProduct, WholesaleBundleItem } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
 
 /**

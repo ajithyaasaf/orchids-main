@@ -1,7 +1,7 @@
 {
-    "name": "@tntrends/backend",
+    "name": "@orchids/backend",
     "version": "1.0.0",
-    "description": "TNtrends E-commerce Backend API",
+    "description": "Orchid E-commerce Backend API",
     "main": "dist/index.js",
     "scripts": {
         "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
@@ -16,10 +16,10 @@
         "ecommerce",
         "api"
     ],
-    "author": "TNtrends",
+    "author": "Orchid",
     "license": "MIT",
     "dependencies": {
-        "@tntrends/shared": "workspace:*",
+        "@orchids/shared": "workspace:*",
         "cloudinary": "^1.41.0",
         "cors": "^2.8.5",
         "crypto": "^1.0.1",
@@ -44,6 +44,7 @@
         "@types/node": "^20.10.6",
         "@types/pdfkit": "^0.13.4",
         "@types/uuid": "^11.0.0",
+        "firebase-functions": "^7.0.5",
         "ts-node": "^10.9.2",
         "ts-node-dev": "^2.0.0",
         "typescript": "^5.9.3"

@@ -1,8 +1,8 @@
 import cloudinary from '../config/cloudinary';
-import { ProductImage } from '@tntrends/shared';
+
 
 // Default fallback if no folder is specified
-const DEFAULT_FOLDER = 'tntrends/products';
+const DEFAULT_FOLDER = 'orchids/products';
 
 interface UploadResult {
     url: string;
@@ -11,7 +11,7 @@ interface UploadResult {
 
 /**
  * Upload image to Cloudinary with optimizations
- * @param folder - (Optional) Target folder. e.g. 'tntrends/banners'
+ * @param folder - (Optional) Target folder. e.g. 'orchids/banners'
  */
 export const uploadImage = async (
     fileBuffer: Buffer,
@@ -71,7 +71,7 @@ export const deleteImage = async (publicId: string): Promise<void> => {
  * Delete multiple images from Cloudinary
  */
 export const deleteMultipleImages = async (
-    images: ProductImage[]
+    images: { publicId: string }[]
 ): Promise<void> => {
     try {
         const deletePromises = images.map((img) => deleteImage(img.publicId));

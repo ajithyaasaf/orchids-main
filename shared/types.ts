@@ -57,38 +57,7 @@ export interface User {
     segmentUpdatedAt?: Date;        // Last segment calculation timestamp
 }
 
-// Product Types
-export type DiscountType = 'percentage' | 'flat' | 'none';
 
-// Flexible sizing system to support adult sizes (S, M, L, XL) and kids sizes (2-3Y, 4-5Y, etc.)
-export type ProductSize = string;
-export type StockBySize = Record<string, number>;
-
-export interface ProductImage {
-    url: string;
-    publicId: string;
-}
-
-export interface Product {
-    id: string;
-    title: string;
-    description: string;
-    basePrice?: number;   // NEW: Admin-entered base price (source of truth)
-    price: number;        // DEPRECATED: Kept for backward compatibility
-    discountType: DiscountType;
-    discountValue: number;
-    category: string;     // Primary classification: Men/Women/Kids
-    tags?: string[];      // Secondary: Product types and attributes (e.g., ["Shirts", "Formal", "Cotton"])
-    sizes: ProductSize[];
-    stockBySize: StockBySize;
-    inStock: boolean;
-    images: ProductImage[];
-    createdAt: Date;
-
-    // Color variant support (H&M style)
-    styleCode?: string;  // Links color variants together
-    color?: string;      // e.g. "Navy Blue", "Black", "White"
-}
 
 // ========================================
 // WHOLESALE PLATFORM TYPES (Greenfield)
@@ -101,6 +70,7 @@ export interface Product {
 export interface WholesaleProduct {
     id: string;
     title: string;
+    slug: string; // URL-friendly unique identifier
     description: string;
     category: string;
     tags?: string[]; // Secondary classification for filtering (e.g. "Jubba", "Rompers")
@@ -170,6 +140,10 @@ export interface WholesaleOrder {
     razorpayOrderId: string;
     razorpayPaymentId?: string;
 
+    // Promotions (optional - applied at checkout)
+    appliedCombo?: AppliedCombo;             // Bundle combo deal applied
+    appliedCoupon?: AppliedCoupon;           // Discount coupon applied
+
     // Order lifecycle
     orderStatus: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
     statusHistory: {
@@ -179,10 +153,20 @@ export interface WholesaleOrder {
         notes?: string;
     }[];
 
+    // Invoice System Fields
+    invoiceNumber?: string;          // INV-2025-000001 (GST-compliant sequential)
+    invoiceGeneratedAt?: Date;       // Timestamp of invoice generation
+    invoiceSent?: boolean;           // Email delivery status
+    packingSlipPrinted?: boolean;    // Warehouse workflow flag
+    refunds?: OrderRefund[];         // Track all refunds with credit notes
+
+    // Shipping
+    courierName?: string;
+    trackingNumber?: string;
+
     // Metadata
     userId: string;
     address: Address;
-    invoiceNumber?: string;
     stockDeducted: boolean;                      // Idempotency flag
     createdAt: Date;
     updatedAt: Date;
@@ -191,42 +175,6 @@ export interface WholesaleOrder {
 // Order Types
 export type PaymentStatus = 'paid' | 'failed' | 'pending';
 export type OrderStatus = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
-
-export interface OrderItem {
-    productId: string;
-    productTitle?: string;
-    productImage?: string;
-    size: ProductSize;
-    quantity: number;
-    price: number;
-}
-
-
-export interface Order {
-    id: string;
-    userId: string;
-    items: (OrderItem | WholesaleBundleItem)[];  // Support both retail and wholesale
-    totalAmount: number;
-    paymentStatus: PaymentStatus;
-    orderStatus: OrderStatus;
-    address: Address;
-    emailSent: boolean;
-    razorpayOrderId?: string;
-    razorpayPaymentId?: string;
-    appliedCombo?: AppliedCombo; // Track combo usage for analytics
-    appliedCoupon?: AppliedCoupon; // Track coupon usage for analytics
-    stockDeducted?: boolean; // SECURITY: Idempotency flag to prevent double stock deduction
-
-    // Invoice System Fields
-    invoiceNumber?: string;          // INV-2025-000001 (GST-compliant sequential)
-    invoiceGeneratedAt?: Date;       // Timestamp of invoice generation
-    invoiceSent?: boolean;           // Email delivery status
-    packingSlipPrinted?: boolean;    // Warehouse workflow flag
-    refunds?: OrderRefund[];         // Track all refunds with credit notes
-
-    createdAt: Date;
-    updatedAt?: Date;
-}
 
 // Invoice Types Import (forward declaration)
 import type { OrderRefund } from './invoice-types';
@@ -249,12 +197,7 @@ export interface Settings {
     returnPolicyDays: number;
 }
 
-// Cart Types
-export interface CartItem {
-    product: Product;
-    size: ProductSize;
-    quantity: number;
-}
+
 
 // API Response Types
 export interface ApiResponse<T = any> {
@@ -279,7 +222,7 @@ export interface PaginatedResponse<T> {
 export interface ProductFilters {
     category?: string;
     tags?: string[];     // Filter by product types
-    sizes?: ProductSize[];
+    sizes?: string[];
     minPrice?: number;
     maxPrice?: number;
     inStock?: boolean;
@@ -377,14 +320,7 @@ export interface AppliedCombo {
     itemCount: number; // Number of items in combo
 }
 
-// Cart pricing options for best-price calculation
-export interface PricingOption {
-    type: 'individual' | 'combo';
-    total: number;
-    savings: number;
-    appliedCombo?: AppliedCombo;
-    breakdown?: string; // Human-readable explanation
-}
+
 
 // Analytics event tracking
 export type ComboAnalyticsEventType = 'view' | 'applied' | 'converted' | 'removed' | 'expired';
@@ -483,39 +419,8 @@ export interface AppliedCoupon {
 }
 
 // Shipping and Checkout Types
-export interface CheckoutItem {
-    productId: string;
-    size: string;
-    color?: string;
-    quantity: number;
-}
 
-export interface CheckoutCalculationRequest {
-    items: CheckoutItem[];
-    pincode: string;
-}
 
-export interface CheckoutCalculatedItem {
-    productId: string;
-    title: string;
-    size: string;
-    color?: string;
-    displayPrice: number;
-    quantity: number;
-    lineTotal: number;
-}
-
-export interface CheckoutCalculationResponse {
-    items: CheckoutCalculatedItem[];
-    subtotal: number;
-    shippingFee: number;
-    shippingLabel: string;
-    discount: number;
-    discountLabel: string | null;
-    finalTotal: number;
-    isTier1: boolean;
-    couponCode?: string;             // Applied coupon code if any
-}
 
 export interface ShippingCheckResponse {
     pincode: string;
@@ -596,7 +501,7 @@ export interface Collection {
 }
 
 export interface CollectionWithProducts extends Collection {
-    products: Product[];
+    products: WholesaleProduct[];
 }
 
 // Admin filter/query params

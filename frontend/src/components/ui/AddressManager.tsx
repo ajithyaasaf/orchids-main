@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SavedAddress, Address } from '@tntrends/shared';
+import { SavedAddress, Address } from '@orchids/shared';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/context/ToastContext';
 import { AddressCard } from './AddressCard';

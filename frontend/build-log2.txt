@@ -1,0 +1,541 @@
+﻿
+> @tntrends/frontend@1.0.0 build
+> next build
+
+  Γû▓ Next.js 14.2.33
+  - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+node.exe : [baseline-br
+owser-mapping] The 
+data in this module is 
+over two months old.  
+To ensure accurate 
+Baseline data, please 
+update: `npm i baseline
+-browser-mapping@latest
+ -D`
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ([baseline-bro   
+ ws...ping@latest -    
+D`:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/29) ...
+   Generating static pages (7/29) 
+   Generating static pages (14/29) 
+   Generating static pages (21/29) 
+ Γ£ô Generating static pages (29/29)
+   Finalizing page optimization ...
+   Collecting build traces ...
+ ΓÜá Failed to copy 
+traced files for 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\server\pages\_app.j
+s Error: EPERM: 
+operation not 
+permitted, symlink 
+'C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\react@18.3.1\no
+de_modules\react' -> 
+'C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\standalone\frontend
+\node_modules\react'
+    at async 
+Object.symlink (node:in
+ternal/fs/promises:1009
+:10)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1402:25
+    at async 
+Promise.all (index 8)
+    at async 
+handleTraceFiles 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1390:9)
+    at async 
+copyTracedFiles 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1451:9)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:224:9
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20)
+    at async writeStand
+aloneDirectory 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:223:5)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:2143:17
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20) 
+{
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'symlink',
+  path: 'C:\\Personal 
+Projects\\WholeSale Orc
+hids\\website\\node_mod
+ules\\.pnpm\\react@18.3
+.1\\node_modules\\react
+',
+  dest: 'C:\\Personal 
+Projects\\WholeSale Orc
+hids\\website\\frontend
+\\.next\\standalone\\fr
+ontend\\node_modules\\r
+eact'
+}
+ ΓÜá Failed to copy 
+traced files for 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\server\pages\_error
+.js Error: EPERM: 
+operation not 
+permitted, symlink 
+'C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\@opentelemetry+
+api@1.9.0\node_modules\
+@opentelemetry\api' -> 
+'C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\standalone\node_mod
+ules\.pnpm\next@14.2.33
+_@opentelemetry_807f5b8
+28720bb92fa2aeae5633940
+b8\node_modules\@opente
+lemetry\api'
+    at async 
+Object.symlink (node:in
+ternal/fs/promises:1009
+:10)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1402:25
+    at async 
+Promise.all (index 50)
+    at async 
+handleTraceFiles 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1390:9)
+    at async 
+copyTracedFiles 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1451:9)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:224:9
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20)
+    at async writeStand
+aloneDirectory 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:223:5)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:2143:17
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20) 
+{
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'symlink',
+  path: 'C:\\Personal 
+Projects\\WholeSale Orc
+hids\\website\\node_mod
+ules\\.pnpm\\@opentelem
+etry+api@1.9.0\\node_mo
+dules\\@opentelemetry\\
+api',
+  dest: 'C:\\Personal 
+Projects\\WholeSale Orc
+hids\\website\\frontend
+\\.next\\standalone\\no
+de_modules\\.pnpm\\next
+@14.2.33_@opentelemetry
+_807f5b828720bb92fa2aea
+e5633940b8\\node_module
+s\\@opentelemetry\\api'
+}
+ ΓÜá Failed to copy 
+traced files for 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\server\pages\_docum
+ent.js Error: EPERM: 
+operation not 
+permitted, symlink 
+'C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\react@18.3.1\no
+de_modules\react' -> 
+'C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\standalone\node_mod
+ules\.pnpm\next@14.2.33
+_@opentelemetry_807f5b8
+28720bb92fa2aeae5633940
+b8\node_modules\react'
+    at async 
+Object.symlink (node:in
+ternal/fs/promises:1009
+:10)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1402:25
+    at async 
+Promise.all (index 63)
+    at async 
+handleTraceFiles 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1390:9)
+    at async 
+copyTracedFiles 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1451:9)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:224:9
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20)
+    at async writeStand
+aloneDirectory 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:223:5)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:2143:17
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20) 
+{
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'symlink',
+  path: 'C:\\Personal 
+Projects\\WholeSale Orc
+hids\\website\\node_mod
+ules\\.pnpm\\react@18.3
+.1\\node_modules\\react
+',
+  dest: 'C:\\Personal 
+Projects\\WholeSale Orc
+hids\\website\\frontend
+\\.next\\standalone\\no
+de_modules\\.pnpm\\next
+@14.2.33_@opentelemetry
+_807f5b828720bb92fa2aea
+e5633940b8\\node_module
+s\\react'
+}
+
+> Build error occurred
+Error: EPERM: 
+operation not 
+permitted, symlink 
+'C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\@next+env@14.2.
+33\node_modules\@next\e
+nv' -> 'C:\Personal 
+Projects\WholeSale Orch
+ids\website\frontend\.n
+ext\standalone\node_mod
+ules\.pnpm\next@14.2.33
+_@opentelemetry_807f5b8
+28720bb92fa2aeae5633940
+b8\node_modules\@next\e
+nv'
+    at async 
+Object.symlink (node:in
+ternal/fs/promises:1009
+:10)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1402:25
+    at async 
+Promise.all (index 83)
+    at async 
+handleTraceFiles 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1390:9)
+    at async 
+copyTracedFiles 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\utils.js:1472:5)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:224:9
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20)
+    at async writeStand
+aloneDirectory 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:223:5)
+    at async 
+C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+build\index.js:2143:17
+    at async 
+Span.traceAsyncFn 
+(C:\Personal 
+Projects\WholeSale Orch
+ids\website\node_module
+s\.pnpm\next@14.2.33_@o
+pentelemetry_807f5b8287
+20bb92fa2aeae5633940b8\
+node_modules\next\dist\
+trace\trace.js:154:20) 
+{
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'symlink',
+  path: 'C:\\Personal 
+Projects\\WholeSale Orc
+hids\\website\\node_mod
+ules\\.pnpm\\@next+env@
+14.2.33\\node_modules\\
+@next\\env',
+  dest: 'C:\\Personal 
+Projects\\WholeSale Orc
+hids\\website\\frontend
+\\.next\\standalone\\no
+de_modules\\.pnpm\\next
+@14.2.33_@opentelemetry
+_807f5b828720bb92fa2aea
+e5633940b8\\node_module
+s\\@next\\env'
+}

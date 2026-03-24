@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { dashboardApi } from '@/lib/api';
-import type { DashboardAnalytics } from '@tntrends/shared';
+import type { DashboardAnalytics } from '@orchids/shared';
 
 export default function AnalyticsPage() {
     const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);

@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // TNtrends Next.js Configuration
+    // Orchid Next.js Configuration
     // 1. Transpile shared packages
-    transpilePackages: ['@tntrends/shared', 'undici', 'firebase', '@firebase/auth', '@firebase/component', '@firebase/util'],
+    transpilePackages: ['@orchids/shared', 'undici', 'firebase', '@firebase/auth', '@firebase/component', '@firebase/util'],
 
     images: {
         remotePatterns: [

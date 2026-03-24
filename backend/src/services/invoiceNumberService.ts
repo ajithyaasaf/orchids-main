@@ -11,7 +11,7 @@
  */
 
 import { db } from '../config/firebase';
-import { Order } from '@tntrends/shared';
+import { WholesaleOrder } from '@orchids/shared';
 
 /**
  * Generate sequential invoice number using Firestore transaction
@@ -77,7 +77,7 @@ export const generateCreditNoteNumber = async (): Promise<string> => {
  * @param order - Order to check
  * @returns boolean - True if invoice exists
  */
-export const hasInvoice = (order: Order): boolean => {
+export const hasInvoice = (order: WholesaleOrder): boolean => {
     return !!(order.invoiceNumber && order.invoiceGeneratedAt);
 };
 

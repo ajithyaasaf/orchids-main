@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { comboApi } from '@/lib/api';
-import { ComboOffer } from '@tntrends/shared';
+import { ComboOffer } from '@orchids/shared';
 import { useToast } from '@/context/ToastContext';
 
 export default function CombosPage() {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { collectionApi } from '@/lib/api';
-import { Collection } from '@tntrends/shared';
+import { Collection } from '@orchids/shared';
 import { CollectionForm } from '@/components/admin/CollectionForm';
 import { Loader2 } from 'lucide-react';
 

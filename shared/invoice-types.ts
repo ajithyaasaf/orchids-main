@@ -4,7 +4,7 @@
  * Complete type definitions for invoice generation system
  */
 
-import { Order, OrderItem } from './types';
+import { WholesaleOrder, WholesaleBundleItem } from './types';
 
 /**
  * Business Details for Invoice Header
@@ -33,7 +33,7 @@ export interface WarehouseDetails {
 export interface InvoiceData {
     invoiceNumber: string;       // INV-2025-000001
     invoiceDate: Date;
-    order: Order;                // Full order snapshot
+    order: WholesaleOrder;                // Full order snapshot
     businessDetails: BusinessDetails;
 }
 
@@ -42,8 +42,8 @@ export interface InvoiceData {
  */
 export interface PackingSlipData {
     slipNumber: string;          // Order ID based
-    order: Order;
-    items: OrderItem[];
+    order: WholesaleOrder;
+    items: WholesaleBundleItem[];
     warehouse: WarehouseDetails;
 }
 
@@ -76,7 +76,7 @@ export interface OrderRefund {
 export interface CreditNoteData {
     creditNoteNumber: string;
     creditNoteDate: Date;
-    order: Order;
+    order: WholesaleOrder;
     refund: OrderRefund;
     businessDetails: BusinessDetails;
 }

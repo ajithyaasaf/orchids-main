@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, getDoc, runTransaction } from 'firebase/firestore';
-import { SavedAddress, Address, AddressError } from '@tntrends/shared';
+import { SavedAddress, Address, AddressError } from '@orchids/shared';
 import {
     validateAddress,
     sanitizeAddress,
@@ -55,14 +55,27 @@ export const useAuthStore = create<AuthStore>((set) => ({
     initialized: false,
 
     signIn: async (email, password) => {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const idToken = await userCredential.user.getIdToken();
+        await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+        });
     },
 
     signUp: async (email, password) => {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const idToken = await userCredential.user.getIdToken();
+        await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+        });
     },
 
     logout: async () => {
+        await fetch('/api/auth/logout', { method: 'POST' });
         await signOut(auth);
         set({ user: null });
     },

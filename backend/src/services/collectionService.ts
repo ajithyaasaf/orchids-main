@@ -1,6 +1,6 @@
 import { db } from '../config/firebase';
 import admin from 'firebase-admin';
-import { Collection, CollectionWithProducts, Product, CollectionQueryParams, WholesaleProduct } from '@tntrends/shared';
+import { Collection, CollectionWithProducts, CollectionQueryParams, WholesaleProduct } from '@orchids/shared';
 import { getWholesaleProductsByIds } from './wholesaleProductService';
 
 class CollectionService {

@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 
 /**
@@ -17,14 +17,14 @@ const COLLECTIONS = ['products', 'orders', 'users', 'settings'];
 
 export const scheduledFirestoreExport = functions.pubsub
     .topic('firestore-backup')
-    .onPublish(async (message) => {
+    .onPublish(async (message: any) => {
         const timestamp = new Date().toISOString().split('T')[0];
         const outputUriPrefix = `${BACKUP_BUCKET}/${timestamp}`;
 
         try {
             const client = new admin.firestore.v1.FirestoreAdminClient();
             const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-            const databaseName = client.databasePath(project Id!, '(default)');
+            const databaseName = client.databasePath(projectId!, '(default)');
 
             console.log(`Starting Firestore export to: ${outputUriPrefix}`);
 

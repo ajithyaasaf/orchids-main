@@ -1,6 +1,6 @@
 import { collections } from '../config/firebase';
 import admin from 'firebase-admin';
-import { WholesaleProduct } from '@tntrends/shared';
+import { WholesaleProduct } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
 
 /**
@@ -8,6 +8,24 @@ import { AppError } from '../middleware/errorHandler';
  * Handles CRUD operations for wholesale products
  * Enforces bundle validation and price locking
  */
+
+/**
+ * Generate URL-friendly slug from title and document ID
+ * Enterprise Pattern: Appends a short hash (last 5 chars of ID) to guarantee uniqueness without DB reads
+ */
+const generateSlug = (title: string, id: string): string => {
+    const baseSlug = title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '') // Remove non-word characters
+        .replace(/\s+/g, '-')      // Replace spaces with hyphens
+        .replace(/-+/g, '-')       // Replace multiple hyphens with single
+        .replace(/^-+|-+$/g, '')   // Trim hyphens from ends
+        .substring(0, 50);         // Truncate to keep URLs reasonable
+
+    const shortHash = id.substring(id.length - 5).toLowerCase();
+
+    return `${baseSlug}-${shortHash}`;
+};
 
 /**
  * Create new wholesale product
@@ -29,8 +47,12 @@ export const createWholesaleProduct = async (
         );
     }
 
+    // Pre-allocate Document Reference to get ID for slug generation
+    const docRef = collections.wholesaleProducts.doc();
+
     const newProduct = {
         ...productData,
+        slug: productData.slug || generateSlug(productData.title, docRef.id),
         totalPieces: productData.availableBundles * productData.bundleQty,
         inStock: productData.availableBundles > 0,
         isLocked: false,
@@ -39,7 +61,7 @@ export const createWholesaleProduct = async (
         updatedAt: new Date(),
     };
 
-    const docRef = await collections.wholesaleProducts.add(newProduct);
+    await docRef.set(newProduct);
     return { id: docRef.id, ...newProduct } as WholesaleProduct;
 };
 
@@ -87,6 +109,11 @@ export const updateWholesaleProduct = async (
         updates.inStock = updates.availableBundles > 0;
     }
 
+    // Auto-update slug if title changes and no custom slug provided
+    if (updates.title && !updates.slug) {
+        updates.slug = generateSlug(updates.title, id);
+    }
+
     await collections.wholesaleProducts.doc(id).update({
         ...updates,
         updatedAt: new Date(),
@@ -103,6 +130,23 @@ export const getWholesaleProductById = async (id: string): Promise<WholesaleProd
         throw new AppError('Product not found', 404);
     }
 
+    return { id: doc.id, ...doc.data() } as WholesaleProduct;
+};
+
+/**
+ * Get wholesale product by Slug
+ */
+export const getWholesaleProductBySlug = async (slug: string): Promise<WholesaleProduct> => {
+    const snapshot = await collections.wholesaleProducts
+        .where('slug', '==', slug)
+        .limit(1)
+        .get();
+
+    if (snapshot.empty) {
+        throw new AppError('Product not found', 404);
+    }
+
+    const doc = snapshot.docs[0];
     return { id: doc.id, ...doc.data() } as WholesaleProduct;
 };
 

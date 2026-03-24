@@ -1,4 +1,4 @@
-import { WholesaleProduct, WholesaleBundleItem } from '@tntrends/shared';
+import { WholesaleProduct, WholesaleBundleItem } from '@orchids/shared';
 import { getSettings, calculateShipping } from './settingsService';
 
 /**

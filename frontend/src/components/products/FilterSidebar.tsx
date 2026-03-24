@@ -6,6 +6,7 @@ import { ChevronDown, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as Accordion from '@radix-ui/react-accordion';
 import * as Checkbox from '@radix-ui/react-checkbox';
+import { PRODUCT_CATEGORIES } from '@orchids/shared';
 
 // ============================================================================
 // Types & Constants
@@ -17,60 +18,7 @@ interface FilterSidebarProps {
     onMobileClose?: () => void;
 }
 
-const FILTER_CATEGORIES = [
-    {
-        id: 'newborn',
-        label: 'Newborn Collection',
-        subcategories: [
-            { label: 'Jubba Sets', value: 'jubba' },
-            { label: 'Rompers', value: 'rompers' },
-            { label: 'Frocks', value: 'frocks' },
-            { label: 'Cord Sets', value: 'cord-sets' },
-            { label: 'Cloth Diapers', value: 'diapers' },
-            { label: 'Gift Boxes', value: 'gift-box' },
-            { label: 'Towels & Wipes', value: 'towels' },
-            { label: 'Bibs & Caps', value: 'bibs' },
-            { label: 'Baby Beds', value: 'beds' },
-            { label: 'Mosquito Nets', value: 'nets' },
-        ]
-    },
-    {
-        id: 'girls',
-        label: 'Girls Wear',
-        subcategories: [
-            { label: 'Frocks & Dresses', value: 'frocks' },
-            { label: 'T-Shirts & Tops', value: 't-shirts' },
-            { label: 'Sets & Combos', value: 'sets' },
-            { label: 'Leggings', value: 'leggings' },
-            { label: 'Nightwear', value: 'nightwear' },
-            { label: 'Innerwear', value: 'innerwear' },
-        ]
-    },
-    {
-        id: 'boys',
-        label: 'Boys Wear',
-        subcategories: [
-            { label: 'T-Shirts', value: 't-shirts' },
-            { label: 'Shirts', value: 'shirts' },
-            { label: 'Sets', value: 'sets' },
-            { label: 'Shorts', value: 'shorts' },
-            { label: 'Track Pants', value: 'pants' },
-            { label: 'Jeans', value: 'jeans' },
-            { label: 'Innerwear', value: 'underwear' },
-        ]
-    },
-    {
-        id: 'women',
-        label: "Women's Apparel",
-        subcategories: [
-            { label: 'Maternity Wear', value: 'maternity' },
-            { label: 'Feeding Tops', value: 'feeding' },
-            { label: 'Nighties', value: 'nighties' },
-            { label: 'Leggings', value: 'leggings' },
-            { label: 'T-Shirts', value: 't-shirts' },
-        ]
-    }
-];
+// Using PRODUCT_CATEGORIES from @orchids/shared as single source of truth
 
 // ============================================================================
 // Component
@@ -225,7 +173,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         onValueChange={setExpandedItems}
                         className="space-y-1"
                     >
-                        {FILTER_CATEGORIES.map((category) => {
+                        {PRODUCT_CATEGORIES.map((category) => {
                             const isCategoryActive = activeCategory === category.id;
 
                             return (

@@ -1,5 +1,4 @@
-import { Product } from '@tntrends/shared';
-import { getProductPricing } from './pricingUtils';
+import { WholesaleProduct } from '@orchids/shared';
 
 /**
  * Format price to Indian Rupee format
@@ -48,22 +47,20 @@ export const isValidPhone = (phone: string): boolean => {
  * Generate product JSON-LD for SEO
  * Uses centralized pricing utilities to ensure consistent prices
  */
-export const generateProductJsonLd = (product: Product) => {
-    const pricing = getProductPricing(product);
-
+export const generateProductJsonLd = (product: WholesaleProduct) => {
     return {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.title,
         description: product.description,
-        image: product.images.map((img: any) => img.url),
+        image: product.images,
         brand: {
             '@type': 'Brand',
             name: 'Wholesale Orchids',
         },
         offers: {
             '@type': 'Offer',
-            price: pricing.displayPrice,
+            price: product.bundlePrice,
             priceCurrency: 'INR',
             availability: product.inStock
                 ? 'https://schema.org/InStock'

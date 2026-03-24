@@ -1,4 +1,4 @@
-import type { User, Order } from './types';
+import type { User, WholesaleOrder } from './types';
 
 // Customer Analytics Types
 export interface CustomerMetadata {
@@ -14,7 +14,7 @@ export interface CustomerMetadata {
 
 export interface CustomerInsight extends User {
     metadata: CustomerMetadata;
-    orderHistory: Order[];
+    orderHistory: WholesaleOrder[];
     segment: 'new' | 'returning' | 'vip' | 'at-risk' | 'inactive';
 }
 

@@ -1,69 +1,44 @@
-import { CartItem, ComboOffer, AppliedCombo, PricingOption } from '@tntrends/shared';
+import { ComboOffer, AppliedCombo, WholesaleProduct } from '@orchids/shared';
 import { getAllActiveCombos, isComboActive } from './comboService';
-import { getProductById } from './productService';
-import { getProductPricing } from '../utils/pricingUtils';
 
-/**
- * Combo Pricing Service - Best price calculation engine
- * 
- * Design Pattern: Strategy Pattern
- * - Each combo type has its own validation strategy
- * - Easy to add new combo types in Path 2
- * - Keeps cart logic clean and focused
- */
+export interface WholesaleCheckoutBundle {
+    productId: string;
+    product: WholesaleProduct;
+    bundlesOrdered: number;
+}
 
-/**
- * Calculate final price after individual product discounts
- */
-const calculateIndividualPricing = (cartItems: CartItem[]): number => {
-    return cartItems.reduce((total, item) => {
-        const pricing = getProductPricing(item.product);
-        // Use displayPrice which includes shipping buffer and discounts
-        return total + (pricing.displayPrice * item.quantity);
+export interface PricingOption {
+    type: 'individual' | 'combo';
+    total: number;
+    savings: number;
+    appliedCombo?: AppliedCombo;
+    breakdown?: string;
+}
+
+const calculateIndividualPricing = (items: WholesaleCheckoutBundle[]): number => {
+    return items.reduce((total, item) => {
+        return total + (item.product.bundlePrice * item.bundlesOrdered);
     }, 0);
 };
 
-/**
- * Calculate original price without any discounts (MRP total)
- */
-const calculateOriginalPrice = (cartItems: CartItem[]): number => {
-    return cartItems.reduce((total, item) => {
-        const pricing = getProductPricing(item.product);
-        // Use originalDisplayPrice which includes shipping buffer but no discounts
-        return total + (pricing.originalDisplayPrice * item.quantity);
-    }, 0);
+const isEligibleForQuantityCombo = (items: WholesaleCheckoutBundle[], combo: ComboOffer): boolean => {
+    const totalBundles = items.reduce((sum, item) => sum + item.bundlesOrdered, 0);
+    return totalBundles >= combo.minimumQuantity;
 };
 
-
-/**
- * Check if cart is eligible for a quantity-based combo
- */
-const isEligibleForQuantityCombo = (cartItems: CartItem[], combo: ComboOffer): boolean => {
-    // For MVP: Simple quantity check
-    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-    return totalItems >= combo.minimumQuantity;
-};
-
-/**
- * Validate stock availability for combo
- * Ensures all items in cart have sufficient stock
- */
-export const validateComboStock = async (cartItems: CartItem[]): Promise<{
+export const validateComboStock = async (items: WholesaleCheckoutBundle[]): Promise<{
     valid: boolean;
     message?: string;
 }> => {
     try {
-        for (const item of cartItems) {
-            const stockForSize = item.product.stockBySize[item.size];
-
-            if (!stockForSize || stockForSize < item.quantity) {
+        for (const item of items) {
+            if (item.product.availableBundles < item.bundlesOrdered) {
                 return {
                     valid: false,
-                    message: `Insufficient stock for ${item.product.title} (Size: ${item.size}). Only ${stockForSize || 0} available.`
+                    message: `Insufficient stock for ${item.product.title}. Only ${item.product.availableBundles} bundles available.`
                 };
             }
         }
-
         return { valid: true };
     } catch (error: any) {
         return {
@@ -73,23 +48,14 @@ export const validateComboStock = async (cartItems: CartItem[]): Promise<{
     }
 };
 
-/**
- * Find all applicable combos for current cart
- */
-const findApplicableCombos = async (cartItems: CartItem[]): Promise<ComboOffer[]> => {
+const findApplicableCombos = async (items: WholesaleCheckoutBundle[]): Promise<ComboOffer[]> => {
     try {
         const activeCombos = await getAllActiveCombos();
 
         return activeCombos.filter(combo => {
-            // MVP: Only handle quantity_based combos
             if (combo.type === 'quantity_based') {
-                return isEligibleForQuantityCombo(cartItems, combo);
+                return isEligibleForQuantityCombo(items, combo);
             }
-
-            // Path 2: Add more combo type handlers here
-            // if (combo.type === 'category_based') { ... }
-            // if (combo.type === 'bundle') { ... }
-
             return false;
         });
     } catch (error: any) {
@@ -98,14 +64,9 @@ const findApplicableCombos = async (cartItems: CartItem[]): Promise<ComboOffer[]
     }
 };
 
-/**
- * Calculate best pricing option for cart
- * Compares individual pricing vs all applicable combos
- * Returns the option that saves user the most money
- */
-export const calculateBestPrice = async (cartItems: CartItem[]): Promise<PricingOption> => {
+export const calculateBestPrice = async (items: WholesaleCheckoutBundle[]): Promise<PricingOption> => {
     try {
-        if (!cartItems || cartItems.length === 0) {
+        if (!items || items.length === 0) {
             return {
                 type: 'individual',
                 total: 0,
@@ -114,49 +75,37 @@ export const calculateBestPrice = async (cartItems: CartItem[]): Promise<Pricing
             };
         }
 
-        // Option 1: Individual pricing (with product discounts)
-        const individualTotal = calculateIndividualPricing(cartItems);
-        const originalTotal = calculateOriginalPrice(cartItems);
+        const originalTotal = calculateIndividualPricing(items);
 
         const individualOption: PricingOption = {
             type: 'individual',
-            total: individualTotal,
-            savings: originalTotal - individualTotal,
-            breakdown: 'Individual product pricing with discounts'
+            total: originalTotal,
+            savings: 0,
+            breakdown: 'Individual bundle pricing'
         };
 
-        // Find applicable combos
-        const applicableCombos = await findApplicableCombos(cartItems);
+        const applicableCombos = await findApplicableCombos(items);
 
         if (applicableCombos.length === 0) {
             return individualOption;
         }
 
-        // Option 2+: Combo pricing
-        // For each combo, calculate total and compare
         const comboOptions: PricingOption[] = applicableCombos.map(combo => {
-            const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+            const totalBundles = items.reduce((sum, item) => sum + item.bundlesOrdered, 0);
 
-            // Calculate how many full combos we can make
-            const comboCount = Math.floor(totalItems / combo.minimumQuantity);
-            const remainingItems = totalItems % combo.minimumQuantity;
+            const comboCount = Math.floor(totalBundles / combo.minimumQuantity);
+            const remainingBundles = totalBundles % combo.minimumQuantity;
 
-            // Price for combo items
             const comboTotal = comboCount * combo.comboPrice;
 
-            // Price for remaining items (use individual pricing)
             let remainingTotal = 0;
-            if (remainingItems > 0) {
-                // Take first N items for remaining calculation
-                let itemsToPrice = remainingItems;
-                for (const item of cartItems) {
+            if (remainingBundles > 0) {
+                let itemsToPrice = remainingBundles;
+                for (const item of items) {
                     if (itemsToPrice <= 0) break;
 
-                    const qtyToPrice = Math.min(item.quantity, itemsToPrice);
-                    const pricing = getProductPricing(item.product);
-
-                    // Use displayPrice which includes discounts and shipping buffer
-                    remainingTotal += pricing.displayPrice * qtyToPrice;
+                    const qtyToPrice = Math.min(item.bundlesOrdered, itemsToPrice);
+                    remainingTotal += item.product.bundlePrice * qtyToPrice;
                     itemsToPrice -= qtyToPrice;
                 }
             }
@@ -176,36 +125,27 @@ export const calculateBestPrice = async (cartItems: CartItem[]): Promise<Pricing
                     appliedAt: new Date(),
                     itemCount: comboCount * combo.minimumQuantity
                 },
-                breakdown: `${combo.name}: ${comboCount} combo(s) + ${remainingItems} individual item(s)`
+                breakdown: `${combo.name}: ${comboCount} combo(s) + ${remainingBundles} individual bundle(s)`
             };
         });
 
-        // Find best option (lowest total price)
         const allOptions = [individualOption, ...comboOptions];
-        const bestOption = allOptions.reduce((best, current) =>
+        return allOptions.reduce((best, current) =>
             current.total < best.total ? current : best
         );
-
-        return bestOption;
     } catch (error: any) {
         console.error('Error calculating best price:', error);
-
-        // Fallback to individual pricing on error
         return {
             type: 'individual',
-            total: calculateIndividualPricing(cartItems),
+            total: calculateIndividualPricing(items),
             savings: 0,
             breakdown: 'Error calculating combos, using individual pricing'
         };
     }
 };
 
-/**
- * Re-validate combo at checkout
- * Ensures combo is still active and stock is available
- */
 export const validateComboAtCheckout = async (
-    cartItems: CartItem[],
+    items: WholesaleCheckoutBundle[],
     comboId: string
 ): Promise<{
     valid: boolean;
@@ -216,9 +156,8 @@ export const validateComboAtCheckout = async (
         const { getComboById } = await import('./comboService');
         const combo = await getComboById(comboId);
 
-        // Check if combo still exists and is active
         if (!combo || !isComboActive(combo)) {
-            const newPricing = await calculateBestPrice(cartItems);
+            const newPricing = await calculateBestPrice(items);
             return {
                 valid: false,
                 recalculatedPrice: newPricing,
@@ -226,10 +165,9 @@ export const validateComboAtCheckout = async (
             };
         }
 
-        // Validate stock
-        const stockValidation = await validateComboStock(cartItems);
+        const stockValidation = await validateComboStock(items);
         if (!stockValidation.valid) {
-            const newPricing = await calculateBestPrice(cartItems);
+            const newPricing = await calculateBestPrice(items);
             return {
                 valid: false,
                 recalculatedPrice: newPricing,

@@ -37,7 +37,7 @@ const BANNER_MESSAGES: BannerMessage[] = [
 ];
 
 const ROTATION_INTERVAL = 5000; // 5 seconds
-const STORAGE_KEY = 'tntrends-banner-dismissed';
+const STORAGE_KEY = 'orchids-banner-dismissed';
 
 export const PromotionalBanner: React.FC = () => {
     const [currentIndex, setCurrentIndex] = useState(0);

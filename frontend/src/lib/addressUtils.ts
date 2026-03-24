@@ -1,4 +1,4 @@
-import { Address, SavedAddress, AddressError } from '@tntrends/shared';
+import { Address, SavedAddress, AddressError } from '@orchids/shared';
 
 /**
  * Address Utilities

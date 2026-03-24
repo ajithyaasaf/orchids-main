@@ -1,0 +1,6 @@
+﻿src/index.ts(4,30): error TS7016: Could not find a declaration file for module 'uuid'. 'C:/Personal Projects/WholeSale Orchids/website/node_modules/.pnpm/uuid@9.0.1/node_modules/uuid/dist/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/uuid` if it exists or add a new declaration (.d.ts) file containing `declare module 'uuid';`
+src/scheduled/dailyBackup.ts(19,6): error TS2339: Property 'topic' does not exist on type 'typeof import("C:/Personal Projects/WholeSale Orchids/website/node_modules/.pnpm/firebase-functions@7.0.5_firebase-admin@12.7.0/node_modules/firebase-functions/lib/v2/providers/pubsub")'.
+src/services/customerAnalyticsService.ts(6,5): error TS2305: Module '"@tntrends/shared"' has no exported member 'Order'.
+src/services/customerAnalyticsService.ts(229,29): error TS7006: Parameter 'item' implicitly has an 'any' type.
+../shared/types.ts(499,15): error TS2304: Cannot find name 'Product'.

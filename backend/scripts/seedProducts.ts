@@ -53,8 +53,8 @@ const products = [
         styleCode: "OX-2025",
         color: "White",
         images: [
-            { url: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=auto", publicId: "tntrends/products/seed_men_white" },
-            { url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=auto", publicId: "tntrends/products/seed_men_white_b" }
+            { url: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=auto", publicId: "orchids/products/seed_men_white" },
+            { url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=auto", publicId: "orchids/products/seed_men_white_b" }
         ]
     },
     {
@@ -71,7 +71,7 @@ const products = [
         styleCode: "OX-2025",
         color: "Navy Blue",
         images: [
-            { url: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&q=auto", publicId: "tntrends/products/seed_men_navy" }
+            { url: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&q=auto", publicId: "orchids/products/seed_men_navy" }
         ]
     },
     // --- MEN: Unlinked product ---
@@ -89,7 +89,7 @@ const products = [
         styleCode: null,
         color: null,
         images: [
-            { url: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&q=auto", publicId: "tntrends/products/seed_men_03" }
+            { url: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&q=auto", publicId: "orchids/products/seed_men_03" }
         ]
     },
 
@@ -108,7 +108,7 @@ const products = [
         styleCode: null,
         color: null,
         images: [
-            { url: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=600&q=auto", publicId: "tntrends/products/seed_women_01" }
+            { url: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=600&q=auto", publicId: "orchids/products/seed_women_01" }
         ]
     },
     {
@@ -125,7 +125,7 @@ const products = [
         styleCode: null,
         color: null,
         images: [
-            { url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=auto", publicId: "tntrends/products/seed_women_02" }
+            { url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=auto", publicId: "orchids/products/seed_women_02" }
         ]
     },
     {
@@ -142,7 +142,7 @@ const products = [
         styleCode: null,
         color: null,
         images: [
-            { url: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=auto", publicId: "tntrends/products/seed_women_03" }
+            { url: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=auto", publicId: "orchids/products/seed_women_03" }
         ]
     },
 
@@ -161,7 +161,7 @@ const products = [
         styleCode: null,
         color: null,
         images: [
-            { url: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=600&q=auto", publicId: "tntrends/products/seed_kids_01" }
+            { url: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=600&q=auto", publicId: "orchids/products/seed_kids_01" }
         ]
     },
     {
@@ -178,7 +178,7 @@ const products = [
         styleCode: null,
         color: null,
         images: [
-            { url: "https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&q=auto", publicId: "tntrends/products/seed_kids_02" }
+            { url: "https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&q=auto", publicId: "orchids/products/seed_kids_02" }
         ]
     }
 ];

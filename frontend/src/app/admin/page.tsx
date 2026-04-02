@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { wholesaleProductsApi, wholesaleOrdersApi, wholesaleDashboardApi } from '@/lib/api/wholesaleApi';
 import { Package, ShoppingBag, TrendingUp, DollarSign, Users, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
 import type { DashboardAnalytics } from '@orchids/shared';
 
 export default function AdminDashboard() {
@@ -14,6 +15,13 @@ export default function AdminDashboard() {
     });
     const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Standardized currency formatter for consistent hydration (India locale)
+    const formatINR = (amount: number) => {
+        return new Intl.NumberFormat('en-IN', {
+            maximumFractionDigits: 0,
+        }).format(amount);
+    };
 
     useEffect(() => {
         const loadStats = async () => {
@@ -73,7 +81,7 @@ export default function AdminDashboard() {
         },
         {
             title: 'Total Revenue',
-            value: `₹${stats.revenue.toLocaleString()}`,
+            value: `₹${formatINR(stats.revenue)}`,
             icon: DollarSign,
             color: 'bg-primary',
         },
@@ -83,14 +91,14 @@ export default function AdminDashboard() {
     const customerCards = analytics ? [
         {
             title: 'Total Customers',
-            value: analytics.totalCustomers.toLocaleString(),
+            value: formatINR(analytics.totalCustomers),
             subtitle: `New this month: ${analytics.newCustomersThisMonth}`,
             icon: Users,
             color: 'bg-purple-500',
         },
         {
             title: 'Avg Order Value',
-            value: `₹${Math.round(analytics.averageOrderValue).toLocaleString()}`,
+            value: `₹${formatINR(Math.round(analytics.averageOrderValue))}`,
             subtitle: `Returning rate: ${analytics.returningCustomerRate.toFixed(1)}%`,
             icon: BarChart3,
             color: 'bg-indigo-500',
@@ -148,34 +156,34 @@ export default function AdminDashboard() {
                     <div className="bg-white rounded-xl shadow-soft p-4 md:p-6">
                         <h2 className="text-lg md:text-xl font-bold text-text-primary mb-4">Quick Actions</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                            <a
-                                href="/admin/wholesale/products/new"
+                            <Link
+                                href="/admin/wholesale/products"
                                 className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
                             >
                                 <Package className="w-8 h-8 mx-auto mb-2 text-primary" />
-                                <p className="font-semibold">Add Whls Product</p>
-                            </a>
-                            <a
+                                <p className="font-semibold">Manage Products</p>
+                            </Link>
+                            <Link
                                 href="/admin/wholesale/orders"
                                 className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
                             >
                                 <ShoppingBag className="w-8 h-8 mx-auto mb-2 text-primary" />
                                 <p className="font-semibold">Manage Orders</p>
-                            </a>
-                            <a
+                            </Link>
+                            <Link
                                 href="/admin/customers"
                                 className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
                             >
                                 <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
                                 <p className="font-semibold">View Customers</p>
-                            </a>
-                            <a
+                            </Link>
+                            <Link
                                 href="/admin/analytics"
                                 className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
                             >
                                 <BarChart3 className="w-8 h-8 mx-auto mb-2 text-primary" />
                                 <p className="font-semibold">View Analytics</p>
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </>

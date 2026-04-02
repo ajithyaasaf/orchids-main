@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { LayoutDashboard, Package, ShoppingBag, Settings, LogOut, Menu, X, Gift, Tag, Users, BarChart3, Sparkles } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -22,31 +23,33 @@ const adminNavItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout } = useAuthStore();
+    const { user, logout, initialized, loading: authLoading } = useAuthStore();
     const { showToast } = useToast();
+    const hasMounted = useHasMounted();
 
     const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
     useEffect(() => {
-        if (!user) {
-            router.push('/auth/login?redirect=/admin');
+        // Only redirect if hydration is complete and auth has finished initializing
+        if (hasMounted && initialized && !authLoading && !user) {
+            router.push('/auth/login?redirect=' + encodeURIComponent(pathname));
             return;
         }
 
         // Firestore role check
-        // (THIS IS WHAT YOU ACTUALLY USE)
-        if (user.role !== 'admin' && user.role !== 'superadmin') {
+        if (hasMounted && initialized && user && user.role !== 'admin' && user.role !== 'superadmin') {
             showToast('Access denied. Admin privileges required.', 'error');
             router.push('/');
         }
-    }, [user]);
+    }, [user, initialized, authLoading, hasMounted, pathname]);
 
     const handleLogout = async () => {
         await logout();
         router.push('/');
     };
 
-    if (!user) {
+    // Show loading if not mounted OR auth not initialized OR user not found
+    if (!hasMounted || !initialized || authLoading || !user) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <p>Loading...</p>

@@ -7,47 +7,51 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Dummy data for collections
+// Category image map — update paths when real photos are available
 const collections = [
     {
         id: 'newborn',
         title: 'Newborn Collection',
-        image: '/11.png',
-        href: '/products?category=newborn'
+        image: '/shop-by-categories/1.png',
+        bg: '#fdf2f8',
+        href: '/products?category=newborn',
     },
     {
         id: 'girls',
         title: 'Girls Wear',
-        image: '/11.png',
-        href: '/products?category=girls'
+        image: '/shop-by-categories/2.png',
+        bg: '#fff1f2',
+        href: '/products?category=girls',
     },
     {
         id: 'boys',
         title: 'Boys Wear',
-        image: '/11.png',
-        href: '/products?category=boys'
+        image: '/shop-by-categories/3.png',
+        bg: '#f0f9ff',
+        href: '/products?category=boys',
     },
     {
         id: 'women',
         title: "Women's Apparel",
         image: '/11.png',
-        href: '/products?category=women'
+        bg: '#faf5ff',
+        href: '/products?category=women',
     },
     {
-        id: 'winter',
-        title: 'Winter Wear',
+        id: 'mens',
+        title: "Men's Apparel",
         image: '/11.png',
-        href: '/products?category=winter'
-    }
+        bg: '#f8fafc',
+        href: '/products?category=mens',
+    },
 ];
 
 export function ArchedCollections() {
-    // We use Embla Carousel to handle the sliding similar to the reference image
     const [emblaRef, emblaApi] = useEmblaCarousel({
         align: 'start',
         skipSnaps: false,
         dragFree: true,
-        containScroll: 'trimSnaps'
+        containScroll: 'trimSnaps',
     });
 
     const scrollPrev = useCallback(() => {
@@ -77,7 +81,7 @@ export function ArchedCollections() {
                                     key={collection.id}
                                     initial={{ opacity: 0, y: 30 }}
                                     whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, margin: "-50px" }}
+                                    viewport={{ once: true, margin: '-50px' }}
                                     transition={{ delay: index * 0.1, duration: 0.5 }}
                                     className="flex-[0_0_85%] sm:flex-[0_0_45%] lg:flex-[0_0_22%] min-w-0"
                                 >
@@ -86,8 +90,11 @@ export function ArchedCollections() {
                                         className="group block border border-gray-200 rounded-lg p-3 hover:border-gray-300 transition-colors bg-white hover:shadow-lg duration-300"
                                     >
                                         {/* Arched Image Container */}
-                                        <div className="relative bg-[#E6E4CD] w-full aspect-[3/4] rounded-t-full overflow-hidden mb-6 flex justify-center items-end">
-                                            {/* Decorative thin white outline arch */}
+                                        <div
+                                            className="relative w-full aspect-[3/4] rounded-t-full overflow-hidden mb-6 flex justify-center items-end"
+                                            style={{ backgroundColor: collection.bg }}
+                                        >
+                                            {/* Decorative arch outline */}
                                             <div className="absolute inset-x-2 top-2 bottom-0 border-t border-l border-r border-white/60 rounded-t-full pointer-events-none z-10" />
 
                                             <div className="relative w-[90%] h-[95%] z-20">
@@ -106,7 +113,7 @@ export function ArchedCollections() {
                                             <span className="text-sm font-medium text-text-primary tracking-wide">
                                                 {collection.title}
                                             </span>
-                                            <ArrowRight className="w-5 h-5 text-text-primary group-hover:translate-x-1 transition-transform" />
+                                            <ArrowRight className="w-5 h-5 text-text-primary group-hover:translate-x-1 group-hover:text-primary transition-all" />
                                         </div>
                                     </Link>
                                 </motion.div>
@@ -114,7 +121,7 @@ export function ArchedCollections() {
                         </div>
                     </div>
 
-                    {/* Navigation Buttons (Bottom Right, like reference image) */}
+                    {/* Navigation Buttons */}
                     <div className="flex justify-end gap-2 mt-8 px-4">
                         <button
                             onClick={scrollPrev}

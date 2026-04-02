@@ -87,7 +87,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
-            <body className="font-body antialiased bg-background-primary text-text-primary">
+            <body className="font-body antialiased bg-white text-text-primary">
                 <GoogleTagManager />
                 <ToastProvider>
                     <AuthProvider>

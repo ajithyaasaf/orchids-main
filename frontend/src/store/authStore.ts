@@ -56,12 +56,16 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
     signIn: async (email, password) => {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const idToken = await userCredential.user.getIdToken();
-        await fetch('/api/auth/session', {
+        // Force refresh ensures we get a fresh token with correct auth_time
+        const idToken = await userCredential.user.getIdToken(true);
+        const response = await fetch('/api/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idToken }),
         });
+        if (!response.ok) {
+            throw new Error('Sign-in succeeded but session creation failed. Please try again.');
+        }
     },
 
     signUp: async (email, password) => {
@@ -87,17 +91,24 @@ export const useAuthStore = create<AuthStore>((set) => ({
                 return;
             }
 
-            // Fetch Firestore user document
-            const ref = doc(db, "users", firebaseUser.uid);
-            const snap = await getDoc(ref);
-
+            // Fetch Firestore user document with error handling to ensure initialization always finishes
             let role = "customer";
             let name = firebaseUser.email;
+            let addresses: SavedAddress[] = [];
+            
+            try {
+                const ref = doc(db, "users", firebaseUser.uid);
+                const snap = await getDoc(ref);
 
-            if (snap.exists()) {
-                const data = snap.data();
-                role = data.role ?? "customer";
-                name = data.name ?? firebaseUser.email;
+                if (snap.exists()) {
+                    const data = snap.data();
+                    role = data.role ?? "customer";
+                    name = data.name ?? firebaseUser.email;
+                    addresses = data.addresses || [];
+                }
+            } catch (error) {
+                console.error("Error fetching user profile from Firestore:", error);
+                // Fallback to customer role if Firestore fetch fails
             }
 
             const user: AppUser = {
@@ -105,7 +116,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
                 email: firebaseUser.email,
                 role: role as any,
                 name: name,
-                addresses: snap.exists() ? (snap.data().addresses || []) : [],
+                addresses: addresses,
             };
 
             set({ user, loading: false, initialized: true });

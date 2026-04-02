@@ -22,6 +22,7 @@ const config: Config = {
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],
+                body: ['Inter', 'system-ui', 'sans-serif'],
                 heading: ['Outfit', 'sans-serif'], // New Heading Font
             },
             boxShadow: {

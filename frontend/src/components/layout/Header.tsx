@@ -48,7 +48,7 @@ const WHOLESALE_NAVIGATION = PRODUCT_CATEGORIES.map(category => {
         name: navName,
         href: `/products?category=${category.id}`,
         sections: columns.map((column, index) => ({
-            title: index === 0 ? 'Categories' : `More ${navName}`,
+            title: index === 0 ? 'Categories' : `More ${navName} ${index > 1 ? index : ''}`.trim(),
             items: column.map(tag => ({
                 label: tag.label,
                 href: `/products?category=${category.id}&tag=${tag.value}`
@@ -142,6 +142,7 @@ export const Header: React.FC = () => {
                                 alt="ORCHID Wholesale Clothing - Tirupur"
                                 fill
                                 className="object-contain object-left"
+                                sizes="(max-width: 768px) 100vw, 224px"
                                 priority
                             />
                         </div>
@@ -173,7 +174,7 @@ export const Header: React.FC = () => {
 
                                 {/* MEGA MENU DROPDOWN */}
                                 <div
-                                    style={{ backgroundColor: '#ffffff', opacity: 1, zIndex: 1000 }}
+                                    style={{ backgroundColor: '#ffffff', zIndex: 1000 }}
                                     className={`absolute left-0 w-full bg-white shadow-xl border-t border-gray-100 transition-all duration-300 ease-in-out origin-top ${activeMegaMenu === category.name
                                         ? 'opacity-100 visible translate-y-0'
                                         : 'opacity-0 invisible -translate-y-2'

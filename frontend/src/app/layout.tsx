@@ -91,7 +91,6 @@ export default function RootLayout({
                 <GoogleTagManager />
                 <ToastProvider>
                     <AuthProvider>
-                        <PromotionalBanner />
                         <ConditionalLayout>{children}</ConditionalLayout>
                     </AuthProvider>
                 </ToastProvider>

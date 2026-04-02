@@ -28,7 +28,7 @@ interface OrderStats {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string }> = {
-    placed: { bg: 'bg-blue-50 border-blue-200', text: 'text-blue-700', dot: 'bg-blue-500' },
+    placed: { bg: 'bg-primary-light border-primary/20', text: 'text-primary', dot: 'bg-primary' },
     processing: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', dot: 'bg-amber-500' },
     shipped: { bg: 'bg-purple-50 border-purple-200', text: 'text-purple-700', dot: 'bg-purple-500' },
     delivered: { bg: 'bg-green-50 border-green-200', text: 'text-green-700', dot: 'bg-green-500' },
@@ -79,6 +79,8 @@ function StatusBadge({ status }: { status: string }) {
         </span>
     );
 }
+
+import { StatCardSkeleton, TableRowSkeleton } from '@/components/ui/Skeleton';
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -342,10 +344,16 @@ export default function AdminOrdersPage() {
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <StatCard icon={IndianRupee} label="Total Revenue" value={stats ? `₹${stats.totalRevenue.toFixed(0)}` : '...'} sub="Paid orders" color="bg-green-50 border-green-200 text-green-800" />
-                <StatCard icon={ShoppingBag} label="New Orders" value={stats?.pending ?? '...'} sub="Awaiting processing" color="bg-blue-50 border-blue-200 text-blue-800" />
-                <StatCard icon={Truck} label="Shipped" value={stats?.shipped ?? '...'} sub="In transit" color="bg-purple-50 border-purple-200 text-purple-800" />
-                <StatCard icon={TrendingUp} label="Unpaid Amount" value={stats ? `₹${stats.unpaidAmount.toFixed(0)}` : '...'} sub="Pending payments" color="bg-amber-50 border-amber-200 text-amber-800" />
+                {statsLoading ? (
+                    [1, 2, 3, 4].map(i => <StatCardSkeleton key={i} />)
+                ) : (
+                    <>
+                        <StatCard icon={IndianRupee} label="Total Revenue" value={stats ? `₹${stats.totalRevenue.toFixed(0)}` : '0'} sub="Paid orders" color="bg-green-50 border-green-200 text-green-800" />
+                        <StatCard icon={ShoppingBag} label="New Orders" value={stats?.pending ?? 0} sub="Awaiting processing" color="bg-primary-light border-primary/10 text-primary" />
+                        <StatCard icon={Truck} label="Shipped" value={stats?.shipped ?? 0} sub="In transit" color="bg-purple-50 border-purple-200 text-purple-800" />
+                        <StatCard icon={TrendingUp} label="Unpaid Amount" value={stats ? `₹${stats.unpaidAmount.toFixed(0)}` : '0'} sub="Pending payments" color="bg-amber-50 border-amber-200 text-amber-800" />
+                    </>
+                )}
             </div>
 
             {/* Filters */}
@@ -354,7 +362,7 @@ export default function AdminOrdersPage() {
                     <button
                         key={s}
                         onClick={() => setSelectedStatus(s)}
-                        className={`px-4 py-2 rounded-lg capitalize text-sm font-medium transition ${selectedStatus === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        className={`px-4 py-2 rounded-lg capitalize text-sm font-medium transition ${selectedStatus === s ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         {s === 'all' ? 'All Orders' : s}
@@ -375,7 +383,7 @@ export default function AdminOrdersPage() {
                     placeholder="Search by Order ID, Customer Name or Phone..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
             </div>
 
@@ -390,13 +398,14 @@ export default function AdminOrdersPage() {
 
             {/* Orders Table */}
             {loading ? (
-                <div className="space-y-3">
-                    {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
+                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-gray-50/50 border-b border-gray-100 h-10 w-full" />
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <TableRowSkeleton key={i} columns={7} />
                     ))}
                 </div>
             ) : filteredOrders.length === 0 ? (
-                <div className="text-center py-24 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                <div className="text-center py-24 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
                     <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-600 font-semibold">No orders found</p>
                     <p className="text-gray-400 text-sm mt-1">
@@ -404,9 +413,9 @@ export default function AdminOrdersPage() {
                     </p>
                 </div>
             ) : (
-                <div className="bg-white border rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                     <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
+                        <thead className="bg-gray-50/50 border-b border-gray-100">
                             <tr>
                                 {['Order', 'Customer', 'Items', 'Total', 'Status', 'Payment', ''].map((h) => (
                                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -415,17 +424,17 @@ export default function AdminOrdersPage() {
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y">
+                        <tbody className="divide-y divide-gray-50">
                             {filteredOrders.map((order) => (
                                 <tr
                                     key={order.id}
                                     onClick={() => setSelectedOrder(order)}
-                                    className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${updatingId === order.id ? 'opacity-50 pointer-events-none' : ''
-                                        } ${selectedOrder?.id === order.id ? 'bg-blue-50/60' : ''}`}
+                                    className={`hover:bg-primary-light/30 cursor-pointer transition-colors ${updatingId === order.id ? 'opacity-50 pointer-events-none' : ''
+                                        } ${selectedOrder?.id === order.id ? 'bg-primary-light/50' : ''}`}
                                 >
                                     {/* Order ID */}
                                     <td className="px-4 py-4">
-                                        <div className="text-sm font-mono font-bold text-blue-700">
+                                        <div className="text-sm font-mono font-bold text-primary">
                                             #{order.id?.slice(0, 8).toUpperCase()}
                                         </div>
                                         <div className="text-xs text-gray-400 mt-0.5">
@@ -548,7 +557,7 @@ export default function AdminOrdersPage() {
                                     {selectedOrder.address?.phone && (
                                         <p className="text-gray-600 flex items-center gap-1">
                                             <Phone className="w-3.5 h-3.5" />
-                                            <a href={`tel:${selectedOrder.address.phone}`} className="hover:text-blue-600">
+                                            <a href={`tel:${selectedOrder.address.phone}`} className="hover:text-primary transition-colors">
                                                 {selectedOrder.address.phone}
                                             </a>
                                         </p>
@@ -623,7 +632,7 @@ export default function AdminOrdersPage() {
                                 {selectedOrder.paymentStatus === 'paid' && selectedOrder.orderStatus !== 'cancelled' && (
                                     <button
                                         onClick={() => setDiscountModal(true)}
-                                        className="mt-2 text-xs text-blue-600 hover:underline"
+                                        className="mt-2 text-xs text-primary hover:underline"
                                     >
                                         + Apply Manual Discount
                                     </button>

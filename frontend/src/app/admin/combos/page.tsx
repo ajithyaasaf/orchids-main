@@ -6,6 +6,8 @@ import { comboApi } from '@/lib/api';
 import { ComboOffer } from '@orchids/shared';
 import { useToast } from '@/context/ToastContext';
 
+import { TableRowSkeleton } from '@/components/ui/Skeleton';
+
 export default function CombosPage() {
     const router = useRouter();
     const { showToast } = useToast();
@@ -20,16 +22,9 @@ export default function CombosPage() {
     const fetchCombos = async () => {
         try {
             setLoading(true);
-            console.log('=== FETCHING COMBOS ===');
-            console.log('Calling API:', comboApi.admin.getAll);
             const response = await comboApi.admin.getAll();
-            console.log('Response:', response);
             setCombos(response.data || []);
         } catch (err: any) {
-            console.error('=== FETCH ERROR ===');
-            console.error('Full error:', err);
-            console.error('Error message:', err.message);
-            console.error('Error stack:', err.stack);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -65,50 +60,49 @@ export default function CombosPage() {
         const start = new Date(combo.startDate);
         const end = combo.endDate ? new Date(combo.endDate) : null;
 
-        if (start > now) return { label: 'Scheduled', color: 'bg-blue-500' };
+        if (start > now) return { label: 'Scheduled', color: 'bg-primary' };
         if (end && end < now) return { label: 'Expired', color: 'bg-red-500' };
         return { label: 'Active', color: 'bg-green-500' };
     };
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[400px]">
-                <div className="text-gray-600">Loading combos...</div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                Error: {error}
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Combo Offers</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Combo Offers</h1>
                     <p className="text-gray-600 mt-1">Manage quantity-based combo pricing</p>
                 </div>
-                <button
-                    onClick={() => router.push('/admin/combos/new')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                    + Create New Combo
-                </button>
+                {!loading && (
+                    <button
+                        onClick={() => router.push('/admin/combos/new')}
+                        className="bg-primary text-white px-6 py-2.5 rounded-full font-bold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
+                    >
+                        + Create New Combo
+                    </button>
+                )}
             </div>
 
-            {/* Combos List */}
-            {combos.length === 0 ? (
+            {error ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+                    Error: {error}
+                </div>
+            ) : loading ? (
+                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-gray-50/50 border-b border-gray-100 h-10 w-full" />
+                    {[1, 2, 3, 4].map((i) => (
+                        <TableRowSkeleton key={i} columns={6} />
+                    ))}
+                </div>
+            ) : (
+                <>
+                    {/* Combos List */}
+                    {combos.length === 0 ? (
                 <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
                     <div className="text-gray-400 text-lg mb-4">No combos created yet</div>
                     <button
                         onClick={() => router.push('/admin/combos/new')}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-dark transition-colors"
                     >
                         Create Your First Combo
                     </button>
@@ -184,7 +178,7 @@ export default function CombosPage() {
                                             </button>
                                             <button
                                                 onClick={() => router.push(`/admin/combos/${combo.id}`)}
-                                                className="text-blue-600 hover:text-blue-900"
+                                                className="text-primary hover:text-primary-dark"
                                             >
                                                 Edit
                                             </button>
@@ -202,6 +196,8 @@ export default function CombosPage() {
                     </table>
                 </div>
             )}
-        </div>
-    );
+        </>
+    )}
+</div>
+);
 }

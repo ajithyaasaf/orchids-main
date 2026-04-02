@@ -1,23 +1,53 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
-import { LayoutDashboard, Package, ShoppingBag, Settings, LogOut, Menu, X, Gift, Tag, Users, BarChart3, Sparkles } from 'lucide-react';
+import { 
+    LayoutDashboard, Package, ShoppingBag, Settings, LogOut, Menu, X, 
+    Gift, Tag, Users, BarChart3, Sparkles 
+} from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useHasMounted } from '@/hooks/useHasMounted';
 
-const adminNavItems = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/wholesale/products', label: 'Products', icon: Package },
-    { href: '/admin/collections', label: 'Collections', icon: Sparkles },
+const navGroups = [
+    {
+        title: 'Overview',
+        items: [
+            { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+            { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+        ]
+    },
+    {
+        title: 'Store',
+        items: [
+            { href: '/admin/wholesale/orders', label: 'Orders', icon: ShoppingBag },
+            { href: '/admin/wholesale/products', label: 'Products', icon: Package },
+            { href: '/admin/customers', label: 'Customers', icon: Users },
+        ]
+    },
+    {
+        title: 'Marketing',
+        items: [
+            { href: '/admin/collections', label: 'Collections', icon: Sparkles, superadminOnly: true },
+            { href: '/admin/combos', label: 'Combos', icon: Gift },
+            { href: '/admin/coupons', label: 'Coupons', icon: Tag },
+        ]
+    },
+    {
+        title: 'System',
+        items: [
+            { href: '/admin/settings', label: 'Settings', icon: Settings },
+        ]
+    }
+];
+
+// Core mobile tabs for bottom navigation
+const mobileTabs = [
+    { href: '/admin', label: 'Home', icon: LayoutDashboard },
     { href: '/admin/wholesale/orders', label: 'Orders', icon: ShoppingBag },
-    { href: '/admin/customers', label: 'Customers', icon: Users },
-    { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/admin/combos', label: 'Combos', icon: Gift },
-    { href: '/admin/coupons', label: 'Coupons', icon: Tag },
-    { href: '/admin/settings', label: 'Settings', icon: Settings },
+    { href: '/admin/wholesale/products', label: 'Products', icon: Package },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,16 +57,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const { showToast } = useToast();
     const hasMounted = useHasMounted();
 
-    const [sidebarOpen, setSidebarOpen] = React.useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
-        // Only redirect if hydration is complete and auth has finished initializing
         if (hasMounted && initialized && !authLoading && !user) {
             router.push('/auth/login?redirect=' + encodeURIComponent(pathname));
             return;
         }
 
-        // Firestore role check
         if (hasMounted && initialized && user && user.role !== 'admin' && user.role !== 'superadmin') {
             showToast('Access denied. Admin privileges required.', 'error');
             router.push('/');
@@ -48,118 +76,158 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.push('/');
     };
 
-    // Show loading if not mounted OR auth not initialized OR user not found
     if (!hasMounted || !initialized || authLoading || !user) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p>Loading...</p>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* Mobile Header - Enhanced Touch Targets */}
-            <div className="lg:hidden sticky top-0 z-50 bg-white border-b border-border px-4 py-4 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors active:bg-gray-200"
-                        aria-label="Open menu"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                    <span className="font-bold text-lg text-gradient">Orchid Admin</span>
+        <div className="min-h-screen bg-[#f9fafb] text-gray-900 font-sans pb-16 lg:pb-0">
+            {/* Mobile Top Header - Clean & Minimal */}
+            <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+                <span className="font-bold text-xl tracking-tight text-gray-900">Admin</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium px-2 py-1 bg-primary/10 text-primary rounded-full">
+                        {user.role}
+                    </span>
                 </div>
-                <button
-                    onClick={handleLogout}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors active:bg-gray-200"
-                    aria-label="Logout"
-                >
-                    <LogOut className="w-5 h-5" />
-                </button>
             </div>
 
-            {/* Backdrop Overlay for Mobile */}
+            {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+                    className="fixed inset-0 bg-black/40 z-50 lg:hidden backdrop-blur-sm transition-opacity"
                     onClick={() => setSidebarOpen(false)}
                     aria-hidden="true"
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Desktop Sidebar & Mobile Drawer */}
             <aside
-                className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-border z-50 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                    }`}
+                className={`fixed top-0 left-0 h-full w-72 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-50 transform transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] flex flex-col ${
+                    sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                }`}
             >
-                <div className="p-6">
-                    <div className="flex items-center justify-between mb-8">
-                        <h1 className="text-2xl font-bold text-gradient">Orchid</h1>
-                        <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
-                            <X className="w-6 h-6" />
-                        </button>
+                <div className="p-6 flex-shrink-0 flex items-center justify-between">
+                    <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Orchid</h1>
+                    <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 rounded-full hover:bg-gray-100 text-gray-500">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="px-6 pb-6 flex-shrink-0">
+                    <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                            {user.email?.charAt(0).toUpperCase() || 'A'}
+                        </div>
+                        <div className="overflow-hidden">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{user.email}</p>
+                            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                        </div>
                     </div>
+                </div>
 
-                    <div className="mb-6 p-4 bg-primary/10 rounded-lg">
-                        <p className="text-sm text-text-secondary">Logged in as:</p>
-                        <p className="font-semibold text-text-primary truncate">{user.email}</p>
+                <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
+                    <nav className="space-y-6 pb-6">
+                        {navGroups.map((group) => {
+                            const visibleItems = group.items.filter(item => 
+                                !(item.superadminOnly && user.role !== 'superadmin')
+                            );
+                            
+                            if (visibleItems.length === 0) return null;
 
-                        {/* FIRESTORE ROLE DISPLAY */}
-                        <span className="inline-block mt-2 px-2 py-1 bg-primary text-white text-xs rounded-full">
-                            {user.role}
-                        </span>
-                    </div>
+                            return (
+                                <div key={group.title}>
+                                    <h3 className="px-3 text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                                        {group.title}
+                                    </h3>
+                                    <div className="space-y-1">
+                                        {visibleItems.map((item) => {
+                                            const Icon = item.icon;
+                                            const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
 
-                    {/* Navigation */}
-                    <nav className="space-y-2">
-                        {adminNavItems
-                            .filter(item => {
-                                // Hide Collections from regular admins
-                                if (item.href === '/admin/collections' && user.role !== 'superadmin') {
-                                    return false;
-                                }
-                                return true;
-                            })
-                            .map((item) => {
-                                const Icon = item.icon;
-                                const isActive = pathname === item.href;
-
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${isActive
-                                            ? 'bg-primary text-white'
-                                            : 'text-text-secondary hover:bg-gray-100'
-                                            }`}
-                                        onClick={() => setSidebarOpen(false)}
-                                    >
-                                        <Icon className="w-5 h-5" />
-                                        <span>{item.label}</span>
-                                    </Link>
-                                );
-                            })}
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                                                        isActive
+                                                            ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                                    }`}
+                                                    onClick={() => setSidebarOpen(false)}
+                                                >
+                                                    <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                                                    <span className="font-medium text-sm">{item.label}</span>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </nav>
+                </div>
 
-                    <div className="mt-8 pt-8 border-t border-border">
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-3 text-error hover:bg-error/10 rounded-lg transition w-full"
-                        >
-                            <LogOut className="w-5 h-5" />
-                            <span>Logout</span>
-                        </button>
-                    </div>
+                <div className="p-4 border-t border-gray-100 flex-shrink-0">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center justify-center gap-2 w-full py-3 px-4 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-semibold text-sm"
+                    >
+                        <LogOut className="w-5 h-5" />
+                        <span>Logout</span>
+                    </button>
                 </div>
             </aside>
 
-            <main className="lg:ml-64 p-4 md:p-6 lg:p-8">
-                <div className="container-custom">
+            {/* Main Content */}
+            <main className="lg:ml-72 min-h-screen transition-all">
+                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
                     {children}
                 </div>
             </main>
+
+            {/* Mobile Bottom Navigation (App-like) */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe z-40 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center justify-around px-2">
+                    {mobileTabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = pathname === tab.href || (tab.href !== '/admin' && pathname.startsWith(tab.href));
+                        
+                        return (
+                            <Link 
+                                key={tab.href}
+                                href={tab.href}
+                                className="flex flex-col items-center justify-center w-full py-3 gap-1 relative"
+                            >
+                                <div className={`relative p-1.5 rounded-full transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-500'}`}>
+                                    <Icon className={`w-6 h-6 transition-transform ${isActive ? 'scale-110' : ''}`} />
+                                </div>
+                                <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-primary' : 'text-gray-500'}`}>
+                                    {tab.label}
+                                </span>
+                            </Link>
+                        );
+                    })}
+                    
+                    {/* Mobile Menu Trigger */}
+                    <button 
+                        onClick={() => setSidebarOpen(true)}
+                        className="flex flex-col items-center justify-center w-full py-3 gap-1 relative"
+                    >
+                        <div className="relative p-1.5 rounded-full text-gray-500 hover:bg-gray-50 transition-colors">
+                            <Menu className="w-6 h-6" />
+                        </div>
+                        <span className="text-[10px] font-semibold tracking-wide text-gray-500">
+                            Menu
+                        </span>
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
+

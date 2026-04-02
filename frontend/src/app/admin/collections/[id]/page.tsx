@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { collectionApi } from '@/lib/api';
 import { Collection } from '@orchids/shared';
 import { CollectionForm } from '@/components/admin/CollectionForm';
-import { Loader2 } from 'lucide-react';
+import { FormSkeleton } from '@/components/ui/Skeleton';
 
 /**
  * Admin page: Edit existing collection
@@ -35,14 +35,7 @@ export default function EditCollectionPage() {
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
-                    <p className="text-gray-600">Loading collection...</p>
-                </div>
-            </div>
-        );
+        return <FormSkeleton />;
     }
 
     if (error || !collection) {

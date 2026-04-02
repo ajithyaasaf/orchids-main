@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { wholesaleProductsApi, wholesaleOrdersApi, wholesaleDashboardApi } from '@/lib/api/wholesaleApi';
-import { Package, ShoppingBag, TrendingUp, DollarSign, Users, BarChart3 } from 'lucide-react';
+import { Package, ShoppingBag, TrendingUp, DollarSign, Users, BarChart3, Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import type { DashboardAnalytics } from '@orchids/shared';
+
+import { StatCardSkeleton } from '@/components/ui/Skeleton';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -16,7 +18,6 @@ export default function AdminDashboard() {
     const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Standardized currency formatter for consistent hydration (India locale)
     const formatINR = (amount: number) => {
         return new Intl.NumberFormat('en-IN', {
             maximumFractionDigits: 0,
@@ -29,7 +30,7 @@ export default function AdminDashboard() {
                 const [products, orders, analyticsData] = await Promise.all([
                     wholesaleProductsApi.getAll(),
                     wholesaleOrdersApi.getAll(),
-                    wholesaleDashboardApi.getAnalytics().catch(() => null), // Don't fail if analytics not ready
+                    wholesaleDashboardApi.getAnalytics().catch(() => null),
                 ]);
 
                 const pendingOrders = orders.filter(
@@ -62,132 +63,195 @@ export default function AdminDashboard() {
 
     const statCards = [
         {
-            title: 'Total Products',
-            value: stats.totalProducts,
-            icon: Package,
-            color: 'bg-blue-500',
-        },
-        {
-            title: 'Total Orders',
-            value: stats.totalOrders,
-            icon: ShoppingBag,
-            color: 'bg-green-500',
+            title: 'Total Revenue',
+            value: `₹${formatINR(stats.revenue)}`,
+            icon: DollarSign,
+            color: 'text-emerald-600',
+            bg: 'bg-emerald-50',
         },
         {
             title: 'Pending Orders',
             value: stats.pendingOrders,
             icon: TrendingUp,
-            color: 'bg-yellow-500',
+            color: 'text-amber-600',
+            bg: 'bg-amber-50',
         },
         {
-            title: 'Total Revenue',
-            value: `₹${formatINR(stats.revenue)}`,
-            icon: DollarSign,
-            color: 'bg-primary',
+            title: 'Total Orders',
+            value: stats.totalOrders,
+            icon: ShoppingBag,
+            color: 'text-indigo-600',
+            bg: 'bg-indigo-50',
+        },
+        {
+            title: 'Total Products',
+            value: stats.totalProducts,
+            icon: Package,
+            color: 'text-slate-600',
+            bg: 'bg-slate-50',
         },
     ];
 
-    // Add customer widgets if analytics available
     const customerCards = analytics ? [
         {
             title: 'Total Customers',
             value: formatINR(analytics.totalCustomers),
-            subtitle: `New this month: ${analytics.newCustomersThisMonth}`,
+            subtitle: `+${analytics.newCustomersThisMonth} this month`,
             icon: Users,
-            color: 'bg-purple-500',
+            color: 'text-violet-600',
+            bg: 'bg-violet-50',
         },
         {
             title: 'Avg Order Value',
             value: `₹${formatINR(Math.round(analytics.averageOrderValue))}`,
-            subtitle: `Returning rate: ${analytics.returningCustomerRate.toFixed(1)}%`,
+            subtitle: `${analytics.returningCustomerRate.toFixed(1)}% return rate`,
             icon: BarChart3,
-            color: 'bg-indigo-500',
+            color: 'text-blue-600',
+            bg: 'bg-blue-50',
         },
     ] : [];
 
     return (
-        <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-6 md:mb-8">Wholesale Dashboard</h1>
+        <div className="animate-in fade-in duration-500">
+            {/* Top Action Bar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">Dashboard</h1>
+                    <p className="text-sm text-gray-500 mt-1">Welcome back. Here's what's happening today.</p>
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <Link
+                        href="/admin/wholesale/products/new"
+                        className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-full font-semibold transition-all shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/30 w-full sm:w-auto"
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span>Add Product</span>
+                    </Link>
+                </div>
+            </div>
 
             {loading ? (
-                <div className="text-center py-12">
-                    <p>Loading dashboard...</p>
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                        {[1, 2, 3, 4].map((i) => (
+                            <StatCardSkeleton key={i} />
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                        <div className="lg:col-span-2 h-[300px] bg-white rounded-3xl border border-gray-50 shadow-sm animate-pulse p-8">
+                            <div className="w-1/4 h-6 bg-gray-100 rounded-md mb-8" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="h-32 bg-gray-50 rounded-2xl" />
+                                <div className="h-32 bg-gray-50 rounded-2xl" />
+                            </div>
+                        </div>
+                        <div className="h-[300px] bg-gray-900 rounded-3xl animate-pulse p-8" />
+                    </div>
                 </div>
             ) : (
-                <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+                <div className="space-y-8">
+                    {/* Primary Stats Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                         {statCards.map((stat) => {
                             const Icon = stat.icon;
                             return (
-                                <div key={stat.title} className="bg-white rounded-xl shadow-soft p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className={`${stat.color} p-3 rounded-lg`}>
-                                            <Icon className="w-6 h-6 text-white" />
+                                <div 
+                                    key={stat.title} 
+                                    className="group bg-white rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-300 relative overflow-hidden"
+                                >
+                                    <div className="flex items-start justify-between relative z-10">
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">{stat.title}</p>
+                                            <p className="text-3xl font-extrabold text-gray-900 tracking-tight">{stat.value}</p>
+                                        </div>
+                                        <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300`}>
+                                            <Icon className="w-6 h-6" />
                                         </div>
                                     </div>
-                                    <h3 className="text-text-secondary text-sm mb-1">{stat.title}</h3>
-                                    <p className="text-2xl font-bold text-text-primary">{stat.value}</p>
                                 </div>
                             );
                         })}
                     </div>
 
-                    {/* Customer Metrics */}
-                    {customerCards.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-                            {customerCards.map((stat) => {
-                                const Icon = stat.icon;
-                                return (
-                                    <div key={stat.title} className="bg-white rounded-xl shadow-soft p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className={`${stat.color} p-3 rounded-lg`}>
-                                                <Icon className="w-6 h-6 text-white" />
+                    {/* Secondary Insights & Quick Links */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                        {/* Customers / Insights */}
+                        <div className="lg:col-span-2 bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-6 sm:p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-lg font-bold text-gray-900">Customer Insights</h2>
+                                <Link href="/admin/analytics" className="text-sm font-medium text-primary hover:text-primary-dark flex items-center gap-1 group">
+                                    View Report <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                            </div>
+                            
+                            {customerCards.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {customerCards.map((stat) => {
+                                        const Icon = stat.icon;
+                                        return (
+                                            <div key={stat.title} className="p-5 border border-gray-100 rounded-2xl hover:bg-gray-50 transition-colors">
+                                                <div className="flex items-center gap-4 mb-3">
+                                                    <div className={`${stat.bg} ${stat.color} p-2.5 rounded-xl`}>
+                                                        <Icon className="w-5 h-5" />
+                                                    </div>
+                                                    <h3 className="text-sm font-semibold text-gray-600">{stat.title}</h3>
+                                                </div>
+                                                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                                                <p className="text-xs font-medium text-emerald-600 mt-1">{stat.subtitle}</p>
                                             </div>
-                                        </div>
-                                        <h3 className="text-text-secondary text-sm mb-1">{stat.title}</h3>
-                                        <p className="text-2xl font-bold text-text-primary">{stat.value}</p>
-                                        <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
-                                    </div>
-                                );
-                            })}
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-500">
+                                    <BarChart3 className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                                    <p>Not enough data to generate insights yet.</p>
+                                </div>
+                            )}
                         </div>
-                    )}
 
-                    <div className="bg-white rounded-xl shadow-soft p-4 md:p-6">
-                        <h2 className="text-lg md:text-xl font-bold text-text-primary mb-4">Quick Actions</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                            <Link
-                                href="/admin/wholesale/products"
-                                className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
-                            >
-                                <Package className="w-8 h-8 mx-auto mb-2 text-primary" />
-                                <p className="font-semibold">Manage Products</p>
-                            </Link>
-                            <Link
-                                href="/admin/wholesale/orders"
-                                className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
-                            >
-                                <ShoppingBag className="w-8 h-8 mx-auto mb-2 text-primary" />
-                                <p className="font-semibold">Manage Orders</p>
-                            </Link>
-                            <Link
-                                href="/admin/customers"
-                                className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
-                            >
-                                <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
-                                <p className="font-semibold">View Customers</p>
-                            </Link>
-                            <Link
-                                href="/admin/analytics"
-                                className="p-4 md:p-5 border-2 border-border rounded-lg hover:border-primary transition text-center active:bg-gray-50"
-                            >
-                                <BarChart3 className="w-8 h-8 mx-auto mb-2 text-primary" />
-                                <p className="font-semibold">View Analytics</p>
-                            </Link>
+                        {/* Streamlined Quick Links */}
+                        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/5 blur-2xl"></div>
+                            
+                            <h2 className="text-lg font-bold mb-6 relative z-10">Manage Store</h2>
+                            <div className="space-y-3 relative z-10">
+                                <Link
+                                    href="/admin/wholesale/orders"
+                                    className="flex items-center justify-between p-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-colors group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <ShoppingBag className="w-5 h-5 text-gray-300" />
+                                        <span className="font-semibold">View Orders</span>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                                <Link
+                                    href="/admin/wholesale/products"
+                                    className="flex items-center justify-between p-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-colors group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Package className="w-5 h-5 text-gray-300" />
+                                        <span className="font-semibold">Inventory</span>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                                <Link
+                                    href="/admin/customers"
+                                    className="flex items-center justify-between p-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-colors group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Users className="w-5 h-5 text-gray-300" />
+                                        <span className="font-semibold">Customers</span>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                            </div>
                         </div>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );
 }
+

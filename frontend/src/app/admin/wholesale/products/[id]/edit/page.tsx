@@ -7,6 +7,8 @@ import { useToast } from '@/context/ToastContext';
 import WholesaleProductForm, { WholesaleJobFormData } from '@/components/admin/WholesaleProductForm';
 import { WholesaleProduct } from '@orchids/shared';
 
+import { FormSkeleton } from '@/components/ui/Skeleton';
+
 export default function EditWholesaleProductPage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const { id } = params;
@@ -48,14 +50,7 @@ export default function EditWholesaleProductPage({ params }: { params: { id: str
     };
 
     if (loading) {
-        return (
-            <div className="flex bg-white items-center justify-center min-h-[400px] rounded-xl shadow-soft">
-                <div className="text-center">
-                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-text-secondary">Loading product details...</p>
-                </div>
-            </div>
-        );
+        return <FormSkeleton />;
     }
 
     if (error) {

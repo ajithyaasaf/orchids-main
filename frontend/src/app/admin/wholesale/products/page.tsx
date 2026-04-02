@@ -10,6 +10,8 @@ import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
  * Displays all wholesale products with lock status and quick actions
  */
 
+import { TableRowSkeleton } from '@/components/ui/Skeleton';
+
 export default function AdminProductListPage() {
     const router = useRouter();
     const [products, setProducts] = useState<WholesaleProduct[]>([]);
@@ -52,22 +54,14 @@ export default function AdminProductListPage() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-xl">Loading products...</div>
-            </div>
-        );
-    }
-
     return (
         <div className="container-custom p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Wholesale Products</h1>
-                {products.length > 0 && (
+                {(!loading && products.length > 0) && (
                     <button
                         onClick={() => router.push('/admin/wholesale/products/new')}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+                        className="px-6 py-3 bg-primary text-white rounded-full font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 hover:shadow-md"
                     >
                         + Add New Product
                     </button>
@@ -80,58 +74,65 @@ export default function AdminProductListPage() {
                 </div>
             )}
 
-            {products.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
+            {loading ? (
+                <div className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm">
+                    <div className="bg-gray-50/50 border-b border-gray-100 py-3 px-6 h-10 w-full" />
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <TableRowSkeleton key={i} columns={6} />
+                    ))}
+                </div>
+            ) : products.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-100">
                     <p className="text-gray-600 mb-4">No products found</p>
                     <button
                         onClick={() => router.push('/admin/wholesale/products/new')}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+                        className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors"
                     >
                         + Add Your First Product
                     </button>
                 </div>
             ) : (
-                <div className="bg-white border rounded-lg overflow-hidden">
+                <div className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm">
                     <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
+                        <thead className="bg-gray-50/50 border-b border-gray-100">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Product
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Bundle Config
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Price
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Stock
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Status
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y">
+                        <tbody className="divide-y divide-gray-50">
                             {products.map((product) => (
-                                <tr key={product.id} className="hover:bg-gray-50">
+                                <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div>
-                                            <div className="font-semibold">{product.title}</div>
-                                            <div className="text-sm text-gray-500">
+                                            <div className="font-semibold text-text-primary">{product.title}</div>
+                                            <div className="text-sm text-text-secondary">
                                                 {product.category}
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="text-sm">
-                                            <div className="font-medium">
+                                            <div className="font-medium text-text-primary">
                                                 {product.bundleQty} pcs/bundle
                                             </div>
-                                            <div className="text-gray-500">
+                                            <div className="text-text-secondary">
                                                 {Object.entries(product.bundleComposition)
                                                     .map(([size, qty]) => `${size}:${qty}`)
                                                     .join(', ')}
@@ -140,10 +141,10 @@ export default function AdminProductListPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div>
-                                            <div className="font-semibold">
+                                            <div className="font-semibold text-text-primary">
                                                 ₹{product.bundlePrice.toFixed(2)}
                                             </div>
-                                            <div className="text-sm text-gray-500">
+                                            <div className="text-sm text-text-secondary">
                                                 ₹
                                                 {(product.bundlePrice / product.bundleQty).toFixed(
                                                     2
@@ -162,31 +163,31 @@ export default function AdminProductListPage() {
                                             >
                                                 {product.availableBundles} bundles
                                             </div>
-                                            <div className="text-sm text-gray-500">
+                                            <div className="text-sm text-text-secondary">
                                                 {product.totalPieces} total pcs
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         {product.isLocked ? (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-800 border border-yellow-100">
                                                 🔒 Locked
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-800 border border-green-100">
                                                 ✓ Unlocked
                                             </span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-4">
                                             <button
                                                 onClick={() =>
                                                     router.push(
                                                         `/admin/wholesale/products/${product.id}/edit`
                                                     )
                                                 }
-                                                className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                                                className="text-indigo-600 hover:text-indigo-800 font-bold text-sm transition-colors"
                                             >
                                                 Edit
                                             </button>
@@ -195,7 +196,7 @@ export default function AdminProductListPage() {
                                                     onClick={() =>
                                                         handleDelete(product.id, product.title)
                                                     }
-                                                    className="text-red-600 hover:text-red-800 font-medium text-sm"
+                                                    className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors"
                                                 >
                                                     Delete
                                                 </button>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { comboApi } from '@/lib/api';
 import ComboForm from '@/components/admin/ComboForm';
+import { FormSkeleton } from '@/components/ui/Skeleton';
 import { ComboOffer } from '@orchids/shared';
 
 export default function EditComboPage({ params }: { params: { id: string } }) {
@@ -34,11 +35,7 @@ export default function EditComboPage({ params }: { params: { id: string } }) {
     };
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[400px]">
-                <div className="text-gray-600">Loading combo...</div>
-            </div>
-        );
+        return <FormSkeleton />;
     }
 
     if (error || !combo) {

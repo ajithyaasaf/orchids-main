@@ -9,12 +9,14 @@ import { useAuthStore } from '@/store/authStore';
 import { auth } from '@/lib/firebase';
 
 const statusConfig: Record<WholesaleOrder['orderStatus'], any> = {
-    placed: { label: 'Placed', icon: Package, color: 'text-blue-500' },
+    placed: { label: 'Placed', icon: Package, color: 'text-primary' },
     processing: { label: 'Processing', icon: CheckCircle, color: 'text-green-500' },
     shipped: { label: 'Shipped', icon: Truck, color: 'text-purple-500' },
     delivered: { label: 'Delivered', icon: CheckCircle, color: 'text-success' },
     cancelled: { label: 'Cancelled', icon: XCircle, color: 'text-error' },
 };
+
+import { TableRowSkeleton } from '@/components/ui/Skeleton';
 
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState<WholesaleOrder[]>([]);
@@ -31,6 +33,7 @@ export default function AdminOrdersPage() {
 
     const loadOrders = async () => {
         try {
+            setLoading(true);
             const { data } = await orderApi.getAll();
             setOrders(data);
         } catch (error) {
@@ -137,30 +140,34 @@ export default function AdminOrdersPage() {
         : orders.filter(o => o.orderStatus === filter);
 
     return (
-        <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-6 md:mb-8">Orders</h1>
-
-            {/* Filter Tabs */}
-            <div className="bg-white rounded-xl shadow-soft p-4 md:p-6 mb-4 md:mb-6">
-                <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 -mb-2 scrollbar-hide">
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Wholesale Orders</h1>
+                    <p className="text-gray-600 mt-1">Manage and track all customer orders</p>
+                </div>
+                <div className="flex bg-white border border-gray-100 p-1 rounded-full shadow-sm overflow-x-auto scrollbar-hide max-w-full">
                     {['all', 'placed', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
-                            className={`px-4 py-3 rounded-lg font-medium whitespace-nowrap transition text-sm md:text-base min-w-[100px] md:min-w-0 ${filter === status
-                                ? 'bg-primary text-white'
-                                : 'bg-gray-100 text-text-secondary hover:bg-gray-200 active:bg-gray-300'
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all whitespace-nowrap ${filter === status
+                                ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                                 }`}
                         >
-                            {status === 'all' ? 'All Orders' : status.charAt(0).toUpperCase() + status.slice(1)}
+                            {status === 'all' ? 'All Orders' : status}
                         </button>
                     ))}
                 </div>
             </div>
 
             {loading ? (
-                <div className="text-center py-12">
-                    <p>Loading orders...</p>
+                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-gray-50/50 border-b border-gray-100 h-10 w-full" />
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <TableRowSkeleton key={i} columns={5} />
+                    ))}
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -260,7 +267,7 @@ export default function AdminOrdersPage() {
                                             {/* View Invoice */}
                                             <button
                                                 onClick={() => handleViewInvoice(order.id)}
-                                                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors text-sm font-medium"
+                                                className="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-colors text-sm font-bold"
                                             >
                                                 <Eye className="w-4 h-4" />
                                                 View Invoice
@@ -293,9 +300,15 @@ export default function AdminOrdersPage() {
                     })}
 
                     {filteredOrders.length === 0 && (
-                        <div className="text-center py-12 bg-white rounded-xl shadow-soft">
-                            <p className="text-text-secondary">No orders found.</p>
-                        </div>
+                        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                           <div className="p-3 inline-flex rounded-full bg-white shadow-sm mb-4">
+                               <Package className="w-8 h-8 text-gray-300" />
+                           </div>
+                           <p className="text-xl font-bold text-gray-900">No orders found</p>
+                           <p className="text-gray-500 mt-1 max-w-xs mx-auto">
+                               {filter !== 'all' ? `No orders with status "${filter}"` : 'Your orders will appear here once customers start purchasing.'}
+                           </p>
+                       </div>
                     )}
                 </div>
             )}

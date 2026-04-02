@@ -22,6 +22,7 @@ import authRoutes from './routes/auth';
 import wholesaleProductRoutes from './routes/wholesaleProducts';
 import wholesaleOrderRoutes from './routes/wholesaleOrders';
 import wholesaleCheckoutRoutes from './routes/wholesaleCheckout';
+import customerRoutes from './routes/customers';
 
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
@@ -100,6 +101,7 @@ app.use('/api/combos', comboRoutes);             // Promotions: Product combos (
 app.use('/api/collections', collectionRoutes);   // Collections: Manual product grouping
 app.use('/api/dashboard', dashboardRoutes);      // Dashboard analytics
 app.use('/api/auth', authRoutes);                // Secure session cookie generation
+app.use('/api/customers', customerRoutes);       // Customer management & analytics
 
 // Shared Infrastructure
 app.use('/api/payment', paymentRoutes);          // Razorpay payment gateway

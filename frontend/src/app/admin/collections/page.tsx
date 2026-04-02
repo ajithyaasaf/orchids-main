@@ -8,6 +8,8 @@ import { Collection } from '@orchids/shared';
 import { Button } from '@/components/ui/Button';
 import { Plus, Eye, Edit, Trash2, Globe, Calendar, Sparkles } from 'lucide-react';
 
+import { Skeleton } from '@/components/ui/Skeleton';
+
 /**
  * Admin Collections Management Page
  * Displays all collections with filtering and CRUD operations
@@ -52,7 +54,7 @@ export default function AdminCollectionsPage() {
         const styles = {
             active: 'bg-green-100 text-green-800',
             draft: 'bg-gray-100 text-gray-800',
-            scheduled: 'bg-blue-100 text-blue-800',
+            scheduled: 'bg-primary/10 text-primary',
             expired: 'bg-orange-100 text-orange-800',
             archived: 'bg-red-100 text-red-800',
         };
@@ -74,13 +76,13 @@ export default function AdminCollectionsPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Collections</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Collections</h1>
                     <p className="text-gray-600 mt-1">
                         Manage product collections and campaigns
                     </p>
                 </div>
                 <Link href="/admin/collections/new">
-                    <Button>
+                    <Button className="rounded-full shadow-sm shadow-primary/20 hover:shadow-md">
                         <Plus className="w-4 h-4 mr-2" />
                         New Collection
                     </Button>
@@ -88,14 +90,14 @@ export default function AdminCollectionsPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                 {(['all', 'active', 'draft', 'archived'] as const).map(status => (
                     <button
                         key={status}
                         onClick={() => setFilter(status)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === status
-                            ? 'bg-primary text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        className={`px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${filter === status
+                            ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                            : 'bg-white border border-gray-100 text-gray-600 hover:bg-gray-50'
                             }`}
                     >
                         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -109,15 +111,21 @@ export default function AdminCollectionsPage() {
             </div>
 
             {/* Loading State */}
-            {loading && (
-                <div className="text-center py-12">
-                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-                    <p className="mt-4 text-gray-600">Loading collections...</p>
+            {loading ? (
+                <div className="space-y-4">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="bg-white p-6 rounded-2xl border border-gray-50 shadow-sm flex items-center gap-6">
+                            <Skeleton className="w-24 h-24 rounded-lg flex-shrink-0" />
+                            <div className="flex-1 space-y-3">
+                                <Skeleton className="w-1/3 h-6" />
+                                <Skeleton className="w-1/2 h-4" />
+                                <Skeleton className="w-20 h-4 rounded-full" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            )}
-
-            {/* Empty State */}
-            {!loading && filteredCollections.length === 0 && (
+            ) : filteredCollections.length === 0 ? (
+                /* Empty State */
                 <div className="text-center py-16 bg-gray-50 rounded-xl">
                     <Sparkles className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -129,10 +137,8 @@ export default function AdminCollectionsPage() {
                             : `No collections with status "${filter}"`}
                     </p>
                 </div>
-            )}
-
-            {/* Collections Grid */}
-            {!loading && filteredCollections.length > 0 && (
+            ) : (
+                /* Collections Grid */
                 <div className="grid grid-cols-1 gap-4">
                     {filteredCollections.map(collection => (
                         <div

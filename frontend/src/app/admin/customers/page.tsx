@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { customerApi } from '@/lib/api';
 import type { CustomerInsight } from '@orchids/shared';
 
+import { TableRowSkeleton } from '@/components/ui/Skeleton';
+
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<CustomerInsight[]>([]);
     const [loading, setLoading] = useState(true);
@@ -88,7 +90,7 @@ export default function CustomersPage() {
     const getSegmentBadgeClass = (segment: string) => {
         const classes = {
             vip: 'bg-purple-100 text-purple-800',
-            returning: 'bg-blue-100 text-blue-800',
+            returning: 'bg-primary-light text-primary',
             new: 'bg-green-100 text-green-800',
             'at-risk': 'bg-yellow-100 text-yellow-800',
             inactive: 'bg-gray-100 text-gray-800',
@@ -104,19 +106,19 @@ export default function CustomersPage() {
             </div>
 
             {/* Search and Filter Bar */}
-            <div className="bg-white p-4 rounded-lg shadow mb-6">
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
                 <form onSubmit={handleSearch} className="flex gap-4">
                     <input
                         type="text"
                         placeholder="Search by name or email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-4 py-2 border border-gray-100 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                     />
                     <select
                         value={filterSegment}
                         onChange={(e) => setFilterSegment(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-4 py-2 border border-gray-100 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                     >
                         <option value="">All Segments</option>
                         <option value="vip">VIP</option>
@@ -127,7 +129,7 @@ export default function CustomersPage() {
                     </select>
                     <button
                         type="submit"
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-bold"
                     >
                         Search
                     </button>
@@ -135,56 +137,67 @@ export default function CustomersPage() {
                         type="button"
                         onClick={handleExport}
                         disabled={isExporting}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
+                        className="px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition disabled:bg-gray-400 font-bold"
                     >
                         {isExporting ? 'Exporting...' : 'Export CSV'}
                     </button>
+
                 </form>
             </div>
 
             {/* Customer Table */}
             {loading && !customers.length ? (
-                <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <p className="mt-4 text-gray-600">Loading customers...</p>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="bg-gray-50/50 border-b border-gray-100 h-10 w-full" />
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <TableRowSkeleton key={i} columns={7} />
+                    ))}
                 </div>
-            ) : error ? (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                    {error}
+            ) : customers.length === 0 ? (
+                <div className="text-center py-20 bg-gray-50 rounded-lg border-2 border-dashed border-gray-100">
+                    <div className="p-3 inline-flex rounded-full bg-white shadow-sm mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <p className="text-xl font-bold text-gray-900">No customers found</p>
+                    <p className="text-gray-500 mt-1 max-w-xs mx-auto">
+                        Try adjusting your search or filters to find what you're looking for.
+                    </p>
                 </div>
             ) : (
                 <>
-                    <div className="bg-white rounded-lg shadow overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                        <table className="min-w-full divide-y divide-gray-100">
+                            <thead className="bg-gray-50/50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Segment</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spent</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AOV</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Order</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Segment</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Orders</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Spent</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">AOV</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Last Order</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white divide-y divide-gray-50">
                                 {customers.map((customer) => (
-                                    <tr key={customer.uid} className="hover:bg-gray-50">
+                                    <tr key={customer.uid} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div>
-                                                <div className="font-medium text-gray-900">{customer.name}</div>
+                                                <div className="font-semibold text-gray-900">{customer.name}</div>
                                                 <div className="text-sm text-gray-500">{customer.email}</div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getSegmentBadgeClass(customer.segment)}`}>
+                                            <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${getSegmentBadgeClass(customer.segment)}`}>
                                                 {customer.segment.toUpperCase()}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
+                                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                                             {customer.metadata.totalOrders}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
+                                        <td className="px-6 py-4 text-sm text-gray-900 font-bold">
                                             ₹{customer.metadata.totalSpent.toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-900">
@@ -195,10 +208,10 @@ export default function CustomersPage() {
                                                 ? new Date(customer.metadata.lastOrderDate).toLocaleDateString()
                                                 : 'N/A'}
                                         </td>
-                                        <td className="px-6 py-4 text-sm">
+                                        <td className="px-6 py-4 text-sm text-right">
                                             <button
                                                 onClick={() => viewCustomerDetails(customer.uid)}
-                                                className="text-blue-600 hover:text-blue-900"
+                                                className="text-indigo-600 hover:text-indigo-800 font-bold transition-colors"
                                             >
                                                 View Details
                                             </button>
@@ -210,11 +223,11 @@ export default function CustomersPage() {
                     </div>
 
                     {hasMore && (
-                        <div className="mt-4 text-center">
+                        <div className="mt-6 text-center">
                             <button
                                 onClick={() => fetchCustomers(true)}
                                 disabled={loading}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
+                                className="px-8 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors disabled:bg-gray-400 font-medium"
                             >
                                 {loading ? 'Loading...' : 'Load More'}
                             </button>
@@ -246,10 +259,10 @@ export default function CustomersPage() {
 
                         <div className="p-6">
                             {/* Customer Metrics */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div className="bg-blue-50 p-4 rounded-lg">
-                                    <p className="text-sm text-gray-600">Total Orders</p>
-                                    <p className="text-2xl font-bold text-blue-600">{selectedCustomer.metadata.totalOrders}</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                                <div className="bg-primary-light/50 p-4 rounded-2xl border border-primary/5">
+                                    <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Total Orders</p>
+                                    <p className="text-2xl font-bold text-primary">{selectedCustomer.metadata.totalOrders}</p>
                                 </div>
                                 <div className="bg-green-50 p-4 rounded-lg">
                                     <p className="text-sm text-gray-600">Total Spent</p>

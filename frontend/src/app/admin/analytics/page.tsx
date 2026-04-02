@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { dashboardApi } from '@/lib/api';
 import type { DashboardAnalytics } from '@orchids/shared';
 
+import { StatCardSkeleton } from '@/components/ui/Skeleton';
+
 export default function AnalyticsPage() {
     const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
     const [loading, setLoading] = useState(true);
@@ -43,46 +45,45 @@ export default function AnalyticsPage() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="p-6">
-                <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <p className="mt-4 text-gray-600">Loading analytics...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error || !analytics) {
-        return (
-            <div className="p-6">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                    {error || 'No analytics data available'}
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="p-6">
             {/* Header */}
             <div className="mb-6 flex justify-between items-start">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Business Analytics</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Business Analytics</h1>
                     <p className="text-gray-600 mt-1">Comprehensive insights and metrics</p>
                 </div>
-                <button
-                    onClick={handleRebuild}
-                    disabled={isRebuilding}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition disabled:bg-gray-400 text-sm"
-                >
-                    {isRebuilding ? 'Rebuilding...' : 'Rebuild Cache'}
-                </button>
+                {!loading && (
+                    <button
+                        onClick={handleRebuild}
+                        disabled={isRebuilding}
+                        className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition disabled:bg-gray-400 text-sm font-bold shadow-sm"
+                    >
+                        {isRebuilding ? 'Rebuilding...' : 'Rebuild Cache'}
+                    </button>
+                )}
             </div>
 
-            {/* Revenue Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {loading ? (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {[1, 2, 3, 4].map((i) => (
+                            <StatCardSkeleton key={i} />
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div className="bg-white p-8 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] h-80 animate-pulse border border-gray-50"></div>
+                        <div className="bg-white p-8 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] h-80 animate-pulse border border-gray-50"></div>
+                    </div>
+                </>
+            ) : (error || !analytics) ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+                    {error || 'No analytics data available'}
+                </div>
+            ) : (
+                <>
+                    {/* Revenue Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <MetricCard
                     title="Total Revenue"
                     value={`₹${analytics.totalRevenue.toLocaleString()}`}
@@ -142,7 +143,7 @@ export default function AnalyticsPage() {
                         return (
                             <div key={index} className="flex-1 flex flex-col items-center group relative">
                                 <div
-                                    className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors"
+                                    className="w-full bg-primary rounded-t hover:bg-primary-dark transition-colors"
                                     style={{ height: `${height}%` }}
                                 ></div>
                                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded px-2 py-1 mt-2 whitespace-nowrap z-10">
@@ -166,8 +167,8 @@ export default function AnalyticsPage() {
                     <div className="space-y-3">
                         {analytics.topProducts.map((product, index) => (
                             <div key={product.productId} className="flex items-center gap-4">
-                                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <span className="text-sm font-bold text-blue-600">#{index + 1}</span>
+                                <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <span className="text-sm font-bold text-primary">#{index + 1}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium text-gray-900 truncate">{product.productTitle}</p>
@@ -201,7 +202,9 @@ export default function AnalyticsPage() {
                         ))}
                     </div>
                 </div>
-            </div>
+                </div>
+                </>
+            )}
         </div>
     );
 }
@@ -218,7 +221,7 @@ function MetricCard({
     color: string;
 }) {
     const colorClasses: Record<string, string> = {
-        blue: 'from-blue-500 to-blue-600',
+        blue: 'from-primary to-primary-dark',
         green: 'from-green-500 to-green-600',
         purple: 'from-purple-500 to-purple-600',
         yellow: 'from-yellow-500 to-yellow-600',

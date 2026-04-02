@@ -31,7 +31,7 @@ const apiFetch = async (url: string, options: RequestInit = {}) => {
 
     if (response.status === 401) {
         if (typeof window !== 'undefined') {
-            window.location.href = '/login?expired=true';
+            window.location.href = '/auth/login?expired=true';
         }
         throw new Error('Session Expired or Unauthorized');
     }

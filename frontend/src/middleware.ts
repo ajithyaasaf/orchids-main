@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
     // Authentication & Route Protection
     // ========================================================================
     const protectedPaths = ['/admin', '/profile', '/wholesale/checkout', '/orders'];
-    const authPaths = ['/login', '/register', '/signup'];
+    const authPaths = ['/auth/login', '/auth/register', '/auth/signup'];
 
     const isProtectedRoute = protectedPaths.some(path =>
         pathname === path || pathname.startsWith(`${path}/`)
@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
 
     // Redirect to login if unauthenticated user tries to hit protected route
     if (isProtectedRoute && !session) {
-        const loginUrl = new URL('/login', request.url);
+        const loginUrl = new URL('/auth/login', request.url);
         loginUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(loginUrl);
     }
@@ -83,9 +83,9 @@ export const config = {
         '/wholesale/checkout',
         '/orders/:path*',
         /* Auth Routes */
-        '/login',
-        '/register',
-        '/signup',
+        '/auth/login',
+        '/auth/register',
+        '/auth/signup',
         /* Retail Redirect Routes */
         '/cart',
         '/checkout',

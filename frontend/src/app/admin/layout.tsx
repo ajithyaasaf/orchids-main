@@ -78,19 +78,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     // Auth & Permission check
     const isAuthenticating = !initialized || authLoading;
-    const isUnauthorized = !user || (user.role !== 'admin' && user.role !== 'superadmin');
-    const isLoadingState = !hasMounted || isAuthenticating || isUnauthorized;
+    const isLoadingState = !hasMounted || isAuthenticating;
+
+    // If fully loaded and still not authorized, we'll let the useEffect handle the redirect
+    // but we don't want to show the admin UI during that brief moment.
+    const isAuthorized = user && (user.role === 'admin' || user.role === 'superadmin');
+
+    if (isLoadingState) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50/50 backdrop-blur-sm">
+                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    // Guard: If not authorized and not loading, show nothing (useEffect will redirect)
+    if (!isAuthorized) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-[#f9fafb] text-gray-900 font-sans pb-16 lg:pb-0 transition-all duration-300">
-            {isLoadingState ? (
-                /* Stable loading state inside the same root structure */
-                <div className="min-h-screen flex items-center justify-center bg-gray-50/50 backdrop-blur-sm">
-                    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                </div>
-            ) : (
-                <>
-                    {/* Mobile Top Header */}
+            {/* Mobile Top Header */}
                     <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between">
                         <span className="font-bold text-xl tracking-tight text-gray-900">Admin</span>
                         <div className="flex items-center gap-2">
@@ -229,8 +238,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             </button>
                         </div>
                     </div>
-                </>
-            )}
         </div>
     );
 }

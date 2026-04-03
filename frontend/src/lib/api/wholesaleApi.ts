@@ -67,6 +67,50 @@ export const wholesaleProductsApi = {
     },
 
     /**
+     * Get wholesale products by category
+     */
+    getByCategory: async (category: string): Promise<WholesaleProduct[]> => {
+        const token = await getAuthToken();
+
+        const response = await apiFetch(`${API_BASE}/wholesale/products/category/${category}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            cache: 'no-store',
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch products');
+        }
+
+        return data.data;
+    },
+
+    /**
+     * Get wholesale products by style code (color variants)
+     */
+    getByStyleCode: async (styleCode: string): Promise<WholesaleProduct[]> => {
+        const token = await getAuthToken();
+
+        const response = await apiFetch(`${API_BASE}/wholesale/products/style/${styleCode}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            cache: 'no-store',
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch products');
+        }
+
+        return data.data;
+    },
+
+    /**
      * Get single wholesale product by ID
      */
     getById: async (id: string): Promise<WholesaleProduct> => {
@@ -337,6 +381,25 @@ export const settingsApi = {
 
         if (!data.success) {
             throw new Error('Failed to fetch settings');
+        }
+
+        return data.data;
+    },
+};
+
+/**
+ * Shipping API Client
+ */
+export const shippingApi = {
+    /**
+     * Check pincode serviceability and get estimated delivery date
+     */
+    checkPincode: async (pincode: string) => {
+        const response = await apiFetch(`${API_BASE}/shipping/check/${pincode}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to check pincode');
         }
 
         return data.data;

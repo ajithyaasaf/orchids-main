@@ -1,11 +1,18 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 import { ProductSchema, Breadcrumbs } from '@/components/seo/StructuredData';
 import { AddToCartSection } from '@/components/product/AddToCartSection';
 import { ProductImageGallery } from '@/components/product/ProductImageGallery';
-import { Package, Ruler, ShoppingBag } from 'lucide-react';
+import { PincodeCheck } from '@/components/product/PincodeCheck';
+import { WhatsAppInquiry } from '@/components/product/WhatsAppInquiry';
+import { SocialShare } from '@/components/product/SocialShare';
+import { RelatedProducts } from '@/components/product/RelatedProducts';
+import { MobileStickyAddToCart } from '@/components/product/MobileStickyAddToCart';
+import { ColorVariants } from '@/components/product/ColorVariants';
+import { Package, Ruler, ShoppingBag, ArrowLeft } from 'lucide-react';
 
 /**
  * Product Detail Page - SEO Optimized
@@ -89,8 +96,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
         { name: 'Home', url: '/' },
         { name: 'Products', url: '/products' },
         { name: product.category || 'Clothing', url: `/products?category=${product.category}` },
-        { name: product.title, url: `/product/${product.slug}` },
     ];
+
+    // Add Sub-category if tags exist
+    if (product.tags && product.tags.length > 0) {
+        breadcrumbItems.push({ 
+            name: product.tags[0], 
+            url: `/products?category=${product.category}&tag=${product.tags[0]}` 
+        });
+    }
+
+    breadcrumbItems.push({ name: product.title, url: `/product/${product.slug}` });
 
     return (
         <>
@@ -100,8 +116,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <main className="min-h-screen bg-gray-50/50">
                 <div className="container mx-auto px-6 py-12 max-w-7xl">
                     {/* SEO: Breadcrumb Navigation */}
-                    <div className="mb-6">
+                    <div className="mb-6 flex items-center justify-between">
                         <Breadcrumbs items={breadcrumbItems} />
+                        <Link 
+                            href={`/products?category=${product.category}`}
+                            className="text-sm font-bold text-gray-500 hover:text-primary flex items-center gap-1 transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to {product.category}
+                        </Link>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
@@ -115,10 +138,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
                             <div>
                                 {/* Category Badge */}
                                 {product.category && (
-                                    <div className="mb-3">
+                                    <div className="mb-3 flex gap-2">
                                         <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">
                                             {product.category}
                                         </span>
+                                        {product.tags?.[0] && (
+                                            <>
+                                                <span className="text-gray-300">•</span>
+                                                <span className="text-xs font-bold tracking-widest text-primary uppercase">
+                                                    {product.tags[0]}
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                 )}
 
@@ -141,7 +172,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                 </div>
 
                                 {/* Bundle Configuration - Clean Grid Spec */}
-                                <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+                                <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
                                             <Package className="w-4 h-4 text-primary" />
@@ -164,10 +195,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Color Variants */}
+                                {product.styleCode && (
+                                    <ColorVariants styleCode={product.styleCode} currentProductId={product.id} />
+                                )}
                             </div>
 
                             {/* Add to Cart Section */}
-                            <AddToCartSection product={product} />
+                            <div className="space-y-4">
+                                <AddToCartSection product={product} />
+                                <WhatsAppInquiry productTitle={product.title} productSlug={product.slug} />
+                            </div>
+
+                            {/* Delivery Check Section */}
+                            <PincodeCheck />
 
                             {/* Description - Accordion style or clean block */}
                             {product.description && (
@@ -176,6 +218,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                     <p>{product.description}</p>
                                 </div>
                             )}
+
+                            {/* Social Share Section */}
+                            <SocialShare title={product.title} slug={product.slug} />
 
                             {/* Wholesale Value Props */}
                             <div className="grid grid-cols-3 gap-4 py-6 border-t border-gray-100">
@@ -201,12 +246,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                     <p className="text-[10px] text-gray-500">Professional Pack</p>
                                 </div>
                             </div>
-
                         </div>
                     </div>
+
+                    {/* Related Products Section */}
+                    {product.category && (
+                        <RelatedProducts category={product.category} currentProductId={product.id} />
+                    )}
                 </div>
             </main>
+
+            {/* Mobile Sticky Add to Cart */}
+            <MobileStickyAddToCart product={product} />
         </>
     );
 }
-

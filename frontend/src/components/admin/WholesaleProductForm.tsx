@@ -23,6 +23,8 @@ export interface WholesaleJobFormData {
     description: string;
     category: string;
     tags: string[];
+    styleCode: string;
+    colorName: string;
     bundleQty: number;
     bundleComposition: Record<string, number>;
     bundlePrice: number;
@@ -44,6 +46,8 @@ const INITIAL_FORM: WholesaleJobFormData = {
     description: '',
     category: PRODUCT_CATEGORIES[0]?.id || '',
     tags: [],
+    styleCode: '',
+    colorName: '',
     bundleQty: 20,
     bundleComposition: {},
     bundlePrice: 0,
@@ -88,6 +92,8 @@ export default function WholesaleProductForm({
                 description: initialData.description || '',
                 category: initialData.category || INITIAL_FORM.category,
                 tags: initialData.tags || [],
+                styleCode: initialData.styleCode || '',
+                colorName: initialData.colorName || '',
                 bundleQty: initialData.bundleQty || 20,
                 bundleComposition: initialData.bundleComposition || {},
                 bundlePrice: initialData.bundlePrice || 0,
@@ -187,19 +193,50 @@ export default function WholesaleProductForm({
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Info */}
-                <div>
-                    <label className="block text-sm font-medium mb-1">
-                        Product Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        value={form.title}
-                        onChange={(e) => handleFieldChange({ title: e.target.value })}
-                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="e.g., Girls Cotton T-Shirt Mix"
-                        disabled={isLoading}
-                        required
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium mb-1">
+                            Product Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={form.title}
+                            onChange={(e) => handleFieldChange({ title: e.target.value })}
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="e.g., Girls Cotton T-Shirt Mix"
+                            disabled={isLoading}
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Style Code (Variant Group ID)
+                        </label>
+                        <input
+                            type="text"
+                            value={form.styleCode}
+                            onChange={(e) => handleFieldChange({ styleCode: e.target.value })}
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g., G-TSHIRT-001"
+                            disabled={isLoading}
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">Used to group color variants together</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Color Name
+                        </label>
+                        <input
+                            type="text"
+                            value={form.colorName}
+                            onChange={(e) => handleFieldChange({ colorName: e.target.value })}
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g., Dusty Rose"
+                            disabled={isLoading}
+                        />
+                    </div>
                 </div>
 
                 <div>

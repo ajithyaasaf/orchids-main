@@ -184,6 +184,40 @@ export const getWholesaleProductsByIds = async (ids: string[]): Promise<Wholesal
 
 
 /**
+ * Get wholesale products by category
+ */
+export const getWholesaleProductsByCategory = async (
+    category: string,
+    limit: number = 10
+): Promise<WholesaleProduct[]> => {
+    const snapshot = await collections.wholesaleProducts
+        .where('category', '==', category)
+        .limit(limit)
+        .get();
+
+    return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+    })) as WholesaleProduct[];
+};
+
+/**
+ * Get wholesale products by style code (color variants)
+ */
+export const getWholesaleProductsByStyleCode = async (
+    styleCode: string
+): Promise<WholesaleProduct[]> => {
+    const snapshot = await collections.wholesaleProducts
+        .where('styleCode', '==', styleCode)
+        .get();
+
+    return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+    })) as WholesaleProduct[];
+};
+
+/**
  * Get all wholesale products
  * Returns only products with wholesale schema structure
  */

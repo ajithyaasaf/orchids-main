@@ -6,6 +6,8 @@ import {
     updateWholesaleProduct,
     getWholesaleProductById,
     getWholesaleProductBySlug,
+    getWholesaleProductsByCategory,
+    getWholesaleProductsByStyleCode,
     getAllWholesaleProducts,
     deleteWholesaleProduct,
 } from '../services/wholesaleProductService';
@@ -25,6 +27,34 @@ const router = express.Router();
 router.get('/', async (req, res, next) => {
     try {
         const products = await getAllWholesaleProducts();
+        res.json({ success: true, data: products });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * GET /api/wholesale/products/category/:category
+ * Get products by category
+ */
+router.get('/category/:category', async (req, res, next) => {
+    try {
+        const { category } = req.params;
+        const products = await getWholesaleProductsByCategory(category);
+        res.json({ success: true, data: products });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * GET /api/wholesale/products/style/:styleCode
+ * Get color variants by style code
+ */
+router.get('/style/:styleCode', async (req, res, next) => {
+    try {
+        const { styleCode } = req.params;
+        const products = await getWholesaleProductsByStyleCode(styleCode);
         res.json({ success: true, data: products });
     } catch (error) {
         next(error);

@@ -74,6 +74,8 @@ export interface WholesaleProduct {
     description: string;
     category: string;
     tags?: string[]; // Secondary classification for filtering (e.g. "Jubba", "Rompers")
+    styleCode?: string; // Group products as color variants (e.g. "TSHIRT-001")
+    colorName?: string; // Specific color for this variant (e.g. "Red", "Navy")
 
     // Bundle configuration
     bundleQty: number;                           // Total pieces per bundle (default: 20)

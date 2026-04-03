@@ -23,6 +23,7 @@ import wholesaleProductRoutes from './routes/wholesaleProducts';
 import wholesaleOrderRoutes from './routes/wholesaleOrders';
 import wholesaleCheckoutRoutes from './routes/wholesaleCheckout';
 import customerRoutes from './routes/customers';
+import shippingRoutes from './routes/shipping';
 
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
@@ -109,6 +110,7 @@ app.use('/api/payment', webhookRoutes);          // Razorpay webhook (handles /a
 app.use('/api/upload', uploadRoutes);            // Cloudinary image upload
 app.use('/api/settings', settingsRoutes);        // System configuration (GST, etc.)
 app.use('/api/invoices', invoiceRoutes);         // Invoice generation
+app.use('/api/shipping', shippingRoutes);         // Shipping serviceability & estimation
 
 // Wholesale Core Routes
 app.use('/api/wholesale/products', wholesaleProductRoutes);

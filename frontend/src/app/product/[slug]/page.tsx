@@ -10,6 +10,8 @@ import { PincodeCheck } from '@/components/product/PincodeCheck';
 import { WhatsAppInquiry } from '@/components/product/WhatsAppInquiry';
 import { SocialShare } from '@/components/product/SocialShare';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
+import { RecentlyViewedProducts } from '@/components/product/RecentlyViewedProducts';
+import { RecentlyViewedTracker } from '@/components/product/RecentlyViewedTracker';
 import { MobileStickyAddToCart } from '@/components/product/MobileStickyAddToCart';
 import { ColorVariants } from '@/components/product/ColorVariants';
 import { Package, Ruler, ShoppingBag, ArrowLeft } from 'lucide-react';
@@ -113,6 +115,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {/* SEO: Product Schema */}
             <ProductSchema product={product} />
 
+            {/* Tracking: Record this view in browser history (Currently Hidden)
+            <RecentlyViewedTracker productId={product.id} />
+            */}
+
             <main className="min-h-screen bg-gray-50/50">
                 <div className="container mx-auto px-6 py-12 max-w-7xl">
                     {/* SEO: Breadcrumb Navigation */}
@@ -154,17 +160,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                 )}
 
                                 {/* Product Title - H1 for SEO */}
-                                <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 mb-6 leading-tight">
+                                <h1 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 mb-4 leading-tight">
                                     {product.title}
                                 </h1>
 
                                 {/* Price */}
                                 <div className="mb-6 pb-6 border-b border-gray-100">
-                                    <div className="flex items-baseline gap-3">
-                                        <span className="text-5xl font-heading font-bold text-primary">
+                                    <div className="flex items-baseline gap-2.5">
+                                        <span className="text-3xl md:text-4xl font-heading font-bold text-primary">
                                             ₹{product.bundlePrice.toLocaleString('en-IN')}
                                         </span>
-                                        <span className="text-lg text-gray-500 font-medium">/ bundle</span>
+                                        <span className="text-base text-gray-500 font-medium">/ bundle</span>
                                     </div>
                                     <p className="text-sm text-gray-400 mt-2 font-medium">
                                         ₹{(product.bundlePrice / product.bundleQty).toFixed(0)} per piece • GST Included
@@ -253,6 +259,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     {product.category && (
                         <RelatedProducts category={product.category} currentProductId={product.id} />
                     )}
+
+                    {/* Recently Viewed Section (User History) (Currently Hidden)
+                    <RecentlyViewedProducts currentProductId={product.id} />
+                    */}
                 </div>
             </main>
 

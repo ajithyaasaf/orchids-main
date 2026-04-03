@@ -100,18 +100,18 @@ export function AddToCartSection({ product }: AddToCartSectionProps) {
                 {/* Dynamic Total Price */}
                 <div className="text-right">
                     <p className="text-sm text-gray-500 font-medium mb-1">Total Amount</p>
-                    <p className="text-3xl font-heading font-bold text-gray-900 leading-none">
+                    <p className="text-2xl font-heading font-bold text-gray-900 leading-none">
                         ₹{totalPrice.toLocaleString('en-IN')}
                     </p>
                 </div>
-            </div>
+                </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-3">
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3">
                 <button
                     onClick={handleAddToCart}
                     disabled={isAdding}
-                    className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-primary/40 active:transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                    className="w-full bg-primary text-white py-3.5 rounded-xl font-bold text-base hover:bg-primary-dark shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/40 active:transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
                 >
                     {isAdding ? (
                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -123,11 +123,11 @@ export function AddToCartSection({ product }: AddToCartSectionProps) {
 
                 <button
                     onClick={handleBuyNow}
-                    className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-black hover:shadow-lg active:transform active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-bold text-base hover:bg-black hover:shadow-md active:transform active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                 >
                     Buy Now
                 </button>
-            </div>
+                </div>
 
             <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-gray-400">
                 <div className="w-2 h-2 rounded-full bg-green-500" />

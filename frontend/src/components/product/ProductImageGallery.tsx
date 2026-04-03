@@ -25,10 +25,10 @@ export function ProductImageGallery({ images, title }: ProductImageGalleryProps)
     }
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 lg:sticky lg:top-24">
+        <div className="flex flex-col lg:flex-row gap-4 lg:sticky lg:top-24">
             {/* Thumbnail Strip (Left Side - Desktop) */}
             {images.length > 1 && (
-                <div className="hidden lg:flex flex-col gap-4 w-24 flex-shrink-0">
+                <div className="hidden lg:flex flex-col gap-3 w-20 flex-shrink-0">
                     {images.map((image, index) => (
                         <button
                             key={index}

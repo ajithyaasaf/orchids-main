@@ -16,16 +16,14 @@ export function ConditionalLayout({ children }: { children: ReactNode }) {
     const isAuthRoute = pathname?.startsWith('/auth');
     const isHideLayout = isAdminRoute || isAuthRoute;
 
-    if (!hasMounted) {
-        return <main className="min-h-screen">{children}</main>;
-    }
-
     return (
-        <>
-            {!isHideLayout && <PromotionalBanner />}
-            {!isAdminRoute && <Header />}
-            <main className="min-h-screen">{children}</main>
-            {!isAdminRoute && <Footer />}
-        </>
+        <div className="flex flex-col min-h-screen">
+            {hasMounted && !isHideLayout && <PromotionalBanner />}
+            {hasMounted && !isAdminRoute && <Header />}
+            <main className="flex-1">
+                {children}
+            </main>
+            {hasMounted && !isAdminRoute && <Footer />}
+        </div>
     );
 }

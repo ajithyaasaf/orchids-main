@@ -2,7 +2,7 @@
 const nextConfig = {
     // Orchid Next.js Configuration
     // 1. Transpile shared packages
-    transpilePackages: ['@orchids/shared', 'undici', 'firebase', '@firebase/auth', '@firebase/component', '@firebase/util'],
+    transpilePackages: ['@orchids/shared', 'undici'],
 
     images: {
         remotePatterns: [

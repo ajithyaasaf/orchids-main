@@ -195,7 +195,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                                 key={size}
                                                 className="flex flex-col items-center justify-center bg-gray-50 p-3 rounded-lg border border-transparent hover:border-gray-200 transition-colors"
                                             >
-                                                <span className="text-xs text-gray-500 mb-1">Size {size}</span>
+                                                <span className="text-xs text-gray-500 mb-1">{size}</span>
                                                 <span className="text-lg font-bold text-gray-900">{qty}</span>
                                             </div>
                                         ))}

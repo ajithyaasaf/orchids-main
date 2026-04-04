@@ -1,19 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { WholesaleProduct, PRODUCT_CATEGORIES, CategoryTag } from '@orchids/shared';
+import { WholesaleProduct, PRODUCT_CATEGORIES, getSizeGroupForCategory } from '@orchids/shared';
 import { useToast } from '@/context/ToastContext';
 import ImageUpload from './ImageUpload';
 
 /**
  * Wholesale Product Form Component
- * 
+ *
  * Reusable form for creating and editing wholesale products.
  * Handles:
  * - State management for product fields
- * - Validation
- * - Bundle configuration presets
+ * - Dynamic size labels based on selected category (age-ranges for kids, S/M/L for adults)
+ * - Bundle configuration with category-aware presets
  * - Image management
  * - Unsaved changes warning
  */
@@ -57,17 +57,13 @@ const INITIAL_FORM: WholesaleJobFormData = {
     mixedColors: true,
 };
 
-// Removed hardcoded CATEGORIES array, using PRODUCT_CATEGORIES from @orchids/shared
-
-// Composition presets for common size distributions
-const PRESETS = {
-    '8-7-5': { M: 8, L: 7, XL: 5 },
-    '10-10': { M: 10, L: 10 },
-    '6-7-7': { S: 6, M: 7, L: 7 },
-    '5-5-5-5': { S: 5, M: 5, L: 5, XL: 5 },
+/** Badge color/text by sizing dimension type */
+const SIZING_TYPE_BADGE: Record<string, { label: string; className: string }> = {
+    kids_age:    { label: 'Age Range (Kids)',     className: 'bg-purple-100 text-purple-700' },
+    newborn_age: { label: 'Age Range (Newborn)',  className: 'bg-pink-100 text-pink-700' },
+    standard:    { label: 'Standard Sizes',       className: 'bg-blue-100 text-blue-700' },
+    unisex:      { label: 'Unisex Sizes',         className: 'bg-green-100 text-green-700' },
 };
-
-const SIZES = ['S', 'M', 'L', 'XL', '2XL'];
 
 export default function WholesaleProductForm({
     initialData,
@@ -84,7 +80,7 @@ export default function WholesaleProductForm({
     const [error, setError] = useState<string>('');
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-    // Initialize with data
+    // Initialize with data (edit mode)
     useEffect(() => {
         if (initialData) {
             setForm({
@@ -123,11 +119,27 @@ export default function WholesaleProductForm({
         setError('');
     };
 
-    // Derived tags for selected category
-    const activeCategoryConfig = PRODUCT_CATEGORIES.find(c => c.id === form.category);
-    const availableTags = activeCategoryConfig ? activeCategoryConfig.subcategories : [];
+    // ─────────────────────────────────────────────────────────────────────────
+    // Derived category configuration
+    // ─────────────────────────────────────────────────────────────────────────
 
-    // Toggle Tag selection
+    const activeCategoryConfig = useMemo(
+        () => PRODUCT_CATEGORIES.find(c => c.id === form.category),
+        [form.category]
+    );
+
+    /** Size group for the active category — updates when category changes */
+    const activeSizeGroup = useMemo(
+        () => getSizeGroupForCategory(form.category),
+        [form.category]
+    );
+
+    const availableTags = activeCategoryConfig?.subcategories ?? [];
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Tag helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
     const handleTagToggle = (tagValue: string) => {
         const newTags = form.tags.includes(tagValue)
             ? form.tags.filter(t => t !== tagValue)
@@ -135,16 +147,28 @@ export default function WholesaleProductForm({
         handleFieldChange({ tags: newTags });
     };
 
-    // Calculate total pieces in composition
+    // ─────────────────────────────────────────────────────────────────────────
+    // Bundle composition helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
     const totalPcs = Object.values(form.bundleComposition).reduce((a, b) => a + b, 0);
     const isValidComposition = totalPcs === form.bundleQty;
 
-    // Apply composition preset
-    const applyPreset = (presetKey: keyof typeof PRESETS) => {
-        handleFieldChange({ bundleComposition: PRESETS[presetKey] });
+    /** When category changes, clear the composition to avoid stale size keys */
+    const handleCategoryChange = (newCategoryId: string) => {
+        handleFieldChange({
+            category: newCategoryId,
+            tags: [],
+            bundleComposition: {},
+        });
     };
 
-    // Update single size quantity
+    /** Apply a preset from the active size group */
+    const applyPreset = (composition: Record<string, number>) => {
+        handleFieldChange({ bundleComposition: composition });
+    };
+
+    /** Update a single size key in the composition */
     const updateSize = (size: string, qty: number) => {
         handleFieldChange({
             bundleComposition: {
@@ -154,9 +178,14 @@ export default function WholesaleProductForm({
         });
     };
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Submit
+    // ─────────────────────────────────────────────────────────────────────────
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setFieldErrors({});
 
         if (!isValidComposition) {
             setError('Bundle composition must sum to bundle quantity');
@@ -175,15 +204,23 @@ export default function WholesaleProductForm({
 
         try {
             await onSubmit(form);
-            setIsDirty(false); // Reset dirty state on success
+            setIsDirty(false);
         } catch (err: any) {
             setError(err.message || 'Failed to save product');
         }
     };
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Render
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const sizingBadge = SIZING_TYPE_BADGE[activeSizeGroup.type] ?? SIZING_TYPE_BADGE.standard;
+
     return (
         <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-soft">
-            <h1 className="text-3xl font-bold mb-6">{isEditing ? 'Edit Wholesale Product' : 'Add Wholesale Product'}</h1>
+            <h1 className="text-3xl font-bold mb-6">
+                {isEditing ? 'Edit Wholesale Product' : 'Add Wholesale Product'}
+            </h1>
 
             {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -192,7 +229,8 @@ export default function WholesaleProductForm({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Info */}
+
+                {/* ── Basic Info ──────────────────────────────────────── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-1">
@@ -201,7 +239,7 @@ export default function WholesaleProductForm({
                         <input
                             type="text"
                             value={form.title}
-                            onChange={(e) => handleFieldChange({ title: e.target.value })}
+                            onChange={e => handleFieldChange({ title: e.target.value })}
                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="e.g., Girls Cotton T-Shirt Mix"
                             disabled={isLoading}
@@ -216,7 +254,7 @@ export default function WholesaleProductForm({
                         <input
                             type="text"
                             value={form.styleCode}
-                            onChange={(e) => handleFieldChange({ styleCode: e.target.value })}
+                            onChange={e => handleFieldChange({ styleCode: e.target.value })}
                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="e.g., G-TSHIRT-001"
                             disabled={isLoading}
@@ -225,13 +263,11 @@ export default function WholesaleProductForm({
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">
-                            Color Name
-                        </label>
+                        <label className="block text-sm font-medium mb-1">Color Name</label>
                         <input
                             type="text"
                             value={form.colorName}
-                            onChange={(e) => handleFieldChange({ colorName: e.target.value })}
+                            onChange={e => handleFieldChange({ colorName: e.target.value })}
                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="e.g., Dusty Rose"
                             disabled={isLoading}
@@ -243,7 +279,7 @@ export default function WholesaleProductForm({
                     <label className="block text-sm font-medium mb-1">Description</label>
                     <textarea
                         value={form.description}
-                        onChange={(e) => handleFieldChange({ description: e.target.value })}
+                        onChange={e => handleFieldChange({ description: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         rows={3}
                         placeholder="Product description..."
@@ -251,19 +287,19 @@ export default function WholesaleProductForm({
                     />
                 </div>
 
-                {/* Category Selection */}
+                {/* ── Category ────────────────────────────────────────── */}
                 <div>
                     <label className="block text-sm font-medium mb-1">
                         Category <span className="text-red-500">*</span>
                     </label>
                     <select
                         value={form.category}
-                        onChange={(e) => handleFieldChange({ category: e.target.value, tags: [] })}
+                        onChange={e => handleCategoryChange(e.target.value)}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         disabled={isLoading}
                         required
                     >
-                        {PRODUCT_CATEGORIES.map((cat) => (
+                        {PRODUCT_CATEGORIES.map(cat => (
                             <option key={cat.id} value={cat.id}>
                                 {cat.label}
                             </option>
@@ -271,15 +307,18 @@ export default function WholesaleProductForm({
                     </select>
                 </div>
 
-                {/* Tags Details (Multi-Select checkboxes based on category) */}
+                {/* ── Tags ────────────────────────────────────────────── */}
                 {availableTags.length > 0 && (
                     <div className="bg-gray-50 p-4 border rounded-lg">
                         <label className="block text-sm font-medium mb-2">
                             Product Tags (Select all that apply)
                         </label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            {availableTags.map((tag) => (
-                                <label key={tag.value} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-all">
+                            {availableTags.map(tag => (
+                                <label
+                                    key={tag.value}
+                                    className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-all"
+                                >
                                     <input
                                         type="checkbox"
                                         checked={form.tags.includes(tag.value)}
@@ -294,11 +333,11 @@ export default function WholesaleProductForm({
                     </div>
                 )}
 
-                {/* Image Upload */}
+                {/* ── Images ──────────────────────────────────────────── */}
                 <div>
                     <ImageUpload
                         images={form.images}
-                        onImagesChange={(images) => handleFieldChange({ images })}
+                        onImagesChange={images => handleFieldChange({ images })}
                         maxImages={5}
                     />
                     {fieldErrors.images && (
@@ -306,33 +345,37 @@ export default function WholesaleProductForm({
                     )}
                 </div>
 
-                {/* Bundle Configuration */}
+                {/* ── Bundle Configuration ─────────────────────────────── */}
                 <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-4 text-blue-900">
-                        Bundle Configuration
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-blue-900">Bundle Configuration</h3>
+                        {/* Sizing type badge — tells the admin which dimension they are configuring */}
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${sizingBadge.className}`}>
+                            {sizingBadge.label}
+                        </span>
+                    </div>
 
-                    {/* Composition Presets */}
+                    {/* Quick Presets — derived from the active size group */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-2 text-gray-700">
                             Quick Presets
                         </label>
                         <div className="flex flex-wrap gap-2">
-                            {Object.keys(PRESETS).map((preset) => (
+                            {activeSizeGroup.presets.map(preset => (
                                 <button
-                                    key={preset}
+                                    key={preset.label}
                                     type="button"
-                                    onClick={() => applyPreset(preset as keyof typeof PRESETS)}
-                                    className="px-4 py-2 bg-white border-2 border-blue-300 rounded-lg hover:bg-blue-100 hover:border-blue-400 transition-colors font-medium text-blue-900"
+                                    onClick={() => applyPreset(preset.composition)}
+                                    className="px-4 py-2 bg-white border-2 border-blue-300 rounded-lg hover:bg-blue-100 hover:border-blue-400 transition-colors font-medium text-blue-900 text-sm"
                                     disabled={isLoading}
                                 >
-                                    {preset} Split
+                                    {preset.label}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* Bundle Quantity */}
+                    {/* Total Bundle Quantity */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-1 text-gray-700">
                             Total Pieces per Bundle
@@ -340,20 +383,23 @@ export default function WholesaleProductForm({
                         <input
                             type="number"
                             value={form.bundleQty}
-                            onChange={(e) => handleFieldChange({ bundleQty: Number(e.target.value) })}
+                            onChange={e => handleFieldChange({ bundleQty: Number(e.target.value) })}
                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             min={1}
                             disabled={isLoading}
                         />
                     </div>
 
-                    {/* Size Distribution */}
+                    {/* Size Distribution Grid — dynamic labels */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-2 text-gray-700">
-                            Size Distribution
+                            {activeSizeGroup.dimensionLabel} Distribution
                         </label>
-                        <div className="grid grid-cols-5 gap-3">
-                            {SIZES.map((size) => (
+                        <div
+                            className="grid gap-3"
+                            style={{ gridTemplateColumns: `repeat(${Math.min(activeSizeGroup.sizes.length, 5)}, minmax(0, 1fr))` }}
+                        >
+                            {activeSizeGroup.sizes.map(size => (
                                 <div key={size} className="text-center">
                                     <label className="block text-xs font-semibold mb-1 text-gray-600">
                                         {size}
@@ -361,7 +407,7 @@ export default function WholesaleProductForm({
                                     <input
                                         type="number"
                                         value={form.bundleComposition[size] || 0}
-                                        onChange={(e) => updateSize(size, Number(e.target.value))}
+                                        onChange={e => updateSize(size, Number(e.target.value))}
                                         className="w-full px-2 py-2 border rounded-lg text-center text-lg font-semibold"
                                         min={0}
                                         disabled={isLoading}
@@ -371,19 +417,20 @@ export default function WholesaleProductForm({
                         </div>
                     </div>
 
-                    {/* Validation Feedback */}
+                    {/* Composition Validation */}
                     <div
-                        className={`text-base font-semibold px-4 py-3 rounded-lg ${isValidComposition
-                            ? 'bg-green-100 text-green-800 border border-green-300'
-                            : 'bg-red-100 text-red-800 border border-red-300'
-                            }`}
+                        className={`text-base font-semibold px-4 py-3 rounded-lg ${
+                            isValidComposition
+                                ? 'bg-green-100 text-green-800 border border-green-300'
+                                : 'bg-red-100 text-red-800 border border-red-300'
+                        }`}
                     >
                         Total: {totalPcs} / {form.bundleQty}{' '}
                         {isValidComposition ? '✓ Valid Configuration' : '✗ Must match bundle qty'}
                     </div>
                 </div>
 
-                {/* Pricing */}
+                {/* ── Pricing ──────────────────────────────────────────── */}
                 <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold mb-4 text-green-900">Pricing</h3>
                     <label className="block text-sm font-medium mb-1 text-gray-700">
@@ -395,9 +442,7 @@ export default function WholesaleProductForm({
                         <input
                             type="number"
                             value={form.bundlePrice}
-                            onChange={(e) =>
-                                handleFieldChange({ bundlePrice: Number(e.target.value) })
-                            }
+                            onChange={e => handleFieldChange({ bundlePrice: Number(e.target.value) })}
                             className="flex-1 px-4 py-3 border-2 rounded-lg text-2xl font-semibold focus:ring-2 focus:ring-green-500"
                             placeholder="0"
                             step="0.01"
@@ -412,7 +457,7 @@ export default function WholesaleProductForm({
                     )}
                 </div>
 
-                {/* Stock */}
+                {/* ── Stock ────────────────────────────────────────────── */}
                 <div>
                     <label className="block text-sm font-medium mb-1">
                         Available Bundles (Stock)
@@ -420,9 +465,7 @@ export default function WholesaleProductForm({
                     <input
                         type="number"
                         value={form.availableBundles}
-                        onChange={(e) =>
-                            handleFieldChange({ availableBundles: Number(e.target.value) })
-                        }
+                        onChange={e => handleFieldChange({ availableBundles: Number(e.target.value) })}
                         className="w-full px-4 py-2 border rounded-lg"
                         min={0}
                         disabled={isLoading}
@@ -434,27 +477,27 @@ export default function WholesaleProductForm({
                     )}
                 </div>
 
-                {/* Color Description */}
+                {/* ── Color Description ────────────────────────────────── */}
                 <div>
                     <label className="block text-sm font-medium mb-1">Color Description</label>
                     <input
                         type="text"
                         value={form.colorDescription}
-                        onChange={(e) => handleFieldChange({ colorDescription: e.target.value })}
+                        onChange={e => handleFieldChange({ colorDescription: e.target.value })}
                         className="w-full px-4 py-2 border rounded-lg"
                         placeholder="e.g., Assorted vibrant colors"
                         disabled={isLoading}
                     />
                 </div>
 
-                {/* Actions */}
+                {/* ── Actions ──────────────────────────────────────────── */}
                 <div className="flex gap-4 pt-4 border-t">
                     <button
                         type="submit"
                         disabled={isLoading || !isValidComposition}
                         className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                     >
-                        {isLoading ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
+                        {isLoading ? 'Saving...' : isEditing ? 'Update Product' : 'Create Product'}
                     </button>
 
                     <button

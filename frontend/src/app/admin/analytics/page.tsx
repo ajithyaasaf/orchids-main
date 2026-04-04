@@ -84,125 +84,125 @@ export default function AnalyticsPage() {
                 <>
                     {/* Revenue Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <MetricCard
-                    title="Total Revenue"
-                    value={`₹${analytics.totalRevenue.toLocaleString()}`}
-                    subtitle={`Today: ₹${analytics.revenueToday.toLocaleString()}`}
-                    color="blue"
-                />
-                <MetricCard
-                    title="This Month"
-                    value={`₹${analytics.revenueThisMonth.toLocaleString()}`}
-                    subtitle={`This Year: ₹${analytics.revenueThisYear.toLocaleString()}`}
-                    color="green"
-                />
-                <MetricCard
-                    title="Total Orders"
-                    value={analytics.totalOrders.toLocaleString()}
-                    subtitle={`Today: ${analytics.ordersToday} | Month: ${analytics.ordersThisMonth}`}
-                    color="purple"
-                />
-                <MetricCard
-                    title="Average Order Value"
-                    value={`₹${Math.round(analytics.averageOrderValue).toLocaleString()}`}
-                    subtitle="Across all orders"
-                    color="yellow"
-                />
-            </div>
-
-            {/* Customer Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <MetricCard
-                    title="Total Customers"
-                    value={analytics.totalCustomers.toLocaleString()}
-                    subtitle={`New Today: ${analytics.newCustomersToday} | This Month: ${analytics.newCustomersThisMonth}`}
-                    color="indigo"
-                />
-                <MetricCard
-                    title="Returning Customer Rate"
-                    value={`${analytics.returningCustomerRate.toFixed(1)}%`}
-                    subtitle="Customers with 2+ orders"
-                    color="pink"
-                />
-                <MetricCard
-                    title="Customer Lifetime"
-                    value={analytics.totalCustomers > 0 ? `₹${Math.round(analytics.totalRevenue / analytics.totalCustomers).toLocaleString()}` : '₹0'}
-                    subtitle="Avg revenue per customer"
-                    color="teal"
-                />
-            </div>
-
-            {/* Revenue Trend Chart */}
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
-                <h2 className="text-xl font-bold mb-4">Revenue Trend (Last 30 Days)</h2>
-                <div className="h-64 flex items-end justify-between gap-1">
-                    {analytics.revenueTrend.map((day, index) => {
-                        const maxRevenue = Math.max(...analytics.revenueTrend.map(d => d.revenue));
-                        const height = maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0;
-
-                        return (
-                            <div key={index} className="flex-1 flex flex-col items-center group relative">
-                                <div
-                                    className="w-full bg-primary rounded-t hover:bg-primary-dark transition-colors"
-                                    style={{ height: `${height}%` }}
-                                ></div>
-                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded px-2 py-1 mt-2 whitespace-nowrap z-10">
-                                    <div>{new Date(day.date).toLocaleDateString()}</div>
-                                    <div>₹{day.revenue.toLocaleString()}</div>
-                                    <div>{day.orders} orders</div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-                <div className="mt-4 text-center text-sm text-gray-500">
-                    Hover over bars to see details
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Top Products */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-bold mb-4">Top Products by Revenue</h2>
-                    <div className="space-y-3">
-                        {analytics.topProducts.map((product, index) => (
-                            <div key={product.productId} className="flex items-center gap-4">
-                                <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                    <span className="text-sm font-bold text-primary">#{index + 1}</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-gray-900 truncate">{product.productTitle}</p>
-                                    <p className="text-sm text-gray-500">{product.unitsSold} units sold</p>
-                                </div>
-                                <div className="flex-shrink-0 text-right">
-                                    <p className="font-bold text-green-600">₹{product.revenue.toLocaleString()}</p>
-                                </div>
-                            </div>
-                        ))}
+                        <MetricCard
+                            title="Total Revenue"
+                            value={`₹${analytics.totalRevenue.toLocaleString()}`}
+                            subtitle={`Today: ₹${analytics.revenueToday.toLocaleString()}`}
+                            color="blue"
+                        />
+                        <MetricCard
+                            title="This Month"
+                            value={`₹${analytics.revenueThisMonth.toLocaleString()}`}
+                            subtitle={`This Year: ₹${analytics.revenueThisYear.toLocaleString()}`}
+                            color="green"
+                        />
+                        <MetricCard
+                            title="Total Orders"
+                            value={analytics.totalOrders.toLocaleString()}
+                            subtitle={`Today: ${analytics.ordersToday} | Month: ${analytics.ordersThisMonth}`}
+                            color="purple"
+                        />
+                        <MetricCard
+                            title="Average Order Value"
+                            value={`₹${Math.round(analytics.averageOrderValue).toLocaleString()}`}
+                            subtitle="Across all orders"
+                            color="yellow"
+                        />
                     </div>
-                </div>
 
-                {/* Top States */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-bold mb-4">Top States by Revenue</h2>
-                    <div className="space-y-3">
-                        {analytics.topStates.map((state, index) => (
-                            <div key={state.state} className="flex items-center gap-4">
-                                <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                    <span className="text-sm font-bold text-green-600">#{index + 1}</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-gray-900">{state.state}</p>
-                                    <p className="text-sm text-gray-500">{state.orderCount} orders</p>
-                                </div>
-                                <div className="flex-shrink-0 text-right">
-                                    <p className="font-bold text-green-600">₹{state.revenue.toLocaleString()}</p>
-                                </div>
-                            </div>
-                        ))}
+                    {/* Customer Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <MetricCard
+                            title="Total Customers"
+                            value={analytics.totalCustomers.toLocaleString()}
+                            subtitle={`New Today: ${analytics.newCustomersToday} | This Month: ${analytics.newCustomersThisMonth}`}
+                            color="indigo"
+                        />
+                        <MetricCard
+                            title="Returning Customer Rate"
+                            value={`${analytics.returningCustomerRate.toFixed(1)}%`}
+                            subtitle="Customers with 2+ orders"
+                            color="pink"
+                        />
+                        <MetricCard
+                            title="Customer Lifetime"
+                            value={analytics.totalCustomers > 0 ? `₹${Math.round(analytics.totalRevenue / analytics.totalCustomers).toLocaleString()}` : '₹0'}
+                            subtitle="Avg revenue per customer"
+                            color="teal"
+                        />
                     </div>
-                </div>
-                </div>
+
+                    {/* Revenue Trend Chart */}
+                    <div className="bg-white rounded-lg shadow p-6 mb-8">
+                        <h2 className="text-xl font-bold mb-4">Revenue Trend (Last 30 Days)</h2>
+                        <div className="h-64 flex items-end justify-between gap-1">
+                            {analytics.revenueTrend.map((day, index) => {
+                                const maxRevenue = Math.max(...analytics.revenueTrend.map(d => d.revenue));
+                                const height = maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0;
+
+                                return (
+                                    <div key={index} className="flex-1 flex flex-col items-center group relative">
+                                        <div
+                                            className="w-full bg-primary rounded-t hover:bg-primary-dark transition-colors"
+                                            style={{ height: `${height}%` }}
+                                        ></div>
+                                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded px-2 py-1 mt-2 whitespace-nowrap z-10">
+                                            <div>{new Date(day.date).toLocaleDateString()}</div>
+                                            <div>₹{day.revenue.toLocaleString()}</div>
+                                            <div>{day.orders} orders</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="mt-4 text-center text-sm text-gray-500">
+                            Hover over bars to see details
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Top Products */}
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h2 className="text-xl font-bold mb-4">Top Products by Revenue</h2>
+                            <div className="space-y-3">
+                                {analytics.topProducts.map((product, index) => (
+                                    <div key={product.productId} className="flex items-center gap-4">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                            <span className="text-sm font-bold text-primary">#{index + 1}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-gray-900 truncate">{product.productTitle}</p>
+                                            <p className="text-sm text-gray-500">{product.unitsSold} units sold</p>
+                                        </div>
+                                        <div className="flex-shrink-0 text-right">
+                                            <p className="font-bold text-green-600">₹{product.revenue.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Top States */}
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h2 className="text-xl font-bold mb-4">Top States by Revenue</h2>
+                            <div className="space-y-3">
+                                {analytics.topStates.map((state, index) => (
+                                    <div key={state.state} className="flex items-center gap-4">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                            <span className="text-sm font-bold text-green-600">#{index + 1}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-gray-900">{state.state}</p>
+                                            <p className="text-sm text-gray-500">{state.orderCount} orders</p>
+                                        </div>
+                                        <div className="flex-shrink-0 text-right">
+                                            <p className="font-bold text-green-600">₹{state.revenue.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </>
             )}
         </div>

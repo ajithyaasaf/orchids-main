@@ -118,13 +118,15 @@ export async function createWholesaleOrder(
     const productRefs = cartItems.map((item) =>
         collections.wholesaleProducts.doc(item.productId)
     );
+    const userRef = collections.users.doc(userId);
 
     let serverCalculatedItems: WholesaleBundleItem[] = [];
     let orderId: string;
 
     await db.runTransaction(async (tx) => {
-        // Read all product docs atomically
+        // Read all product docs atomically + user doc
         const productSnapshots = await tx.getAll(...productRefs);
+        const userDoc = await tx.get(userRef);
 
         // Build verified line items using server-side prices
         serverCalculatedItems = [];
@@ -236,6 +238,68 @@ export async function createWholesaleOrder(
         };
 
         tx.set(orderRef, newOrder);
+
+        // ── 7.5. Auto-Save Address to User Profile ──────────────────────────────
+        if (userDoc.exists) {
+            const userData = userDoc.data() as any;
+            const existingAddresses: any[] = userData.addresses || [];
+
+            const normalize = (str?: string) => (str || '').toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '').trim();
+            const normName = normalize(address.name);
+            const normPhone = normalize(address.phone);
+            const normLine1 = normalize(address.addressLine1);
+            const normPincode = normalize(address.pincode);
+
+            // Exact Match requires Name + Phone + House + Pincode
+            const matchedIndex = existingAddresses.findIndex(a => 
+                normalize(a.name) === normName &&
+                normalize(a.phone) === normPhone &&
+                normalize(a.addressLine1) === normLine1 &&
+                normalize(a.pincode) === normPincode
+            );
+
+            let updatedAddresses = [...existingAddresses];
+            let shouldUpdateUser = false;
+
+            if (matchedIndex === -1) {
+                // 1. It is a completely new identity or location. Create New.
+                const isDefault = existingAddresses.length === 0;
+
+                const newSavedAddress = {
+                    ...address,
+                    id: admin.firestore().collection('_tmp_').doc().id, // Quick ID generator
+                    label: isDefault ? 'Default' : 'Checkout',
+                    isDefault,
+                    createdAt: new Date().toISOString(),
+                    lastUsedAt: new Date().toISOString()
+                };
+
+                updatedAddresses.unshift(newSavedAddress); // Prepend so it's top of list
+
+                // Enforce Max-10 LRU limit
+                if (updatedAddresses.length > 10) {
+                    const nonDefaults = updatedAddresses.filter(a => !a.isDefault);
+                    if (nonDefaults.length > 0) {
+                        nonDefaults.sort((a, b) => new Date(b.lastUsedAt).getTime() - new Date(a.lastUsedAt).getTime());
+                        const oldestId = nonDefaults[nonDefaults.length - 1].id;
+                        updatedAddresses = updatedAddresses.filter(a => a.id !== oldestId);
+                    }
+                }
+                shouldUpdateUser = true;
+
+            } else {
+                // 2. Exact match found. Just bump the 'lastUsedAt' timestamp.
+                updatedAddresses[matchedIndex].lastUsedAt = new Date().toISOString();
+                shouldUpdateUser = true;
+            }
+
+            if (shouldUpdateUser) {
+                tx.update(userRef, {
+                    addresses: updatedAddresses,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }
 
         // ── 8. Decrement Stock Atomically ────────────────────────────────────
         for (const { ref, newStock, newTotal } of stockUpdates) {

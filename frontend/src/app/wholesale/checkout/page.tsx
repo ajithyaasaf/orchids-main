@@ -43,6 +43,7 @@ export default function WholesaleCheckoutPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [isAddressConfirmed, setIsAddressConfirmed] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     const STORAGE_KEY = 'wholesale_checkout_address_v1';
 
@@ -87,10 +88,10 @@ export default function WholesaleCheckoutPage() {
     useEffect(() => {
         fetchGSTRate();
 
-        if (items.length === 0) {
+        if (items.length === 0 && !isSuccess) {
             router.push('/products');
         }
-    }, [items]);
+    }, [items, isSuccess]);
 
     // ── Pincode Watcher (Edge Case: City/State Mapping) ──────────────────
     useEffect(() => {
@@ -202,6 +203,7 @@ export default function WholesaleCheckoutPage() {
 
             if (isTest) {
                 // Bypass Razorpay entirely on frontend
+                setIsSuccess(true);
                 clearCart();
                 router.push(`/orders/${orderId}?success=true`);
                 return;
@@ -270,6 +272,7 @@ export default function WholesaleCheckoutPage() {
             const data = await response.json();
 
             if (data.success) {
+                setIsSuccess(true);
                 clearCart();
                 router.push(`/orders/${orderId}?success=true`);
             } else {

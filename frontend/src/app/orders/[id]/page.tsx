@@ -40,8 +40,12 @@ export default function OrderStatusPage() {
         try {
             setLoading(true);
 
+            // Dynamically build the API URL securely
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+
             // Try wholesale API first using authenticated fetch
-            const response = await authenticatedFetch(`${API_BASE}/wholesale/orders/${orderId}`);
+            const response = await authenticatedFetch(`${apiUrl}/wholesale/orders/${orderId}`);
 
             const data = await response.json();
 

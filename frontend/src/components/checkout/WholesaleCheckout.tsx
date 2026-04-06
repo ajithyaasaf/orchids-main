@@ -76,6 +76,14 @@ export default function WholesaleCheckout() {
         try {
             setLoading(true);
 
+            // Generate a simple idempotency key
+            const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+            const checkoutItems = items.map((item) => ({
+                productId: item.product.id,
+                bundlesOrdered: item.bundlesOrdered,
+            }));
+
             // Create order on backend using authenticatedFetch
             const response = await authenticatedFetch('/api/wholesale/orders', {
                 method: 'POST',
@@ -83,12 +91,10 @@ export default function WholesaleCheckout() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    items: calculatedOrder.items,
+                    cartItems: checkoutItems,
                     address,
-                    subtotal: calculatedOrder.subtotal,
-                    gstRate: calculatedOrder.gstRate,
-                    gst: calculatedOrder.gst,
-                    totalAmount: calculatedOrder.totalAmount,
+                    expectedTotalAmount: calculatedOrder.totalAmount,
+                    idempotencyKey,
                 }),
             });
 

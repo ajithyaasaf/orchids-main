@@ -13,7 +13,7 @@ import { Truck, Package, Calendar, MapPin, CreditCard, Tag, ArrowLeft } from 'lu
  */
 
 import { useAuthToken } from '@/hooks/useAuthToken';
-import { formatDateOnly, formatRelative } from '@/lib/dateUtils';
+import { formatDate, formatDateOnly, formatRelative } from '@/lib/dateUtils';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -331,7 +331,7 @@ export default function OrderStatusPage() {
                                 <div className="flex-1">
                                     <p className="font-semibold capitalize">{history.status}</p>
                                     <p className="text-sm text-gray-600">
-                                        {new Date(history.changedAt).toLocaleString('en-IN')}
+                                        {formatDate(history.changedAt)}
                                     </p>
                                     {history.notes && (
                                         <p className="text-sm text-gray-700 mt-1">{history.notes}</p>

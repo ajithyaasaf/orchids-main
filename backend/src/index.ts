@@ -75,10 +75,10 @@ app.use((req, res, next) => {
 // CORS configuration (optimized for performance)
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
         credentials: true,
         maxAge: 86400, // Cache preflight for 24 hours
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     })
 );
@@ -94,6 +94,36 @@ app.get('/health', (req, res) => {
         message: 'Orchid API is running',
         timestamp: new Date().toISOString(),
     });
+});
+
+// DIAGNOSTIC: Check Firestore connectivity
+app.get('/api/diagnostic/db', async (req, res) => {
+    try {
+        const { collections } = await import('./config/firebase');
+        const productsCount = (await collections.products.get()).size;
+        const wholesaleProductsCount = (await collections.wholesaleProducts.get()).size;
+        const ordersCount = (await collections.orders.get()).size;
+        const wholesaleOrdersCount = (await collections.wholesaleOrders.get()).size;
+        const usersCount = (await collections.users.get()).size;
+
+        res.json({
+            success: true,
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            counts: {
+                products: productsCount,
+                wholesaleProducts: wholesaleProductsCount,
+                orders: ordersCount,
+                wholesaleOrders: wholesaleOrdersCount,
+                users: usersCount
+            }
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
 });
 
 // API Routes - Wholesale Platform
@@ -124,10 +154,28 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`\n🚀 Orchid Backend API running on port ${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}\n`);
 });
+
+// GRACEFUL SHUTDOWN: Ensure the process exits cleanly and releases port 5000
+const shutdown = () => {
+    console.log('\n🛑 Shutting down server...');
+    server.close(() => {
+        console.log('✅ Server stopped. Port released.');
+        process.exit(0);
+    });
+
+    // Force exit after 5 seconds if server.close() hangs
+    setTimeout(() => {
+        console.error('⚠️ Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 5000);
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 export default app;

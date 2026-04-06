@@ -1,6 +1,5 @@
 import { WholesaleProduct } from '@orchids/shared';
 
-// Backend is at port 5000, ensure /api suffix is present
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
 

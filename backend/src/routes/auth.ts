@@ -21,8 +21,9 @@ router.post('/session', async (req, res) => {
         // Verify the ID token before creating the session cookie
         const decodedIdToken = await auth.verifyIdToken(idToken);
 
-        // Ensure token was issued recently (within 5 minutes)
-        if (new Date().getTime() / 1000 - decodedIdToken.auth_time > 5 * 60) {
+        // Allow up to 15 minutes of leeway for clock skew instead of 5
+        if (new Date().getTime() / 1000 - decodedIdToken.auth_time > 15 * 60) {
+            console.warn(`[Auth] Token auth_time (${decodedIdToken.auth_time}) is older than 15 minutes. Rejecting.`);
             return res.status(401).json({ success: false, error: 'Recent sign-in required' });
         }
 

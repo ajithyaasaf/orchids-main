@@ -46,7 +46,10 @@ export const useCartStore = create<CartStore>()(
             fetchGSTRate: async () => {
                 set({ isLoadingGST: true });
                 try {
-                    const response = await fetch('/api/settings');
+                    // Use consistent API base for all settings calls
+                    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                    const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+                    const response = await fetch(`${apiUrl}/settings`);
                     const data = await response.json();
 
                     if (data.success) {

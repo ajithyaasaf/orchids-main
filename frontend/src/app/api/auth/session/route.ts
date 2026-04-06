@@ -12,17 +12,30 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'ID token is required' }, { status: 400 });
         }
 
-        // Call our Node.js Backend to securely generate the 14-day Session Cookie
+        // Proxy to Node.js backend to securely generate the 14-day Session Cookie
         const response = await fetch(`${API_BASE}/api/auth/session`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idToken }),
         });
 
-        const data = await response.json();
+        let data: any = null;
+        let rawText = '';
+        try {
+            rawText = await response.text();
+            data = JSON.parse(rawText);
+        } catch (e) {
+            console.error('[Session Route] JSON parse failed. Raw response:', rawText);
+        }
 
-        if (!response.ok || !data.success || !data.data?.sessionCookie) {
-            return NextResponse.json({ success: false, error: data.error || 'Failed to create session' }, { status: 401 });
+        if (!response.ok || !data?.success || !data?.data?.sessionCookie) {
+            const errorMsg = data?.error || `Backend returned status ${response.status}: ${rawText.slice(0, 50)}...`;
+            console.error('[Session Route] Backend proxy failed:', {
+                status: response.status,
+                url: API_BASE,
+                error: errorMsg
+            });
+            return NextResponse.json({ success: false, error: errorMsg }, { status: 401 });
         }
 
         const sessionCookie = data.data.sessionCookie;

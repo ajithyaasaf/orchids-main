@@ -63,19 +63,37 @@ export const useAuthStore = create<AuthStore>((set) => ({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idToken }),
         });
+        
         if (!response.ok) {
-            throw new Error('Sign-in succeeded but session creation failed. Please try again.');
+            let errorMsg = 'Sign-in succeeded but session creation failed. Please try again.';
+            try {
+                const data = await response.json();
+                if (data.error) errorMsg = data.error;
+            } catch (e) {
+                // ignore
+            }
+            throw new Error(errorMsg);
         }
     },
 
     signUp: async (email, password) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const idToken = await userCredential.user.getIdToken();
-        await fetch('/api/auth/session', {
+        const response = await fetch('/api/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idToken }),
         });
+        if (!response.ok) {
+            let errorMsg = 'Sign-up succeeded but session creation failed. Please try logging in.';
+            try {
+                const data = await response.json();
+                if (data.error) errorMsg = data.error;
+            } catch (e) {
+                // ignore
+            }
+            throw new Error(errorMsg);
+        }
     },
 
     logout: async () => {

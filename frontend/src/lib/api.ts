@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const BASE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+export const API_URL = BASE_API_URL;
 
 // Validate API URL configuration
 if (!process.env.NEXT_PUBLIC_API_URL) {

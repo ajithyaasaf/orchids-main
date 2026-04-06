@@ -4,11 +4,13 @@
     "description": "Orchid E-commerce Backend API",
     "main": "dist/index.js",
     "scripts": {
+        "predev": "npx kill-port 5000 && node -e \"setTimeout(()=>{}, 1000)\" || echo 'Port 5000 clear'",
         "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
         "build": "tsc",
         "start": "node dist/index.js",
         "type-check": "tsc --noEmit",
-        "seed": "ts-node scripts/seedProducts.ts"
+        "seed": "ts-node scripts/seedProducts.ts",
+        "seed-wholesale": "ts-node scripts/seedWholesale.ts"
     },
     "keywords": [
         "express",

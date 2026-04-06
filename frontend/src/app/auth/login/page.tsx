@@ -17,18 +17,18 @@ function LoginForm() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Redirect based on role AFTER login OR respect ?redirect=...
+    // Initial check: if already logged in, redirect away
     useEffect(() => {
-        if (!user) return;
+        if (!user || loading) return;
 
         if (redirectPath) {
             router.replace(redirectPath);
         } else if (user.role === 'superadmin' || user.role === 'admin') {
             router.replace('/admin');
         } else {
-            router.replace('/');
+            router.replace('/profile');
         }
-    }, [user, redirectPath, router]);
+    }, [user, redirectPath, router, loading]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,6 +37,18 @@ function LoginForm() {
 
         try {
             await signIn(formData.email, formData.password);
+            
+            // Re-fetch user from store to get updated role
+            const user = useAuthStore.getState().user;
+            
+            // Manual redirect ONLY after successful backend session creation
+            if (redirectPath) {
+                router.replace(redirectPath);
+            } else if (user?.role === 'superadmin' || user?.role === 'admin') {
+                router.replace('/admin');
+            } else {
+                router.replace('/profile');
+            }
         } catch (err: any) {
             setError(err.message || 'Failed to login. Please check your credentials.');
         } finally {

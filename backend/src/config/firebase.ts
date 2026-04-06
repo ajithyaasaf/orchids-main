@@ -6,10 +6,14 @@ dotenv.config();
 // Initialize Firebase Admin SDK
 const initializeFirebase = () => {
     try {
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY
+            ? process.env.FIREBASE_PRIVATE_KEY.replace(/^"(.*)"$/, '$1').replace(/\\n/g, '\n')
+            : undefined;
+
         admin.initializeApp({
             credential: admin.credential.cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
-                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+                privateKey: privateKey,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
             }),
         });

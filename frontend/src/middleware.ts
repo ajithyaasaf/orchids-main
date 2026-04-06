@@ -12,9 +12,6 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const session = request.cookies.get('session')?.value;
 
-    // ========================================================================
-    // Authentication & Route Protection
-    // ========================================================================
     const protectedPaths = ['/admin', '/profile', '/wholesale/checkout', '/orders'];
     const authPaths = ['/auth/login', '/auth/register', '/auth/signup'];
 
@@ -31,11 +28,6 @@ export function middleware(request: NextRequest) {
         const loginUrl = new URL('/auth/login', request.url);
         loginUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(loginUrl);
-    }
-
-    // Redirect to profile if authenticated user tries to hit login/signup page
-    if (isAuthRoute && session) {
-        return NextResponse.redirect(new URL('/profile', request.url));
     }
 
     // ========================================================================

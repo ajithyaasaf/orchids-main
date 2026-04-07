@@ -1,24 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { WholesaleProductCard } from '@/components/products/WholesaleProductCard';
 import { type WholesaleProduct, PRODUCT_CATEGORIES } from '@orchids/shared';
 import { Search, Filter } from 'lucide-react';
+import Fuse from 'fuse.js';
+import { useDebounce } from '@/hooks/useDebounce';
 
 /**
  * SearchPageClient - Wholesale Product Search
  * 
  * Clean Architecture Implementation:
  * - Client-side search for fast, responsive UX
- * - Debounced search to minimize re-renders
- * - Separation of search logic from presentation
- * - Optimized filtering with multiple criteria
- * 
- * Search Criteria:
- * - Product title
- * - Category
- * - Description (if available)
+ * - Debounced search to minimize CPU re-renders on mobile
+ * - Fuzzy search (Fuse.js) for typo tolerance and relevance ranking
+ * - URL Synchronization for deep linking and browser history
  */
 
 interface SearchPageClientProps {
@@ -29,34 +26,6 @@ interface SearchPageClientProps {
 // ============================================================================
 // SEARCH UTILITIES
 // ============================================================================
-
-/**
- * Performs client-side search filtering on wholesale products
- * Searches across: title, category, and bundle composition
- */
-const filterProducts = (
-    products: WholesaleProduct[],
-    searchQuery: string
-): WholesaleProduct[] => {
-    if (!searchQuery.trim()) return products;
-
-    const query = searchQuery.toLowerCase().trim();
-
-    return products.filter((product) => {
-        // Search in product title
-        if (product.title.toLowerCase().includes(query)) return true;
-
-        // Search in category
-        if (product.category?.toLowerCase().includes(query)) return true;
-
-        // Search in sizes (bundle composition keys)
-        if (Object.keys(product.bundleComposition).some(size =>
-            size.toLowerCase().includes(query)
-        )) return true;
-
-        return false;
-    });
-};
 
 /**
  * Sort products based on criteria
@@ -89,27 +58,87 @@ const sortProducts = (
 // ============================================================================
 
 export function SearchPageClient({ initialQuery = '', initialProducts = [] }: SearchPageClientProps) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    // Initialize search term from URL query if available, otherwise fallback to prop
+    const urlQuery = searchParams.get('q') || initialQuery;
+
     // ========================================
     // State Management
     // ========================================
-
-    const [searchTerm, setSearchTerm] = useState(initialQuery);
-    const [allProducts, setAllProducts] = useState<WholesaleProduct[]>(initialProducts);
-    const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState(urlQuery);
     const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_asc' | 'price_desc'>('newest');
+    const [isSearching, setIsSearching] = useState(false);
+
+    // Apply 300ms debounce to the search input
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+    // ========================================
+    // Fuse.js Initialization (Fuzzy Search)
+    // ========================================
+    const fuse = useMemo(() => {
+        return new Fuse(initialProducts, {
+            keys: [
+                { name: 'title', weight: 2 },           // Title matches are most important
+                { name: 'category', weight: 1.5 },      // Category matches
+                { name: 'description', weight: 1 },     // Description matches
+                // Search within sizes (bundle composition keys like 'S', 'M', 'L')
+                { 
+                    name: 'sizes', 
+                    weight: 1, 
+                    getFn: (product) => Object.keys(product.bundleComposition) 
+                }
+            ],
+            threshold: 0.3,         // How fuzzy the match can be (0.0 = perfect, 1.0 = anything)
+            ignoreLocation: true,   // Match anywhere in the string
+            useExtendedSearch: true,
+        });
+    }, [initialProducts]);
+
+    // ========================================
+    // URL Synchronization Effect
+    // ========================================
+    useEffect(() => {
+        // Only update the URL after the user finishes typing (using the debounced value)
+        const params = new URLSearchParams(searchParams.toString());
+        
+        if (debouncedSearchTerm) {
+            params.set('q', debouncedSearchTerm);
+        } else {
+            params.delete('q');
+        }
+
+        // Push to router silently (scroll: false prevents jumping to top of page)
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        setIsSearching(false);
+    }, [debouncedSearchTerm, pathname, router, searchParams]);
+
+    // Update local state if URL changes externally (like clicking "Back")
+    useEffect(() => {
+        const query = searchParams.get('q');
+        if (query !== null && query !== debouncedSearchTerm) {
+            setSearchTerm(query);
+        }
+    }, [searchParams, debouncedSearchTerm]);
+
 
     // ========================================
     // Computed Values
     // ========================================
 
-    // Filter products based on search term
-    const filteredProducts = React.useMemo(
-        () => filterProducts(allProducts, searchTerm),
-        [allProducts, searchTerm]
-    );
+    // Filter products using Fuse.js
+    const filteredProducts = useMemo(() => {
+        if (!debouncedSearchTerm.trim()) return initialProducts;
+
+        // Fuse returns an array of { item: Product, refIndex: number, ... }
+        const results = fuse.search(debouncedSearchTerm);
+        return results.map(result => result.item);
+    }, [initialProducts, debouncedSearchTerm, fuse]);
 
     // Sort the filtered products
-    const displayedProducts = React.useMemo(
+    const displayedProducts = useMemo(
         () => sortProducts(filteredProducts, sortBy),
         [filteredProducts, sortBy]
     );
@@ -120,6 +149,7 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
+        setIsSearching(true); // Show a slight loading indication while typing
     };
 
     const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -128,7 +158,7 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Search is reactive, but form submit can trigger focus loss
+        // Prevent form submission from reloading page, handled by reactivity
     };
 
     // ========================================
@@ -153,6 +183,12 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
                             className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                             aria-label="Search products"
                         />
+                        {/* Loading Spinner for Debounce Feedback */}
+                        {isSearching && (
+                             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-primary"></div>
+                             </div>
+                        )}
                     </div>
 
                     {/* Sort Dropdown */}
@@ -177,15 +213,13 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
             {/* SEARCH RESULTS */}
             {/* =================================== */}
 
-            {loading ? (
-                <LoadingState />
-            ) : searchTerm ? (
+            {debouncedSearchTerm ? (
                 <SearchResults
-                    searchTerm={searchTerm}
+                    searchTerm={debouncedSearchTerm}
                     products={displayedProducts}
                 />
             ) : (
-                <EmptySearchState totalProducts={allProducts.length} />
+                <EmptySearchState totalProducts={initialProducts.length} />
             )}
         </>
     );
@@ -194,16 +228,6 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
-
-/**
- * Loading State Component
- */
-const LoadingState: React.FC = () => (
-    <div className="text-center py-16">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-primary mb-4"></div>
-        <p className="text-gray-500">Loading products...</p>
-    </div>
-);
 
 /**
  * Search Results Component
@@ -230,13 +254,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchTerm, products }) =
                 ))}
             </div>
         ) : (
-            <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
+            <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                     No products found
                 </h3>
                 <p className="text-gray-500 mb-4">
-                    Try different keywords or browse our categories
+                    Try different keywords, check your spelling, or browse our categories.
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 mt-6">
                     {PRODUCT_CATEGORIES.map(category => (
@@ -263,7 +287,7 @@ interface EmptySearchStateProps {
 }
 
 const EmptySearchState: React.FC<EmptySearchStateProps> = ({ totalProducts }) => (
-    <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
+    <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
         <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
             Start Your Search
@@ -291,7 +315,7 @@ const EmptySearchState: React.FC<EmptySearchStateProps> = ({ totalProducts }) =>
                                 searchInput.dispatchEvent(new Event('input', { bubbles: true }));
                             }
                         }}
-                        className="px-3 py-1 bg-white border border-gray-200 text-gray-700 rounded-full text-xs hover:border-primary hover:bg-primary-light transition-colors"
+                        className="px-3 py-1 bg-white border border-gray-200 text-gray-700 rounded-full text-xs hover:border-primary hover:bg-primary-light transition-colors shadow-sm"
                     >
                         {example}
                     </button>

@@ -139,8 +139,8 @@ export interface WholesaleOrder {
 
     // Payment (online only)
     paymentStatus: 'paid' | 'failed' | 'pending';
-    razorpayOrderId: string;
-    razorpayPaymentId?: string;
+    gatewayOrderId: string;
+    gatewayPaymentId?: string;
 
     // Promotions (optional - applied at checkout)
     appliedCombo?: AppliedCombo;             // Bundle combo deal applied
@@ -265,17 +265,15 @@ export const slugToTag = (slug: string): string => {
 };
 
 // Payment Types
-export interface RazorpayOrderData {
-    orderId: string;
-    amount: number;
-    currency: string;
-    key: string;
+export interface PhonePeOrderData {
+    redirectUrl: string;
+    merchantTransactionId: string;
 }
 
 export interface PaymentVerification {
-    razorpayOrderId: string;
-    razorpayPaymentId: string;
-    razorpaySignature: string;
+    gatewayOrderId: string;
+    gatewayPaymentId: string;
+    signature: string;
 }
 
 // Combo/Promotion Types

@@ -712,14 +712,14 @@ export default function AdminOrdersPage() {
                             </section>
 
                             {/* Payment IDs */}
-                            {selectedOrder.razorpayOrderId && !selectedOrder.razorpayOrderId.startsWith('test_') && (
+                            {selectedOrder.gatewayOrderId && !selectedOrder.gatewayOrderId.startsWith('test_') && (
                                 <section>
                                     <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                         <FileText className="w-3.5 h-3.5 inline mr-1" />Payment Reference
                                     </h3>
                                     <div className="text-xs font-mono bg-gray-50 rounded-lg p-3 text-gray-600 space-y-1">
-                                        <p>Order ID: {selectedOrder.razorpayOrderId}</p>
-                                        {selectedOrder.razorpayPaymentId && <p>Payment ID: {selectedOrder.razorpayPaymentId}</p>}
+                                        <p>Gateway Order ID: {selectedOrder.gatewayOrderId}</p>
+                                        {selectedOrder.gatewayPaymentId && <p>Payment ID: {selectedOrder.gatewayPaymentId}</p>}
                                     </div>
                                 </section>
                             )}

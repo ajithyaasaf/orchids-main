@@ -147,7 +147,7 @@ export default function ContactPage() {
                                     <h4 className="font-semibold text-text-primary mb-2">💳 What payment methods do you accept?</h4>
                                     <p className="text-text-secondary text-sm">
                                         We accept UPI, Credit/Debit Cards, Net Banking, and popular wallets
-                                        through our secure Razorpay payment gateway.
+                                        through our secure PhonePe payment gateway.
                                     </p>
                                 </div>
 

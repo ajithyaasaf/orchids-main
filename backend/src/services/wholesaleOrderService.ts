@@ -208,8 +208,8 @@ export async function createWholesaleOrder(
 
             // Payment & Status Bypass (TODO: REMOVE_AFTER_TESTING)
             paymentStatus: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'paid' : 'pending',
-            razorpayOrderId: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'test_bypass' : '',
-            razorpayPaymentId: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? `test_payment_${Date.now()}` : '',
+            gatewayOrderId: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'test_bypass' : '',
+            gatewayPaymentId: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? `test_payment_${Date.now()}` : '',
 
             // Order lifecycle
             orderStatus: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'processing' : 'placed',
@@ -346,7 +346,7 @@ export async function getWholesaleOrderById(
     return { ...data, id: doc.id };
 }
 
-/** Update wholesale order payment status (called from Razorpay webhook) */
+/** Update wholesale order payment status (called from PhonePe webhook) */
 export async function updateWholesalePaymentStatus(
     orderId: string,
     status: 'paid' | 'failed',
@@ -356,7 +356,7 @@ export async function updateWholesalePaymentStatus(
         paymentStatus: status,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
-    if (paymentId) updateData.razorpayPaymentId = paymentId;
+    if (paymentId) updateData.gatewayPaymentId = paymentId;
     await collections.wholesaleOrders.doc(orderId).update(updateData);
     const updated = await getWholesaleOrderById(orderId);
     if (!updated) throw new AppError('Order not found after update', 404);

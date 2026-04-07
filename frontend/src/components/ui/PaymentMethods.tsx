@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 
 interface PaymentMethod {
     name: string;
@@ -9,10 +8,10 @@ interface PaymentMethod {
 }
 
 // SVG components for payment icons
-const RazorpayIcon = () => (
+const PhonePeIcon = () => (
     <svg viewBox="0 0 120 40" className="h-8 w-auto">
-        <rect fill="#072654" width="120" height="40" rx="4" />
-        <text x="10" y="26" fill="white" fontSize="18" fontWeight="bold" fontFamily="Arial">razorpay</text>
+        <rect fill="#5f259f" width="120" height="40" rx="4" />
+        <text x="10" y="26" fill="white" fontSize="16" fontWeight="bold" fontFamily="Arial">PhonePe</text>
     </svg>
 );
 
@@ -61,7 +60,7 @@ const NetBankingIcon = () => (
 );
 
 const PAYMENT_METHODS: PaymentMethod[] = [
-    { name: 'Razorpay', icon: <RazorpayIcon /> },
+    { name: 'PhonePe', icon: <PhonePeIcon /> },
     { name: 'UPI', icon: <UPIIcon /> },
     { name: 'Visa', icon: <VisaIcon /> },
     { name: 'Mastercard', icon: <MastercardIcon /> },

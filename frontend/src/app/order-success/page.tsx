@@ -4,33 +4,84 @@ import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { orderApi } from '@/lib/api';
-import { CheckCircle, Package } from 'lucide-react';
+import { CheckCircle, XCircle, Package, Loader2 } from 'lucide-react';
 import { WholesaleOrder } from '@orchids/shared';
+import { useAuthToken } from '@/hooks/useAuthToken';
 
 function OrderSuccessContent() {
     const searchParams = useSearchParams();
-    const orderId = searchParams.get('orderId');
+    // Support both 'id' (PhonePe redirect) and 'orderId' (Legacy)
+    const orderId = searchParams.get('id') || searchParams.get('orderId');
     const [order, setOrder] = useState<WholesaleOrder | null>(null);
     const [loading, setLoading] = useState(true);
+    const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed'>('pending');
+    const { authenticatedFetch } = useAuthToken();
 
     useEffect(() => {
-        if (orderId) {
-            orderApi.getById(orderId)
-                .then(({ data }) => setOrder(data))
-                .catch((error) => console.error('Failed to load order:', error))
-                .finally(() => setLoading(false));
-        } else {
-            setLoading(false);
-        }
+        const verifyPaymentStatus = async () => {
+            if (!orderId) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                // Call our backend to verify PhonePe status
+                const response = await authenticatedFetch('/api/payment/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.pending) {
+                        setPaymentStatus('pending');
+                    } else {
+                        setPaymentStatus('success');
+                    }
+                } else {
+                    setPaymentStatus('failed');
+                }
+
+                // Fetch updated order details
+                const orderRes = await authenticatedFetch(`/api/wholesale/orders/${orderId}`);
+                const orderData = await orderRes.json();
+                if (orderData.success) {
+                    setOrder(orderData.data);
+                }
+
+            } catch (error) {
+                console.error('Failed to verify payment:', error);
+                setPaymentStatus('failed');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        verifyPaymentStatus();
     }, [orderId]);
 
     if (loading) {
         return (
-            <div className="container-custom section">
-                <div className="max-w-2xl mx-auto text-center py-16">
-                    <p>Loading order details...</p>
+            <div className="container-custom section min-h-[60vh] flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+                    <p className="text-lg text-text-secondary">Verifying your payment...</p>
+                    <p className="text-sm text-text-secondary mt-2">Please do not close or refresh this page.</p>
                 </div>
+            </div>
+        );
+    }
+
+    if (!orderId) {
+        return (
+            <div className="container-custom section text-center py-16">
+                <h1 className="text-2xl font-bold text-red-600 mb-4">Invalid Request</h1>
+                <p>Order ID is missing.</p>
+                <Link href="/">
+                    <Button className="mt-6">Return Home</Button>
+                </Link>
             </div>
         );
     }
@@ -39,62 +90,70 @@ function OrderSuccessContent() {
         <div className="container-custom section">
             <div className="max-w-2xl mx-auto">
                 <div className="bg-white rounded-xl shadow-soft p-8 text-center">
-                    <CheckCircle className="w-20 h-20 text-success mx-auto mb-6" />
+                    
+                    {paymentStatus === 'success' && (
+                        <CheckCircle className="w-20 h-20 text-success mx-auto mb-6" />
+                    )}
+                    {paymentStatus === 'failed' && (
+                        <XCircle className="w-20 h-20 text-red-500 mx-auto mb-6" />
+                    )}
+                    {paymentStatus === 'pending' && (
+                        <Loader2 className="w-20 h-20 text-yellow-500 animate-spin mx-auto mb-6" />
+                    )}
 
                     <h1 className="text-3xl font-bold text-text-primary mb-4">
-                        Order Placed Successfully!
+                        {paymentStatus === 'success' ? 'Payment Successful!' :
+                         paymentStatus === 'failed' ? 'Payment Failed' :
+                         'Payment Pending'}
                     </h1>
 
                     <p className="text-text-secondary mb-8">
-                        Thank you for your purchase. We've received your order and will send you a confirmation email shortly.
+                        {paymentStatus === 'success' ? "Thank you for your purchase. Your payment has been verified." :
+                         paymentStatus === 'failed' ? "Unfortunately, your payment could not be processed. Any deducted amount will be refunded by your bank within 3-5 business days." :
+                         "Your payment is still being processed by the bank. We will notify you once it completes."}
                     </p>
 
                     {order && (
                         <div className="bg-background rounded-lg p-6 mb-8 text-left">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <span className="text-text-secondary">Order ID:</span>
-                                    <p className="font-semibold text-text-primary">{order.id}</p>
+                                    <span className="text-text-secondary block">Order ID:</span>
+                                    <p className="font-mono text-text-primary mt-1">{order.id}</p>
                                 </div>
                                 <div>
-                                    <span className="text-text-secondary">Total Amount:</span>
-                                    <p className="font-semibold text-text-primary">₹{order.totalAmount}</p>
+                                    <span className="text-text-secondary block">Total Amount:</span>
+                                    <p className="font-semibold text-text-primary mt-1">₹{order.totalAmount}</p>
                                 </div>
                                 <div>
-                                    <span className="text-text-secondary">Payment Status:</span>
-                                    <p className="font-semibold text-success capitalize">{order.paymentStatus}</p>
+                                    <span className="text-text-secondary block">Payment Status:</span>
+                                    <p className={`font-semibold capitalize mt-1 ${
+                                        order.paymentStatus === 'paid' ? 'text-success' : 
+                                        order.paymentStatus === 'failed' ? 'text-red-500' : 'text-yellow-600'
+                                    }`}>
+                                        {order.paymentStatus}
+                                    </p>
                                 </div>
                                 <div>
-                                    <span className="text-text-secondary">Order Status:</span>
-                                    <p className="font-semibold text-primary capitalize">{order.orderStatus}</p>
+                                    <span className="text-text-secondary block">Order Status:</span>
+                                    <p className="font-semibold text-primary capitalize mt-1">{order.orderStatus}</p>
                                 </div>
-
-                                {/* Coupon Savings (if any) */}
-                                {order.appliedCoupon && (
-                                    <div className="mt-4 pt-4 border-t border-border">
-                                        <div className="flex items-center justify-center gap-2 text-center">
-                                            <span className="text-success text-lg font-semibold">
-                                                🎉 You saved ₹{order.appliedCoupon.discount} with coupon
-                                            </span>
-                                            <span className="inline-block px-3 py-1 bg-amber-50 border border-amber-300 text-amber-800 text-sm font-medium rounded-full">
-                                                {order.appliedCoupon.code}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     )}
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link href="/profile">
-                            <Button variant="primary">
-                                <Package className="w-4 h-4 mr-2" />
-                                Track Order
+                        {paymentStatus !== 'failed' && (
+                            <Link href="/profile">
+                                <Button variant="primary" className="w-full sm:w-auto">
+                                    <Package className="w-4 h-4 mr-2 inline" />
+                                    Track Order
+                                </Button>
+                            </Link>
+                        )}
+                        <Link href={paymentStatus === 'failed' ? '/cart' : '/'}>
+                            <Button variant="outline" className="w-full sm:w-auto">
+                                {paymentStatus === 'failed' ? 'Try Again' : 'Continue Shopping'}
                             </Button>
-                        </Link>
-                        <Link href="/">
-                            <Button variant="outline">Continue Shopping</Button>
                         </Link>
                     </div>
                 </div>
@@ -106,10 +165,8 @@ function OrderSuccessContent() {
 export default function OrderSuccessPage() {
     return (
         <Suspense fallback={
-            <div className="container-custom section">
-                <div className="max-w-2xl mx-auto text-center py-16">
-                    <p>Loading...</p>
-                </div>
+            <div className="container-custom section min-h-[60vh] flex items-center justify-center">
+                <div className="text-center text-gray-500">Loading...</div>
             </div>
         }>
             <OrderSuccessContent />

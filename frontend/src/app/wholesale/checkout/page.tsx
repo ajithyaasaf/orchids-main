@@ -202,23 +202,23 @@ export default function WholesaleCheckoutPage() {
             const { orderId, order } = data.data;
 
             if (isTest) {
-                // Bypass Razorpay entirely on frontend
+                // Test mode: bypass payment gateway
                 setIsSuccess(true);
                 clearCart();
                 router.push(`/orders/${orderId}?success=true`);
                 return;
             }
 
-            // Initialize Razorpay payment with server-confirmed amount
-            await initiatePayment(orderId, order.totalAmount);
+            // Initiate PhonePe payment redirect
+            await initiatePayment(orderId);
         } catch (err: any) {
             setError(err.message);
             setLoading(false);
         }
     };
 
-    const initiatePayment = async (orderId: string, amount: number) => {
-        // Create Razorpay order
+    const initiatePayment = async (orderId: string) => {
+        // Create PhonePe payment session
         const response = await authenticatedFetch('/api/payment/create-order', {
             method: 'POST',
             body: JSON.stringify({ orderId }),
@@ -230,57 +230,15 @@ export default function WholesaleCheckoutPage() {
             throw new Error('Failed to initialize payment');
         }
 
-        const { orderId: razorpayOrderId, key } = data.data;
+        // PhonePe returns a redirect URL — navigate the browser to PhonePe's payment page.
+        // After payment, PhonePe will redirect back to /order-success?id={orderId}
+        // where the verify API is called automatically.
+        const { redirectUrl } = data.data;
 
-        // Load Razorpay and initiate payment
-        const options = {
-            key,
-            amount: amount * 100, // Razorpay expects paise
-            currency: 'INR',
-            name: 'Wholesale Orchids',
-            description: 'Order Payment',
-            order_id: razorpayOrderId,
-            handler: async (response: any) => {
-                // Verify payment
-                await verifyPayment(orderId, response);
-            },
-            prefill: {
-                name: address.name,
-                contact: address.phone,
-            },
-            theme: {
-                color: '#3B82F6',
-            },
-        };
+        // Clear cart before redirect since we won't be back on this page
+        clearCart();
 
-        const razorpay = new (window as any).Razorpay(options);
-        razorpay.open();
-    };
-
-    const verifyPayment = async (orderId: string, razorpayResponse: any) => {
-        try {
-            const response = await authenticatedFetch('/api/payment/verify', {
-                method: 'POST',
-                body: JSON.stringify({
-                    orderId,
-                    razorpayOrderId: razorpayResponse.razorpay_order_id,
-                    razorpayPaymentId: razorpayResponse.razorpay_payment_id,
-                    razorpaySignature: razorpayResponse.razorpay_signature,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setIsSuccess(true);
-                clearCart();
-                router.push(`/orders/${orderId}?success=true`);
-            } else {
-                alert('Payment verification failed');
-            }
-        } catch (err) {
-            alert('Payment verification failed');
-        }
+        window.location.href = redirectUrl;
     };
 
     if (items.length === 0) {
@@ -636,7 +594,7 @@ export default function WholesaleCheckoutPage() {
                                     <span>100% Secure Transaction</span>
                                 </div>
                                 <span className="w-1 h-1 rounded-full bg-gray-200"></span>
-                                <span>Powered by Razorpay</span>
+                                <span>Secured by PhonePe</span>
                             </div>
                         </div>
                     </div>

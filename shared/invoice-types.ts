@@ -67,7 +67,7 @@ export interface OrderRefund {
     refundReason: string;        // Customer-facing reason
     refundDate: Date;            // When refund was processed
     originalInvoiceNumber: string; // Reference to original invoice
-    refundMethod: 'razorpay' | 'bank_transfer' | 'store_credit';
+    refundMethod: 'phonepe' | 'bank_transfer' | 'store_credit';
 }
 
 /**

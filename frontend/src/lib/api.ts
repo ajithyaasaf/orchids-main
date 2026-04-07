@@ -109,8 +109,8 @@ export const orderApi = {
 // Payment API
 export const paymentApi = {
     /**
-     * Create Razorpay payment order
-     * SECURITY: Now sends orderId instead of amount to prevent price manipulation
+     * Create PhonePe payment session
+     * SECURITY: Sends orderId instead of amount to prevent price manipulation
      */
     createOrder: (orderId: string) => apiFetch('/api/payment/create-order', {
         method: 'POST',
@@ -370,7 +370,7 @@ export interface CreateRefundPayload {
     orderId: string;
     refundAmount: number;
     refundReason: string;
-    refundMethod?: 'razorpay' | 'bank_transfer' | 'store_credit';
+    refundMethod?: 'phonepe' | 'bank_transfer' | 'store_credit';
 }
 
 export const invoiceApi = {

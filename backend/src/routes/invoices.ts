@@ -313,7 +313,7 @@ router.post(
                 orderId,
                 refundAmount,
                 refundReason,
-                refundMethod || 'razorpay'
+                refundMethod || 'phonepe'
             );
 
             res.json({

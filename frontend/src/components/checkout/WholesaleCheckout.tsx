@@ -8,7 +8,7 @@ import { useAuthToken } from '@/hooks/useAuthToken';
 
 /**
  * Wholesale Checkout Component
- * Displays cart items with GST breakdown and handles order placement
+ * Displays cart items with GST breakdown and handles order placement with PhonePe
  */
 
 interface CalculatedOrder {
@@ -22,7 +22,7 @@ interface CalculatedOrder {
 export default function WholesaleCheckout() {
     const router = useRouter();
     const { items, clearCart, fetchGSTRate } = useCartStore();
-    const { authenticatedFetch, getToken } = useAuthToken(); // Use robust auth hook
+    const { authenticatedFetch } = useAuthToken();
 
     const [address, setAddress] = useState({
         name: '',
@@ -57,7 +57,6 @@ export default function WholesaleCheckout() {
                 bundlesOrdered: item.bundlesOrdered,
             }));
 
-            // Use the API client (which we just updated to use force-refresh)
             const result = await wholesaleCheckoutApi.calculate(checkoutItems, address);
             setCalculatedOrder(result);
         } catch (err: any) {
@@ -76,7 +75,7 @@ export default function WholesaleCheckout() {
         try {
             setLoading(true);
 
-            // Generate a simple idempotency key
+            // Generate idempotency key
             const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
             const checkoutItems = items.map((item) => ({
@@ -84,12 +83,10 @@ export default function WholesaleCheckout() {
                 bundlesOrdered: item.bundlesOrdered,
             }));
 
-            // Create order on backend using authenticatedFetch
+            // Create order on backend
             const response = await authenticatedFetch('/api/wholesale/orders', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     cartItems: checkoutItems,
                     address,
@@ -104,80 +101,38 @@ export default function WholesaleCheckout() {
                 throw new Error(data.error || 'Failed to create order');
             }
 
-            const orderId = data.data.id;
+            const orderId = data.data.orderId;
 
-            // Initialize Razorpay payment
-            await initiatePayment(orderId, calculatedOrder.totalAmount);
+            // Clear the cart immediately since order is placed and stock is reserved
+            clearCart();
+
+            // Initiate PhonePe payment
+            await initiatePayment(orderId);
         } catch (err: any) {
             setError(err.message);
             setLoading(false);
         }
     };
 
-    const initiatePayment = async (orderId: string, amount: number) => {
-        // Create Razorpay order
-        const response = await authenticatedFetch('/api/payment/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId }),
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-            throw new Error('Failed to initialize payment');
-        }
-
-        const { orderId: razorpayOrderId, key } = data.data;
-
-        // Load Razorpay and initiate payment
-        const options = {
-            key,
-            amount: amount * 100, // Razorpay expects paise
-            currency: 'INR',
-            name: 'Wholesale Orchids',
-            description: 'Order Payment',
-            order_id: razorpayOrderId,
-            handler: async (response: any) => {
-                // Verify payment
-                await verifyPayment(orderId, response);
-            },
-            prefill: {
-                name: address.name,
-                contact: address.phone,
-            },
-            theme: {
-                color: '#3B82F6',
-            },
-        };
-
-        const razorpay = new (window as any).Razorpay(options);
-        razorpay.open();
-    };
-
-    const verifyPayment = async (orderId: string, razorpayResponse: any) => {
+    const initiatePayment = async (orderId: string) => {
         try {
-            const response = await authenticatedFetch('/api/payment/verify', {
+            const response = await authenticatedFetch('/api/payment/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    orderId,
-                    razorpayOrderId: razorpayResponse.razorpay_order_id,
-                    razorpayPaymentId: razorpayResponse.razorpay_payment_id,
-                    razorpaySignature: razorpayResponse.razorpay_signature,
-                }),
+                body: JSON.stringify({ orderId }),
             });
 
             const data = await response.json();
 
-            if (data.success) {
-                clearCart();
-                router.push(`/orders/${orderId}?success=true`);
-            } else {
-                alert('Payment verification failed');
+            if (!data.success || !data.data || !data.data.redirectUrl) {
+                throw new Error('Failed to initialize payment gateway');
             }
-        } catch (err) {
-            alert('Payment verification failed');
+
+            // Redirect to PhonePe payment page
+            window.location.href = data.data.redirectUrl;
+        } catch (err: any) {
+            setError(err.message);
+            setLoading(false);
         }
     };
 
@@ -331,9 +286,9 @@ export default function WholesaleCheckout() {
                     <button
                         onClick={handlePlaceOrder}
                         disabled={loading}
-                        className="flex-1 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-300"
+                        className="flex-1 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-300 flex justify-center items-center gap-2"
                     >
-                        {loading ? 'Processing...' : 'Proceed to Payment'}
+                        {loading ? 'Processing...' : 'Pay with PhonePe (UPI, Card, NetBanking)'}
                     </button>
                 )}
 

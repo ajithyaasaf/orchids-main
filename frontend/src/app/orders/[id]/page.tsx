@@ -188,10 +188,10 @@ export default function OrderStatusPage() {
                             <p className="font-mono text-sm font-bold text-gray-900">#{order.invoiceNumber}</p>
                         </div>
                     )}
-                    {order.razorpayPaymentId && (
+                    {order.gatewayPaymentId && (
                         <div>
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Transaction ID</p>
-                            <p className="font-mono text-xs text-gray-600 truncate">{order.razorpayPaymentId}</p>
+                            <p className="font-mono text-xs text-gray-600 truncate">{order.gatewayPaymentId}</p>
                         </div>
                     )}
                 </div>

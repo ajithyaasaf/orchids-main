@@ -39,7 +39,7 @@ export default function PrivacyPage() {
                             <ul className="list-disc pl-6 space-y-2 text-text-secondary mb-6">
                                 <li>Name and contact information (email address, phone number)</li>
                                 <li>Shipping address and billing information</li>
-                                <li>Payment information (processed securely through Razorpay)</li>
+                                <li>Payment information (processed securely through PhonePe)</li>
                                 <li>Order history and preferences</li>
                                 <li>Account credentials (encrypted)</li>
                             </ul>
@@ -84,9 +84,9 @@ export default function PrivacyPage() {
                                 </div>
 
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <h4 className="font-semibold text-text-primary mb-2">Razorpay</h4>
+                                    <h4 className="font-semibold text-text-primary mb-2">PhonePe</h4>
                                     <p className="text-sm text-text-secondary">
-                                        Payment processing. We do not store your complete card details; they are handled securely by Razorpay.
+                                        Payment processing. We do not store your complete card details; they are handled securely by PhonePe.
                                     </p>
                                 </div>
 
@@ -117,7 +117,7 @@ export default function PrivacyPage() {
                             <ul className="list-disc pl-6 space-y-2 text-text-secondary">
                                 <li><strong>Service Providers:</strong> Third parties who assist us in operating our website and processing orders</li>
                                 <li><strong>Shipping Partners:</strong> Courier services to deliver your orders</li>
-                                <li><strong>Payment Processors:</strong> Razorpay for secure payment processing</li>
+                                <li><strong>Payment Processors:</strong> PhonePe for secure payment processing</li>
                                 <li><strong>Legal Authorities:</strong> When required by law or to protect our rights</li>
                             </ul>
                         </section>
@@ -147,7 +147,7 @@ export default function PrivacyPage() {
                                 <li>SSL/TLS encryption for data transmission</li>
                                 <li>Secure authentication through Firebase</li>
                                 <li>Encrypted password storage</li>
-                                <li>PCI-DSS compliant payment processing via Razorpay</li>
+                                <li>PCI-DSS compliant payment processing via PhonePe</li>
                                 <li>Regular security audits and updates</li>
                                 <li>Restricted access to personal data</li>
                             </ul>

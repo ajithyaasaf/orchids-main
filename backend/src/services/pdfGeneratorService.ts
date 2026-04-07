@@ -151,9 +151,9 @@ export const generateInvoicePDF = (
         totalsY + 60
     );
 
-    if (invoice.order.razorpayPaymentId) {
+    if (invoice.order.gatewayPaymentId) {
         doc.text(
-            `Payment ID: ${invoice.order.razorpayPaymentId}`,
+            `Payment ID: ${invoice.order.gatewayPaymentId}`,
             50,
             totalsY + 75
         );

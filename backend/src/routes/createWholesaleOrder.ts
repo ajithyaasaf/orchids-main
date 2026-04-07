@@ -35,7 +35,7 @@ router.post('/', verifyToken, async (req: AuthRequest, res) => {
 
             // Payment
             paymentStatus: 'pending',
-            razorpayOrderId: '',
+            gatewayOrderId: '',
 
             // Order lifecycle
             orderStatus: 'placed',

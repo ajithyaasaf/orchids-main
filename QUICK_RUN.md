@@ -1,4 +1,4 @@
-# 🎯 Quick Start Commands - TNtrends E-commerce
+# 🎯 Quick Start Commands - Orchid E-commerce
 
 ## ✅ Step 1: Dependencies Installed!
 
@@ -14,13 +14,13 @@ Once installation completes, follow these commands:
 
 **Terminal 1 - Start Backend:**
 ```powershell
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\backend"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\backend"
 npm run dev
 ```
 
 **Terminal 2 - Start Frontend:**
 ```powershell
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\frontend"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\frontend"
 npm run dev
 ```
 
@@ -28,12 +28,12 @@ npm run dev
 
 **Backend:**
 ```powershell
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\backend"; npm run dev
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\backend"; npm run dev
 ```
 
 **Frontend:**
 ```powershell
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\frontend"; npm run dev
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\frontend"; npm run dev
 ```
 
 ---
@@ -134,7 +134,7 @@ curl http://localhost:5000/health
 
 **2. Check Frontend:**
 - Open browser: http://localhost:3000
-- Should see TNtrends homepage with hero section
+- Should see Orchid homepage with hero section
 
 **3. Check API:**
 ```powershell

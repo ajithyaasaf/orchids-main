@@ -1,4 +1,4 @@
-# Admin Setup Guide - TNtrends E-commerce
+# Admin Setup Guide - Orchid E-commerce
 
 This guide explains how to set up the first superadmin user and manage admin roles.
 
@@ -277,4 +277,4 @@ After creating a superadmin, you should configure the global settings:
 
 ---
 
-**Admin setup complete! You can now manage your TNtrends store. 🎉**
+**Admin setup complete! You can now manage your Orchid store. 🎉**

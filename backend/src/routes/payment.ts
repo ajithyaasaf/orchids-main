@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { initiatePayment, checkPaymentStatus } from '../services/phonepeService';
-import { deductBundleStock, restoreBundleStock } from '../services/wholesaleStockService';
+import { restoreBundleStock } from '../services/wholesaleStockService';
 import { verifyToken, AuthRequest } from '../middleware/auth';
 import { paymentLimiter } from '../middleware/rateLimiter';
 import { collections } from '../config/firebase';

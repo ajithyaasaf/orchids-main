@@ -1,4 +1,4 @@
-# TNtrends E-commerce API Documentation
+# Orchid E-commerce API Documentation
 
 Base URL: `http://localhost:5000` (development) or your deployed backend URL
 
@@ -52,7 +52,7 @@ GET /api/products
       "images": [
         {
           "url": "https://res.cloudinary.com/...",
-          "publicId": "tntrends/products/..."
+          "publicId": "orchids/products/..."
         }
       ],
       "createdAt": "2024-01-01T00:00:00.000Z"
@@ -101,7 +101,7 @@ Authorization: Bearer <token>
   "images": [
     {
       "url": "https://res.cloudinary.com/...",
-      "publicId": "tntrends/products/..."
+      "publicId": "orchids/products/..."
     }
   ]
 }
@@ -283,7 +283,7 @@ Content-Type: multipart/form-data
   "success": true,
   "data": {
     "url": "https://res.cloudinary.com/...",
-    "publicId": "tntrends/products/..."
+    "publicId": "orchids/products/..."
   }
 }
 ```

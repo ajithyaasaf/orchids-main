@@ -1,4 +1,4 @@
-# TNtrends Project Structure & Remaining Files
+# Orchid Project Structure & Remaining Files
 
 ## ✅ Already Created (Core Foundation)
 
@@ -37,7 +37,7 @@
 ### Frontend - Configuration
 - ✅ `frontend/package.json`
 - ✅ `frontend/tsconfig.json`
-- ✅ `frontend/tailwind.config.ts` - TNtrends design system
+- ✅ `frontend/tailwind.config.ts` - Orchid design system
 - ✅ `frontend/next.config.js` - Performance optimizations
 - ✅ `frontend/postcss.config.js`
 - ✅ `frontend/.env.example`
@@ -214,7 +214,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const { data: product } = await productApi.getById(params.id);
   
   return {
-    title: `${product.title} - TNtrends`,
+    title: `${product.title} - Orchid`,
     description: product.description,
     openGraph: {
       images: [product.images[0]?.url],

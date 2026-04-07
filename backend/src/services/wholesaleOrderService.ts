@@ -333,32 +333,69 @@ export async function createWholesaleOrder(
 }
 
 // ─────────────────────────────────────────────
-// Read / Update Helpers (existing, untouched)
+// Read / Update Helpers (Refactored for Atomicity)
 // ─────────────────────────────────────────────
 
 /** Fetch a wholesale order by ID */
 export async function getWholesaleOrderById(
-    orderId: string
+    orderId: string,
+    transaction?: admin.firestore.Transaction
 ): Promise<(WholesaleOrder & { id: string }) | null> {
-    const doc = await collections.wholesaleOrders.doc(orderId).get();
+    const orderRef = collections.wholesaleOrders.doc(orderId);
+    const doc = transaction ? await transaction.get(orderRef) : await orderRef.get();
+    
     if (!doc.exists) return null;
     const data = doc.data() as WholesaleOrder;
     return { ...data, id: doc.id };
 }
 
-/** Update wholesale order payment status (called from PhonePe webhook) */
+/** 
+ * Update wholesale order payment status.
+ * Handles product price locking atomically on success.
+ * Called from PhonePe webhook or polling verification.
+ */
 export async function updateWholesalePaymentStatus(
     orderId: string,
     status: 'paid' | 'failed',
     paymentId?: string
 ): Promise<WholesaleOrder & { id: string }> {
-    const updateData: any = {
-        paymentStatus: status,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-    if (paymentId) updateData.gatewayPaymentId = paymentId;
-    await collections.wholesaleOrders.doc(orderId).update(updateData);
-    const updated = await getWholesaleOrderById(orderId);
-    if (!updated) throw new AppError('Order not found after update', 404);
-    return updated;
+    try {
+        const orderRef = collections.wholesaleOrders.doc(orderId);
+        
+        await db.runTransaction(async (transaction) => {
+            const order = await getWholesaleOrderById(orderId, transaction);
+            if (!order) throw new AppError('Order not found', 404);
+
+            // Skip if state is already terminal to ensure idempotency
+            if (order.paymentStatus === status) {
+                logger.info(`Idempotency: Order ${orderId} already marked as ${status}. Skipping update.`);
+                return;
+            }
+
+            const updateData: any = {
+                paymentStatus: status,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+            if (paymentId) updateData.gatewayPaymentId = paymentId;
+
+            transaction.update(orderRef, updateData);
+
+            // If payment succeeded, lock the product prices (async call after transaction commits, or here)
+            // Best practice: Lock prices only after payment is confirmed.
+            if (status === 'paid') {
+                const { lockProductPrices } = await import('./wholesaleStockService');
+                // We call this inside the transaction or immediately after.
+                // Since firestore doesn't support recursive transactions, we run locking as a separate process
+                // triggered by successful payment verification.
+                await lockProductPrices(orderId, order.items);
+            }
+        });
+
+        const updated = await getWholesaleOrderById(orderId);
+        if (!updated) throw new AppError('Order not found after update', 404);
+        return updated;
+    } catch (error) {
+        logger.error(`Failed to update payment status for order ${orderId}:`, error);
+        throw error;
+    }
 }

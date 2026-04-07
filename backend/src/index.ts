@@ -154,10 +154,26 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-const server = app.listen(Number(PORT), '0.0.0.0', () => {
+const server = app.listen(Number(PORT), '0.0.0.0', async () => {
     console.log(`\n🚀 Orchid Backend API running on port ${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}\n`);
+
+    // Initialize scheduled tasks
+    try {
+        const { reconcilePendingOrders } = await import('./scheduled/paymentReconciler');
+        // Run immediately on startup
+        reconcilePendingOrders().catch(err => logger.error('Initial reconciliation failed', err));
+        
+        // Then run every 15 minutes
+        setInterval(() => {
+            reconcilePendingOrders().catch(err => logger.error('Scheduled reconciliation failed', err));
+        }, 15 * 60 * 1000);
+        
+        console.log('⏰ Payment reconciler service started (15m interval)');
+    } catch (error) {
+        logger.error('Failed to start scheduled tasks', error);
+    }
 });
 
 // GRACEFUL SHUTDOWN: Ensure the process exits cleanly and releases port 5000

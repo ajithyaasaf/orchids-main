@@ -1,4 +1,4 @@
-# TNtrends E-commerce - Quick Start Guide
+# Orchid E-commerce - Quick Start Guide
 
 ## 🚀 What You Have
 
@@ -15,7 +15,7 @@ A **production-ready e-commerce platform foundation** with:
 
 ### ✅ Frontend Infrastructure (70%)
 - Next.js 14 with TypeScript
-- TNtrends design system (Tailwind CSS)
+- Orchid design system (Tailwind CSS)
 - Core UI components (Button, Input, Card, etc.)
 - Layout components (Header, Footer)
 - Homepage with SSG
@@ -31,7 +31,7 @@ A **production-ready e-commerce platform foundation** with:
 ## 📂 Project Structure
 
 ```
-d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\
+d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\
 │
 ├── shared/                    # ✅ TypeScript types
 │   ├── types.ts              # All type definitions
@@ -126,7 +126,7 @@ npm run dev
 
 ### Step 3: Create First Admin
 
-Follow [docs/ADMIN_SETUP.md](file:///d:/personal/Projects/Riyas/TNtrends%20Ecommerce/Site2/docs/ADMIN_SETUP.md):
+Follow [docs/ADMIN_SETUP.md](file:///d:/personal/Projects/Riyas/Orchid%20Ecommerce/Site2/docs/ADMIN_SETUP.md):
 
 1. Register a user via frontend (implement login page first)
 2. Get user UID from Firebase Console
@@ -137,7 +137,7 @@ Follow [docs/ADMIN_SETUP.md](file:///d:/personal/Projects/Riyas/TNtrends%20Ecomm
 
 ### Step 4: Implement Remaining Pages
 
-Use templates from [docs/PROJECT_STRUCTURE.md](file:///d:/personal/Projects/Riyas/TNtrends%20Ecommerce/Site2/docs/PROJECT_STRUCTURE.md):
+Use templates from [docs/PROJECT_STRUCTURE.md](file:///d:/personal/Projects/Riyas/Orchid%20Ecommerce/Site2/docs/PROJECT_STRUCTURE.md):
 
 **Priority 1 (Essential):**
 - [ ] `frontend/src/app/auth/login/page.tsx` - Login form
@@ -174,7 +174,7 @@ curl http://localhost:5000/settings
 ### Test Frontend
 1. Open `http://localhost:3000`
 2. Homepage should load with:
-   - TNtrends header
+   - Orchid header
    - Hero section
    - Category cards
    - Footer
@@ -258,11 +258,11 @@ import { Card } from '@/components/ui/Card';
 
 ## 📚 Key Documentation Files
 
-- [README.md](file:///d:/personal/Projects/Riyas/TNtrends%20Ecommerce/Site2/README.md) - Overview & setup
-- [API_DOCUMENTATION.md](file:///d:/personal/Projects/Riyas/TNtrends%20Ecommerce/Site2/docs/API_DOCUMENTATION.md) - All API endpoints
-- [DEPLOYMENT.md](file:///d:/personal/Projects/Riyas/TNtrends%20Ecommerce/Site2/docs/DEPLOYMENT.md) - Production deployment
-- [ADMIN_SETUP.md](file:///d:/personal/Projects/Riyas/TNtrends%20Ecommerce/Site2/docs/ADMIN_SETUP.md) - Creating admins
-- [PROJECT_STRUCTURE.md](file:///d:/personal/Projects/Riyas/TNtrends%20Ecommerce/Site2/docs/PROJECT_STRUCTURE.md) - Code templates
+- [README.md](file:///d:/personal/Projects/Riyas/Orchid%20Ecommerce/Site2/README.md) - Overview & setup
+- [API_DOCUMENTATION.md](file:///d:/personal/Projects/Riyas/Orchid%20Ecommerce/Site2/docs/API_DOCUMENTATION.md) - All API endpoints
+- [DEPLOYMENT.md](file:///d:/personal/Projects/Riyas/Orchid%20Ecommerce/Site2/docs/DEPLOYMENT.md) - Production deployment
+- [ADMIN_SETUP.md](file:///d:/personal/Projects/Riyas/Orchid%20Ecommerce/Site2/docs/ADMIN_SETUP.md) - Creating admins
+- [PROJECT_STRUCTURE.md](file:///d:/personal/Projects/Riyas/Orchid%20Ecommerce/Site2/docs/PROJECT_STRUCTURE.md) - Code templates
 
 ## 🎯 Completion Roadmap
 
@@ -300,4 +300,4 @@ Start with Step 1 (environment setup) and work through the priorities. Every rem
 
 ---
 
-**TNtrends - Production-ready e-commerce platform**
+**Orchid - Production-ready e-commerce platform**

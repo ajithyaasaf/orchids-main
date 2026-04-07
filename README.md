@@ -1,6 +1,7 @@
-# TNtrends E-commerce Platform
+# Orchid Wholesale E-commerce Platform
 
-A production-ready full-stack e-commerce application for a clothing brand built with Next.js, Express.js, Firebase, Cloudinary, and Razorpay.
+A production-ready full-stack e-commerce application for a clothing brand built with Next.js, Express.js, Firebase, Cloudinary, and PhonePe.
+
 
 ## 🚀 Tech Stack
 
@@ -11,20 +12,20 @@ A production-ready full-stack e-commerce application for a clothing brand built 
 - **State Management**: Zustand
 - **Authentication**: Firebase Auth
 - **Image Optimization**: next/image with Cloudinary
-- **Payment**: Razorpay
+- **Payment**: PhonePe
 
 ### Backend
 - **Framework**: Express.js with TypeScript
 - **Database**: Firebase Firestore
 - **Authentication**: Firebase Admin SDK
 - **Image Storage**: Cloudinary
-- **Payment Gateway**: Razorpay
+- **Payment Gateway**: PhonePe
 - **Email Service**: Resend
 
 ## 📁 Project Structure
 
 ```
-tntrends-ecommerce/
+orchid-wholesale/
 ├── frontend/                 # Next.js frontend application
 │   ├── src/
 │   │   ├── app/             # Next.js 14 App Router pages
@@ -64,7 +65,7 @@ tntrends-ecommerce/
 - Node.js 18+ and npm
 - Firebase project (Auth + Firestore)
 - Cloudinary account
-- Razorpay account
+- PhonePe Merchant account
 - Resend account (for emails)
 
 ### 1. Clone and Install
@@ -100,13 +101,15 @@ CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
-# Razorpay
-RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxx
-RAZORPAY_KEY_SECRET=your-razorpay-secret
+# PhonePe
+PHONEPE_MERCHANT_ID=your-merchant-id
+PHONEPE_SALT_KEY=your-salt-key
+PHONEPE_SALT_INDEX=1
+PHONEPE_ENV=UAT # or PROD
 
 # Resend
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxx
-FROM_EMAIL=orders@tntrends.shop
+FROM_EMAIL=orders@orchids.store
 
 # CORS
 FRONTEND_URL=http://localhost:3000
@@ -124,9 +127,6 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:xxxxxxxxxx
 
 # Backend API
 NEXT_PUBLIC_API_URL=http://localhost:5000
-
-# Razorpay
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxx
 ```
 
 ### 3. Run Development Servers
@@ -163,7 +163,7 @@ Now you can access the admin panel at `/admin`
 - ✅ Product detail with multiple images
 - ✅ Size and stock selection
 - ✅ Shopping cart with persistence
-- ✅ Secure checkout with Razorpay
+- ✅ Secure checkout with PhonePe
 - ✅ Order history
 - ✅ Email confirmations
 - ✅ Responsive design
@@ -218,7 +218,7 @@ npm run start     # Start production server
 
 ## 📝 Copyright
 
-© 2026 TNtrends. All rights reserved.
+© 2026 Orchid Wholesale. All rights reserved.
 
 This is proprietary software. Unauthorized copying, distribution, or use of this software is strictly prohibited.
 
@@ -228,4 +228,4 @@ For issues or questions, please check the documentation in the `docs/` folder.
 
 ---
 
-**Built with ❤️ for TNtrends**
+**Built with ❤️ for Orchid**

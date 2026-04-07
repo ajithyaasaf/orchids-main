@@ -1,6 +1,6 @@
-# Deployment Guide - TNtrends E-commerce
+# Deployment Guide - Orchid E-commerce
 
-This guide covers deploying the TNtrends platform to production.
+This guide covers deploying the Orchid platform to production.
 
 ## Overview
 
@@ -18,7 +18,7 @@ This guide covers deploying the TNtrends platform to production.
 - Custom domain (optional)
 - Production Firebase project
 - Production Cloudinary account
-- Production Razorpay account
+- Production PhonePe account
 - Production Resend account
 
 ## Part 1: Frontend Deployment (Vercel)
@@ -32,7 +32,7 @@ git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/yourusername/tntrends.git
+git remote add origin https://github.com/yourusername/orchids.git
 git push -u origin main
 ```
 
@@ -61,16 +61,16 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 
 # Backend API URL (update after backend deployment)
-NEXT_PUBLIC_API_URL=https://tntrends-api.ondigitalocean.app
+NEXT_PUBLIC_API_URL=https://orchids-api.ondigitalocean.app
 
-# Razorpay (use production keys)
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxx
+# PhonePe (use production keys)
+NEXT_PUBLIC_PHONEPE_MERCHANT_ID=your_prod_merchant_id
 ```
 
 ### Step 4: Custom Domain (Optional)
 
 1. Go to Vercel Project → Settings → Domains
-2. Add your domain (e.g., `tntrends.shop`)
+2. Add your domain (e.g., `orchids.shop`)
 3. Update DNS records as instructed by Vercel
 4. Wait for SSL certificate provisioning
 
@@ -138,16 +138,18 @@ CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
-# Razorpay (production keys)
-RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxx
-RAZORPAY_KEY_SECRET=your-production-secret
+# PhonePe (production keys)
+PHONEPE_MERCHANT_ID=your_prod_merchant_id
+PHONEPE_SALT_KEY=your_prod_salt_key
+PHONEPE_SALT_INDEX=1
+PHONEPE_ENV=PROD
 
 # Resend
 RESEND_API_KEY=re_your_production_key
-FROM_EMAIL=orders@tntrends.shop
+FROM_EMAIL=orders@orchids.shop
 
 # CORS (your Vercel frontend URL)
-FRONTEND_URL=https://tntrends.vercel.app
+FRONTEND_URL=https://orchids.vercel.app
 ```
 
 **Important for FIREBASE_PRIVATE_KEY:**
@@ -242,7 +244,7 @@ For better query performance, create these indexes:
 
 ### For Backend (DigitalOcean)
 1. Go to DigitalOcean App → Settings → Domains
-2. Add `api.tntrends.shop` (or your subdomain)
+2. Add `api.orchids.shop` (or your subdomain)
 3. Configure DNS:
    - Type: `CNAME`
    - Name: `api`
@@ -256,7 +258,7 @@ For better query performance, create these indexes:
 - [ ] User registration and login work
 - [ ] Products are displayed correctly
 - [ ] Cart functionality works
-- [ ] Razorpay payment integration works (test mode first!)
+- [ ] PhonePe payment integration works (test mode first!)
 - [ ] Email notifications are sent
 - [ ] Admin panel is accessible
 - [ ] Image uploads to Cloudinary work
@@ -302,7 +304,7 @@ For better query performance, create these indexes:
 
 - [ ] Use production Firebase project (separate from development)
 - [ ] Enable Firebase App Check
-- [ ] Use Razorpay production keys (not test keys)
+- [ ] Use PhonePe production keys (not test keys)
 - [ ] Set up proper Firestore security rules
 - [ ] Enable HTTPS only
 - [ ] Use strong passwords for admin accounts
@@ -332,4 +334,4 @@ For better query performance, create these indexes:
 
 **Deployment Complete! 🎉**
 
-Your TNtrends e-commerce platform is now live and ready for customers.
+Your Orchid e-commerce platform is now live and ready for customers.

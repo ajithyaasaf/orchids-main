@@ -1,4 +1,4 @@
-# 🚀 Quick Setup & Run Guide - TNtrends E-commerce
+# 🚀 Quick Setup & Run Guide - Orchid E-commerce
 
 Follow these steps to get your application running locally.
 
@@ -17,19 +17,19 @@ Open 3 terminal windows in VS Code (Terminal → New Terminal) and run:
 
 **Terminal 1 - Shared Types:**
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\shared"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\shared"
 npm install
 ```
 
 **Terminal 2 - Backend:**
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\backend"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\backend"
 npm install
 ```
 
 **Terminal 3 - Frontend:**
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\frontend"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\frontend"
 npm install
 ```
 
@@ -43,7 +43,7 @@ npm install
 
 1. Navigate to backend folder:
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\backend"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\backend"
 ```
 
 2. Copy the example file:
@@ -83,7 +83,7 @@ FRONTEND_URL=http://localhost:3000
 
 1. Navigate to frontend folder:
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\frontend"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\frontend"
 ```
 
 2. Copy the example file:
@@ -125,7 +125,7 @@ If you don't have credentials yet, you can still test the application structure:
 
 **Terminal 1 - Backend:**
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\backend"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\backend"
 npm run dev
 ```
 
@@ -136,7 +136,7 @@ You should see:
 
 **Terminal 2 - Frontend:**
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\frontend"
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\frontend"
 npm run dev
 ```
 
@@ -151,12 +151,12 @@ You should see:
 
 **For Backend:**
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\backend" && npm run dev
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\backend" && npm run dev
 ```
 
 **For Frontend:**
 ```bash
-cd "d:\personal\Projects\Riyas\TNtrends Ecommerce\Site2\frontend" && npm run dev
+cd "d:\personal\Projects\Riyas\Orchid Ecommerce\Site2\frontend" && npm run dev
 ```
 
 ---
@@ -196,7 +196,7 @@ Expected response:
 Open browser and visit: http://localhost:3000
 
 You should see:
-- TNtrends homepage
+- Orchid homepage
 - Hero section
 - Category cards (Men, Women, Kids)
 - Footer
@@ -302,4 +302,4 @@ cd frontend && npm run build
 
 **You're ready to start development! 🎉**
 
-Visit http://localhost:3000 to see your TNtrends e-commerce platform!
+Visit http://localhost:3000 to see your Orchid e-commerce platform!

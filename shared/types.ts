@@ -270,12 +270,6 @@ export interface PhonePeOrderData {
     merchantTransactionId: string;
 }
 
-export interface PaymentVerification {
-    gatewayOrderId: string;
-    gatewayPaymentId: string;
-    signature: string;
-}
-
 // Combo/Promotion Types
 // Extensible combo type system - 'quantity_based' for MVP, ready for Path 2 expansion
 export type ComboType = 'quantity_based' | 'category_based' | 'bundle' | 'product_specific';

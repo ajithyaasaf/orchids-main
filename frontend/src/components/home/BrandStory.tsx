@@ -30,8 +30,8 @@ export function BrandStory() {
                             className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-2xl"
                         >
                             <Image
-                                src="/11.png" // Replace with actual manufacturing/brand image
-                                alt="Orchids Manufacturing Quality"
+                                src="/images/Brand story image/Brand Story.jpg"
+                                alt="ORCHID - Premium Export Quality Clothing from Tirupur"
                                 fill
                                 className="object-cover"
                                 sizes="(max-width: 1024px) 100vw, 50vw"

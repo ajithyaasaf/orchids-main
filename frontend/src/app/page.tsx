@@ -53,17 +53,31 @@ export default async function HomePage() {
             <OrganizationSchema />
 
             <div className="overflow-hidden">
-                {/* Section 1: Hero Section (Unchanged per request) */}
+                {/* Section 1: Responsive Hero Section */}
                 <section className="relative w-full">
-                    <div className="relative w-full aspect-[4/3] md:aspect-[1920/800]">
-                        <Image
-                            src="/11.png"
-                            alt="ORCHID Wholesale Clothing - Premium Apparel from Tirupur"
-                            fill
-                            className="object-cover"
-                            priority
-                            sizes="100vw"
-                        />
+                    <div className="relative w-full aspect-[1080/1350] md:aspect-[1920/800]">
+                        {/* Desktop Image (Hidden on mobile) */}
+                        <div className="hidden md:block absolute inset-0">
+                            <Image
+                                src="/images/hero images/Banner_1_windows.jpg"
+                                alt="ORCHID Wholesale Clothing - Premium Apparel from Tirupur"
+                                fill
+                                className="object-cover"
+                                priority
+                                sizes="100vw"
+                            />
+                        </div>
+                        {/* Mobile Image (Visible on mobile only) */}
+                        <div className="block md:hidden absolute inset-0">
+                            <Image
+                                src="/images/hero images/Banner_1_mobile.jpg"
+                                alt="ORCHID Wholesale Clothing - Mobile Collection"
+                                fill
+                                className="object-cover"
+                                priority
+                                sizes="100vw"
+                            />
+                        </div>
                     </div>
                 </section>
 

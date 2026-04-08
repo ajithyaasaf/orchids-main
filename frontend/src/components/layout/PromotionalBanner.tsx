@@ -93,17 +93,17 @@ export const PromotionalBanner: React.FC = () => {
             <div className="container-custom">
                 <div className="flex items-center justify-between gap-4">
                     {/* Message Content */}
-                    <div className="flex items-center justify-center gap-2 flex-1 text-center">
-                        <span className="text-lg hidden sm:inline">{currentMessage.icon}</span>
-                        <p className="text-sm sm:text-base font-medium">
+                    <div className="flex items-center justify-center gap-2 flex-1 text-center min-w-0">
+                        <span className="text-lg hidden sm:inline flex-shrink-0">{currentMessage.icon}</span>
+                        <p className="text-[13px] sm:text-base font-medium leading-tight">
                             {currentMessage.message}
                         </p>
                         {currentMessage.cta && (
                             <>
-                                <span className="hidden sm:inline text-white/60">|</span>
+                                <span className="hidden sm:inline text-white/60 flex-shrink-0">|</span>
                                 <Link
                                     href={currentMessage.ctaLink || '#'}
-                                    className="text-sm font-semibold hover:underline flex items-center gap-1 group"
+                                    className="text-[13px] sm:text-sm font-semibold hover:underline flex items-center gap-1 group whitespace-nowrap flex-shrink-0"
                                 >
                                     {currentMessage.cta}
                                     <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />

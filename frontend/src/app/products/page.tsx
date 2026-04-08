@@ -22,16 +22,24 @@ interface ProductsPageProps {
     searchParams: {
         category?: string;
         tag?: string | string[]; // Can be string or array
+        size?: string | string[]; // Can be string or array
     };
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
     // 1. Parse Search Params
     const selectedCategory = searchParams.category;
+    
     const tags = typeof searchParams.tag === 'string'
         ? [searchParams.tag]
         : Array.isArray(searchParams.tag)
             ? searchParams.tag
+            : [];
+            
+    const sizes = typeof searchParams.size === 'string'
+        ? [searchParams.size]
+        : Array.isArray(searchParams.size)
+            ? searchParams.size
             : [];
 
     // 2. Fetch Data
@@ -48,16 +56,22 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             }
 
             // Tag Filter (check if product has ANY of the selected tags)
-            // Ideally: AND logic or OR logic? 
-            // Usually "Red" OR "Blue" (OR logic for same group), but we are doing global tags.
-            // Let's implement OR logic: if any selected tag matches any product tag
             if (tags.length > 0) {
                 if (!p.tags) return false;
 
-                // Exact safe matching, removing legacy substring includes
                 const matchesTag = tags.some(tag => p.tags?.includes(tag));
 
                 if (!matchesTag) return false;
+            }
+
+            // Size Filter (check if product has ANY of the selected sizes in its bundle composition)
+            if (sizes.length > 0) {
+                if (!p.bundleComposition) return false;
+                
+                const productSizes = Object.keys(p.bundleComposition);
+                const matchesSize = sizes.some(size => productSizes.includes(size));
+
+                if (!matchesSize) return false;
             }
 
             return true;
@@ -110,12 +124,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                                 </p>
                             </div>
 
-                            {/* Active Filters (Chips) - Optional: visual confirmation */}
-                            {tags.length > 0 && (
+                            {/* Active Filters (Chips) */}
+                            {(tags.length > 0 || sizes.length > 0) && (
                                 <div className="flex flex-wrap gap-2 mb-6">
                                     {tags.map(tag => (
-                                        <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium capitalize">
-                                            {tag.replace('-', ' ')}
+                                        <span key={`tag-${tag}`} className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium capitalize">
+                                            {tag.replace(/-/g, ' ')}
+                                        </span>
+                                    ))}
+                                    {sizes.map(size => (
+                                        <span key={`size-${size}`} className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200 text-sm font-medium">
+                                            Size: {size}
                                         </span>
                                     ))}
                                 </div>

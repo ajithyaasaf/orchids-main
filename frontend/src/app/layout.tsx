@@ -85,8 +85,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
-            <body className="font-body antialiased bg-white text-text-primary">
+        <html lang="en" className={`${inter.variable} ${outfit.variable} overflow-x-hidden`}>
+            <body className="font-body antialiased bg-white text-text-primary overflow-x-hidden w-full relative">
                 <GoogleTagManager />
                 <ToastProvider>
                     <AuthProvider>

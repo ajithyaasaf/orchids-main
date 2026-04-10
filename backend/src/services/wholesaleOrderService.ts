@@ -130,7 +130,7 @@ export async function createWholesaleOrder(
 
         // Build verified line items using server-side prices
         serverCalculatedItems = [];
-        const stockUpdates: Array<{ ref: admin.firestore.DocumentReference; newStock: number; newTotal: number }> = [];
+        const stockUpdates: Array<{ ref: admin.firestore.DocumentReference; newStock: number; newReserved: number; newTotal: number }> = [];
 
         for (let i = 0; i < cartItems.length; i++) {
             const cartItem = cartItems[i];
@@ -170,10 +170,12 @@ export async function createWholesaleOrder(
 
             // Prepare stock decrement
             const newStock = product.availableBundles - cartItem.bundlesOrdered;
+            const newReserved = (product.reservedBundles || 0) + cartItem.bundlesOrdered;
             const newTotal = newStock * product.bundleQty;
             stockUpdates.push({
                 ref: snap.ref,
                 newStock,
+                newReserved,
                 newTotal,
             });
         }
@@ -231,7 +233,8 @@ export async function createWholesaleOrder(
             // Metadata
             userId,
             address,
-            stockDeducted: true, // We are decrementing inside this transaction
+            stockDeducted: false, // Wait for payment success to finalize
+            stockReserved: true, // We are reserving it inside this transaction
             idempotencyKey,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -302,9 +305,10 @@ export async function createWholesaleOrder(
         }
 
         // ── 8. Decrement Stock Atomically ────────────────────────────────────
-        for (const { ref, newStock, newTotal } of stockUpdates) {
+        for (const { ref, newStock, newReserved, newTotal } of stockUpdates) {
             tx.update(ref, {
                 availableBundles: newStock,
+                reservedBundles: newReserved,
                 totalPieces: newTotal,
                 inStock: newStock > 0,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -377,6 +381,20 @@ export async function updateWholesalePaymentStatus(
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             };
             if (paymentId) updateData.gatewayPaymentId = paymentId;
+
+            if (status === 'paid' && order.stockReserved) {
+                updateData.stockDeducted = true;
+                updateData.stockReserved = false;
+                
+                // Clear reservation on products
+                for (const item of order.items) {
+                    const productRef = collections.wholesaleProducts.doc(item.productId);
+                    transaction.update(productRef, {
+                        reservedBundles: admin.firestore.FieldValue.increment(-item.bundlesOrdered),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }
 
             transaction.update(orderRef, updateData);
 

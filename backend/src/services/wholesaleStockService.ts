@@ -69,9 +69,9 @@ export const restoreBundleStock = async (orderId: string): Promise<void> => {
 
             const orderData = orderDoc.data();
             
-            // Only restore if stock was actually deducted and hasn't been restored yet
-            if (!orderData?.stockDeducted) {
-                logger.info(`Stock for order ${orderId} was not deducted or already restored. Skipping.`);
+            // Only restore if stock was actually deducted or reserved, and hasn't been restored yet
+            if (!orderData?.stockDeducted && !orderData?.stockReserved) {
+                logger.info(`Stock for order ${orderId} was not deducted or reserved, or already restored. Skipping.`);
                 return;
             }
 
@@ -82,9 +82,14 @@ export const restoreBundleStock = async (orderId: string): Promise<void> => {
                 if (productDoc.exists) {
                     const product = productDoc.data() as WholesaleProduct;
                     const newStock = product.availableBundles + item.bundlesOrdered;
+                    
+                    // If it was just reserved (pending), we also clear the reservation
+                    const reservedDecrement = orderData.stockReserved ? item.bundlesOrdered : 0;
+                    const newReserved = Math.max(0, (product.reservedBundles || 0) - reservedDecrement);
 
                     transaction.update(productRef, {
                         availableBundles: newStock,
+                        reservedBundles: newReserved,
                         totalPieces: newStock * product.bundleQty,
                         inStock: true,
                         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -95,6 +100,7 @@ export const restoreBundleStock = async (orderId: string): Promise<void> => {
             // Mark as restored
             transaction.update(orderRef, {
                 stockDeducted: false,
+                stockReserved: false,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
         });

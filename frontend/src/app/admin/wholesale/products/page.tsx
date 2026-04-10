@@ -166,6 +166,11 @@ export default function AdminProductListPage() {
                                             <div className="text-sm text-text-secondary">
                                                 {product.totalPieces} total pcs
                                             </div>
+                                            {(product.reservedBundles ?? 0) > 0 && (
+                                                <div className="text-xs text-amber-600 font-medium mt-0.5">
+                                                    + {product.reservedBundles} reserved
+                                                </div>
+                                            )}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">

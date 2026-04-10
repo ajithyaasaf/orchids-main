@@ -81,6 +81,11 @@ export const updateWholesaleProduct = async (
 
     const product = productDoc.data() as WholesaleProduct;
 
+    // Prevent admin form updates from accidentally overwriting live reservations
+    if ('reservedBundles' in updates) {
+        delete updates.reservedBundles;
+    }
+
     // Accounting lock enforcement
     if (product.isLocked && updates.bundlePrice !== undefined) {
         if (updates.bundlePrice !== product.bundlePrice) {

@@ -29,6 +29,7 @@ export interface WholesaleJobFormData {
     bundleComposition: Record<string, number>;
     bundlePrice: number;
     availableBundles: number;
+    reservedBundles: number;
     colorDescription: string;
     images: string[];
     mixedColors: boolean;
@@ -52,6 +53,7 @@ const INITIAL_FORM: WholesaleJobFormData = {
     bundleComposition: {},
     bundlePrice: 0,
     availableBundles: 0,
+    reservedBundles: 0,
     colorDescription: 'Assorted colors',
     images: [],
     mixedColors: true,
@@ -94,6 +96,7 @@ export default function WholesaleProductForm({
                 bundleComposition: initialData.bundleComposition || {},
                 bundlePrice: initialData.bundlePrice || 0,
                 availableBundles: initialData.availableBundles || 0,
+                reservedBundles: initialData.reservedBundles || 0,
                 colorDescription: initialData.colorDescription || '',
                 images: initialData.images || [],
                 mixedColors: initialData.mixedColors ?? true,
@@ -470,11 +473,19 @@ export default function WholesaleProductForm({
                         min={0}
                         disabled={isLoading}
                     />
-                    {form.availableBundles > 0 && (
-                        <p className="text-sm text-gray-500 mt-1">
-                            Total pieces in stock: {form.availableBundles * form.bundleQty}
-                        </p>
-                    )}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 mt-2 gap-2">
+                        {form.availableBundles > 0 ? (
+                            <p>Total pieces in stock: {form.availableBundles * form.bundleQty}</p>
+                        ) : (
+                            <p>Out of stock</p>
+                        )}
+                        {form.reservedBundles > 0 && (
+                            <div className="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-md font-medium text-xs flex items-center gap-1.5 shadow-sm">
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                                {form.reservedBundles} bundles currently held in pending checkouts
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* ── Color Description ────────────────────────────────── */}

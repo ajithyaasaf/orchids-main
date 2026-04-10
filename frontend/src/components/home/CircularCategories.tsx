@@ -10,31 +10,31 @@ const categories = [
     {
         name: 'Newborn Collection',
         href: '/products?category=newborn',
-        image: '/shop-by-categories/1.png',
+        image: '/images/more collection to explore/new born.png',
         bg: 'bg-pink-50',
     },
     {
         name: 'Girls Wear',
         href: '/products?category=girls',
-        image: '/shop-by-categories/2.png',
+        image: '/images/more collection to explore/girl.png',
         bg: 'bg-rose-50',
     },
     {
         name: 'Boys Wear',
         href: '/products?category=boys',
-        image: '/shop-by-categories/3.png',
+        image: '/images/more collection to explore/boy.png',
         bg: 'bg-sky-50',
     },
     {
         name: "Women's Apparel",
         href: '/products?category=women',
-        image: '/11.png',
+        image: '/images/more collection to explore/women.png',
         bg: 'bg-purple-50',
     },
     {
         name: "Men's Apparel",
         href: '/products?category=mens',
-        image: '/11.png',
+        image: '/images/more collection to explore/men.png',
         bg: 'bg-slate-50',
     },
 ];

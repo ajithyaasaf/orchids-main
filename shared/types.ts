@@ -83,7 +83,8 @@ export interface WholesaleProduct {
     bundlePrice: number;                         // Total price per bundle
 
     // Stock management
-    availableBundles: number;                    // Complete bundles in stock
+    availableBundles: number;                    // Complete bundles in stock (sellable)
+    reservedBundles?: number;                    // Bundles held in pending checkouts
     totalPieces: number;                         // Auto-calculated: availableBundles * bundleQty
 
     // Product attributes
@@ -169,7 +170,8 @@ export interface WholesaleOrder {
     // Metadata
     userId: string;
     address: Address;
-    stockDeducted: boolean;                      // Idempotency flag
+    stockDeducted: boolean;                      // True when payment succeeds and physical stock drops
+    stockReserved?: boolean;                     // True when order is placed but pending payment
     createdAt: Date;
     updatedAt: Date;
 }

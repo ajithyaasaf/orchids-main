@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
         return {
             title: `${product.title} - Wholesale Bundle`,
-            description: product.description || `${product.title} wholesale clothing bundle. ${product.bundleQty} pieces per bundle. Bundle composition: ${Object.entries(product.bundleComposition).map(([size, qty]) => `${qty} ${size}`).join(', ')}. Wholesale price: ₹${product.bundlePrice}`,
+            description: product.description || `${product.title} wholesale clothing bundle. ${product.bundleQty || 0} pieces per bundle. Bundle composition: ${Object.entries(product.bundleComposition || {}).map(([size, qty]) => `${qty} ${size}`).join(', ')}. Wholesale price: ₹${product.bundlePrice}`,
             keywords: [
                 product.title,
                 'wholesale clothing',
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
                 description: `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty} pieces at ₹${product.bundlePrice}`,
                 // Use a properly-sized 1200x630 JPEG for social previews.
                 // OG_IMAGE_OPTS applies f_jpg,q_auto,w_1200,h_630,c_fill.
-                images: product.images.length > 0
+                images: (product.images && product.images.length > 0)
                     ? [{ url: getCloudinaryUrl(product.images[0], OG_IMAGE_OPTS), width: 1200, height: 630 }]
                     : [],
             },
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
                 card: 'summary_large_image',
                 title: `${product.title} - Wholesale Bundle`,
                 description: `${product.bundleQty} piece bundle at ₹${product.bundlePrice}`,
-                images: product.images.length > 0
+                images: (product.images && product.images.length > 0)
                     ? [getCloudinaryUrl(product.images[0], OG_IMAGE_OPTS)]
                     : [],
             },
@@ -143,7 +143,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
                         {/* Left Column: Images (7 columns) */}
                         <div className="lg:col-span-7">
-                            <ProductImageGallery images={product.images} title={product.title} />
+                            <ProductImageGallery images={product.images || []} title={product.title} />
                         </div>
 
                         {/* Right Column: Product Info (5 columns) */}
@@ -197,7 +197,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                     </div>
 
                                     <div className="grid grid-cols-4 gap-2">
-                                        {Object.entries(product.bundleComposition).map(([size, qty]) => (
+                                        {Object.entries(product.bundleComposition || {}).map(([size, qty]) => (
                                             <div
                                                 key={size}
                                                 className="flex flex-col items-center justify-center bg-gray-50 p-3 rounded-lg border border-transparent hover:border-gray-200 transition-colors"

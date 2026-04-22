@@ -69,8 +69,8 @@ export function ProductSchema({ product }: ProductSchemaProps) {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.title,
-        description: product.description || `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty} pieces`,
-        image: product.images.length > 0 ? product.images : [`${siteUrl}/images/placeholder.jpg`],
+        description: product.description || `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty || 0} pieces`,
+        image: (product.images && product.images.length > 0) ? product.images : [`${siteUrl}/images/placeholder.jpg`],
         brand: {
             '@type': 'Brand',
             name: 'ORCHID',

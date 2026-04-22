@@ -75,7 +75,7 @@ app.use((req, res, next) => {
 // CORS configuration (optimized for performance)
 app.use(
     cors({
-        origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+        origin: ['http://localhost:3000', 'http://127.0.0.1:3000', process.env.FRONTEND_URL].filter(Boolean) as string[],
         credentials: true,
         maxAge: 86400, // Cache preflight for 24 hours
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

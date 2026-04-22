@@ -11,6 +11,7 @@ import {
     getAllWholesaleProducts,
     deleteWholesaleProduct,
 } from '../services/wholesaleProductService';
+import { WholesaleProduct } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
 
 const router = express.Router();
@@ -99,7 +100,7 @@ router.get('/style/:styleCode', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
     try {
         const product = await getWholesaleProductById(req.params.id);
-        res.json({ success: true, data: sanitizeProduct(product as Record<string, unknown>) });
+        res.json({ success: true, data: sanitizeProduct(product) });
     } catch (error) {
         next(error);
     }
@@ -112,7 +113,7 @@ router.get('/:id', async (req, res, next) => {
 router.get('/slug/:slug', async (req, res, next) => {
     try {
         const product = await getWholesaleProductBySlug(req.params.slug);
-        res.json({ success: true, data: sanitizeProduct(product as Record<string, unknown>) });
+        res.json({ success: true, data: sanitizeProduct(product) });
     } catch (error) {
         next(error);
     }

@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
         return {
             title: `${product.title} - Wholesale Bundle`,
-            description: product.description || `${product.title} wholesale clothing bundle. ${product.bundleQty || 0} pieces per bundle. Bundle composition: ${Object.entries(product.bundleComposition || {}).map(([size, qty]) => `${qty} ${size}`).join(', ')}. Wholesale price: ₹${product.bundlePrice}`,
+            description: product.description || `${product.title} wholesale clothing bundle. ${product.bundleQty || 0} pieces per bundle. Bundle composition: ${Object.entries(product.bundleComposition || {}).map(([size, qty]) => `${qty} ${size}`).join(', ')}. Wholesale price: ₹${product.bundlePrice || 0}`,
             keywords: [
                 product.title,
                 'wholesale clothing',
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
             ],
             openGraph: {
                 title: `${product.title} - Wholesale Bundle | ORCHID`,
-                description: `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty} pieces at ₹${product.bundlePrice}`,
+                description: `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty || 0} pieces at ₹${product.bundlePrice || 0}`,
                 // Use a properly-sized 1200x630 JPEG for social previews.
                 // OG_IMAGE_OPTS applies f_jpg,q_auto,w_1200,h_630,c_fill.
                 images: (product.images && product.images.length > 0)
@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
             twitter: {
                 card: 'summary_large_image',
                 title: `${product.title} - Wholesale Bundle`,
-                description: `${product.bundleQty} piece bundle at ₹${product.bundlePrice}`,
+                description: `${product.bundleQty || 0} piece bundle at ₹${product.bundlePrice || 0}`,
                 images: (product.images && product.images.length > 0)
                     ? [getCloudinaryUrl(product.images[0], OG_IMAGE_OPTS)]
                     : [],
@@ -175,12 +175,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                 <div className="mb-6 pb-6 border-b border-gray-100">
                                     <div className="flex items-baseline gap-2.5">
                                         <span className="text-3xl md:text-4xl font-heading font-bold text-primary">
-                                            ₹{product.bundlePrice.toLocaleString('en-IN')}
+                                            ₹{(product.bundlePrice || 0).toLocaleString('en-IN')}
                                         </span>
                                         <span className="text-base text-gray-500 font-medium">/ bundle</span>
                                     </div>
                                     <p className="text-sm text-gray-400 mt-2 font-medium">
-                                        ₹{(product.bundlePrice / product.bundleQty).toFixed(0)} per piece • GST Included
+                                        ₹{((product.bundlePrice || 0) / (product.bundleQty || 1)).toFixed(0)} per piece • GST Included
                                     </p>
                                 </div>
 

@@ -15,6 +15,7 @@ import { RecentlyViewedTracker } from '@/components/product/RecentlyViewedTracke
 import { MobileStickyAddToCart } from '@/components/product/MobileStickyAddToCart';
 import { ColorVariants } from '@/components/product/ColorVariants';
 import { Package, Ruler, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { getCloudinaryUrl, OG_IMAGE_OPTS } from '@/lib/cloudinaryImage';
 
 /**
  * Product Detail Page - SEO Optimized
@@ -53,13 +54,19 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
             openGraph: {
                 title: `${product.title} - Wholesale Bundle | ORCHID`,
                 description: `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty} pieces at ₹${product.bundlePrice}`,
-                images: product.images.length > 0 ? [{ url: product.images[0] }] : [],
+                // Use a properly-sized 1200x630 JPEG for social previews.
+                // OG_IMAGE_OPTS applies f_jpg,q_auto,w_1200,h_630,c_fill.
+                images: product.images.length > 0
+                    ? [{ url: getCloudinaryUrl(product.images[0], OG_IMAGE_OPTS), width: 1200, height: 630 }]
+                    : [],
             },
             twitter: {
                 card: 'summary_large_image',
                 title: `${product.title} - Wholesale Bundle`,
                 description: `${product.bundleQty} piece bundle at ₹${product.bundlePrice}`,
-                images: product.images.length > 0 ? [product.images[0]] : [],
+                images: product.images.length > 0
+                    ? [getCloudinaryUrl(product.images[0], OG_IMAGE_OPTS)]
+                    : [],
             },
             robots: {
                 index: product.inStock,
@@ -119,7 +126,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <RecentlyViewedTracker productId={product.id} />
             */}
 
-            <main className="min-h-screen bg-gray-50/50">
+            <main key={params.slug} className="min-h-screen bg-gray-50/50">
                 <div className="container mx-auto px-6 py-12 max-w-7xl">
                     {/* SEO: Breadcrumb Navigation */}
                     <div className="mb-6 flex items-center justify-between">

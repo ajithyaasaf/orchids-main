@@ -5,6 +5,11 @@ const nextConfig = {
     transpilePackages: ['@orchids/shared', 'undici'],
 
     images: {
+        // Cloudinary already handles ALL image optimization (f_auto, q_auto,
+        // w_{size}, c_fill). Letting Next.js re-optimize on top of that
+        // causes the dev server to spawn dozens of concurrent sharp jobs,
+        // overwhelming Chrome's renderer (STATUS_ILLEGAL_INSTRUCTION crash).
+        unoptimized: true,
         remotePatterns: [
             {
                 protocol: 'https',
@@ -17,7 +22,6 @@ const nextConfig = {
                 pathname: '**',
             },
         ],
-        formats: ['image/webp', 'image/avif'],
     },
 
     output: 'standalone',

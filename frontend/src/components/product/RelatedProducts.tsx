@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { WholesaleProduct } from '@orchids/shared';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
+import { getCloudinaryUrl, PRODUCT_CARD_IMG_OPTS } from '@/lib/cloudinaryImage';
 import { Loader2, ArrowRight } from 'lucide-react';
 
 interface RelatedProductsProps {
@@ -72,10 +73,12 @@ export const RelatedProducts: React.FC<RelatedProductsProps> = ({ category, curr
                         <div className="aspect-[3/4] relative overflow-hidden bg-gray-100 border border-gray-100">
                             {product.images[0] ? (
                                 <Image
-                                    src={product.images[0]}
+                                    src={getCloudinaryUrl(product.images[0], PRODUCT_CARD_IMG_OPTS)}
                                     alt={product.title}
                                     fill
                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    sizes="(max-width: 768px) 50vw, 25vw"
+                                    loading="lazy"
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-300">

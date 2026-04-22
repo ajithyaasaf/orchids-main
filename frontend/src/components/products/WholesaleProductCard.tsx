@@ -5,6 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Package, ArrowRight, AlertCircle } from 'lucide-react';
 import { WholesaleProduct } from '@orchids/shared';
+import {
+    getCloudinaryUrl,
+    PRODUCT_CARD_IMG_OPTS,
+} from '@/lib/cloudinaryImage';
 
 interface WholesaleProductCardProps {
     product: WholesaleProduct;
@@ -14,25 +18,27 @@ interface WholesaleProductCardProps {
 
 /**
  * WholesaleProductCard
- * 
- * A reusable component for displaying wholesale bundle products.
- * Extracted from ProductsGrid for use across the application (Collections, Related Products, etc.)
+ *
+ * Displays a single wholesale product in a card layout.
+ * Images are served via Cloudinary CDN with automatic:
+ *  - Format selection (WebP/AVIF via f_auto)
+ *  - Quality compression (via q_auto)
+ *  - Width scaling (to match card size)
  */
 export const WholesaleProductCard: React.FC<WholesaleProductCardProps> = ({
     product,
     priority = false,
-    className = ''
+    className = '',
 }) => {
-    // Calculate per-piece price for transparency
-    // Fallback to 0 if bundleQty is missing/zero to avoid NaN
     const qty = product.bundleQty || 1;
     const piecePrice = Math.round((product.bundlePrice || 0) / qty);
 
-    // Low stock threshold logic
     const isLowStock = product.inStock && (product.availableBundles || 0) < 10;
 
-    // Image handling
-    const mainImage = product.images?.[0] || '';
+    // Build an optimized URL; falls back gracefully if publicId is empty
+    const mainImageSrc = product.images?.[0]
+        ? getCloudinaryUrl(product.images[0], PRODUCT_CARD_IMG_OPTS)
+        : '';
 
     return (
         <Link
@@ -41,15 +47,16 @@ export const WholesaleProductCard: React.FC<WholesaleProductCardProps> = ({
         >
             {/* Image Container */}
             <div className="relative aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-100">
-                {mainImage ? (
+                {mainImageSrc ? (
                     <Image
-                        src={mainImage}
-                        alt={product.title}
+                        src={mainImageSrc}
+                        alt={`${product.title} - wholesale clothing bundle`}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         priority={priority}
-                        quality={90}
+                    // Do not pass `quality` — Cloudinary's q_auto is
+                    // smarter than Next.js's fixed quality compression.
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -105,7 +112,7 @@ export const WholesaleProductCard: React.FC<WholesaleProductCardProps> = ({
                         </p>
                     </div>
 
-                    {/* View Button (Icon style) */}
+                    {/* View Button */}
                     <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white transition-all duration-300">
                         <ArrowRight className="w-4 h-4" />
                     </div>

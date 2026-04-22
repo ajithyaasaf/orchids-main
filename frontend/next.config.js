@@ -37,11 +37,13 @@ const nextConfig = {
 
     // API Rewrites
     async rewrites() {
+        // Fallback to localhost if NEXT_PUBLIC_API_URL is not set
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         return {
             fallback: [
                 {
                     source: '/api/:path*',
-                    destination: 'http://localhost:5000/api/:path*',
+                    destination: `${apiUrl}/api/:path*`,
                 },
             ],
         };

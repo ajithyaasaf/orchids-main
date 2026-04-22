@@ -94,12 +94,14 @@ router.get('/style/:styleCode', async (req, res, next) => {
 });
 
 /**
- * GET /api/wholesale/products/:id
- * Get single wholesale product by ID
+ * GET /api/wholesale/products/slug/:slug
+ * Get single wholesale product by slug for SEO URLs
+ * IMPORTANT: Must be registered BEFORE /:id to prevent Express from
+ * treating "slug" as a product ID wildcard match.
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/slug/:slug', async (req, res, next) => {
     try {
-        const product = await getWholesaleProductById(req.params.id);
+        const product = await getWholesaleProductBySlug(req.params.slug);
         res.json({ success: true, data: sanitizeProduct(product) });
     } catch (error) {
         next(error);
@@ -107,12 +109,12 @@ router.get('/:id', async (req, res, next) => {
 });
 
 /**
- * GET /api/wholesale/products/slug/:slug
- * Get single wholesale product by slug for SEO URLs
+ * GET /api/wholesale/products/:id
+ * Get single wholesale product by ID
  */
-router.get('/slug/:slug', async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
     try {
-        const product = await getWholesaleProductBySlug(req.params.slug);
+        const product = await getWholesaleProductById(req.params.id);
         res.json({ success: true, data: sanitizeProduct(product) });
     } catch (error) {
         next(error);

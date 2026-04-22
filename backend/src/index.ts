@@ -177,12 +177,12 @@ const server = app.listen(Number(PORT), '0.0.0.0', async () => {
         const { reconcilePendingOrders } = await import('./scheduled/paymentReconciler');
         // Run immediately on startup
         reconcilePendingOrders().catch(err => logger.error('Initial reconciliation failed', err));
-        
+
         // Then run every 15 minutes
         setInterval(() => {
             reconcilePendingOrders().catch(err => logger.error('Scheduled reconciliation failed', err));
         }, 15 * 60 * 1000);
-        
+
         console.log('⏰ Payment reconciler service started (15m interval)');
     } catch (error) {
         logger.error('Failed to start scheduled tasks', error);

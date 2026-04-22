@@ -10,8 +10,17 @@ const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
  */
 const getAuthToken = async (): Promise<string | null> => {
     if (typeof window === 'undefined') {
-        const { cookies } = await import('next/headers');
-        return cookies().get('session')?.value || null;
+        try {
+            // Use a more generic way to check for cookies if possible, 
+            // but in Next.js SSR, this is the standard.
+            // We wrap it in a try/catch to handle Edge Runtime or generateStaticParams.
+            const { cookies } = await import('next/headers');
+            const cookieStore = cookies();
+            return cookieStore.get('session')?.value || null;
+        } catch (e) {
+            console.warn('[WholesaleAPI] Could not access cookies in this runtime:', e);
+            return null;
+        }
     }
 
     const { auth } = await import('../firebase');

@@ -39,6 +39,13 @@ interface ProductPageProps {
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
     try {
         const product = await wholesaleProductsApi.getBySlug(params.slug);
+        
+        if (!product || !product.title) {
+            return {
+                title: 'Product - Orchid Wholesale',
+                description: 'Wholesale bundle product details',
+            };
+        }
 
         return {
             title: `${product.title} - Wholesale Bundle`,
@@ -74,8 +81,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
             },
         };
     } catch (error) {
+        console.error('[Metadata] Failed to fetch product:', error);
         return {
-            title: 'Product Not Found',
+            title: 'Product - Orchid Wholesale',
+            description: 'Wholesale bundle product details',
         };
     }
 }
@@ -97,7 +106,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
     try {
         product = await wholesaleProductsApi.getBySlug(params.slug);
+        
+        if (!product || !product.id) {
+            notFound();
+        }
     } catch (error) {
+        console.error('[ProductPage] Error fetching product:', error);
         notFound();
     }
 
@@ -143,7 +157,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
                         {/* Left Column: Images (7 columns) */}
                         <div className="lg:col-span-7">
-                            <ProductImageGallery images={product.images || []} title={product.title} />
+                            <ProductImageGallery 
+                                images={Array.isArray(product.images) ? product.images : []} 
+                                title={product.title} 
+                            />
+                            <RecentlyViewedTracker productId={product.id} />
                         </div>
 
                         {/* Right Column: Product Info (5 columns) */}

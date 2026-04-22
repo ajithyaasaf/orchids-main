@@ -23,6 +23,10 @@ const router = express.Router();
 // ---------------------------------------------------------------------------
 
 function sanitizeProduct(product: WholesaleProduct): WholesaleProduct {
+    if (!product || typeof product !== 'object') {
+        return {} as WholesaleProduct;
+    }
+
     return {
         ...product,
         bundlePrice:
@@ -102,6 +106,9 @@ router.get('/style/:styleCode', async (req, res, next) => {
 router.get('/slug/:slug', async (req, res, next) => {
     try {
         const product = await getWholesaleProductBySlug(req.params.slug);
+        if (!product) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
         res.json({ success: true, data: sanitizeProduct(product) });
     } catch (error) {
         next(error);
@@ -115,6 +122,9 @@ router.get('/slug/:slug', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
     try {
         const product = await getWholesaleProductById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
         res.json({ success: true, data: sanitizeProduct(product) });
     } catch (error) {
         next(error);

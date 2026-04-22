@@ -79,7 +79,7 @@ export function ProductSchema({ product }: ProductSchemaProps) {
             '@type': 'Offer',
             url: `${siteUrl}/product/${product.slug || product.id}`,
             priceCurrency: 'INR',
-            price: product.bundlePrice,
+            price: product.bundlePrice ?? 0,
             priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
             availability: product.inStock
                 ? 'https://schema.org/InStock'

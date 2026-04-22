@@ -15,6 +15,37 @@ import { AppError } from '../middleware/errorHandler';
 
 const router = express.Router();
 
+// ---------------------------------------------------------------------------
+// Sanitizer — applied to every GET response to guarantee type safety.
+// Protects against Firestore documents that are missing optional numeric fields
+// (e.g. a product saved before bundlePrice/bundleQty were required).
+// ---------------------------------------------------------------------------
+
+function sanitizeProduct(product: WholesaleProduct): WholesaleProduct {
+    return {
+        ...product,
+        bundlePrice:
+            typeof product.bundlePrice === 'number' && !isNaN(product.bundlePrice)
+                ? product.bundlePrice
+                : 0,
+        bundleQty:
+            typeof product.bundleQty === 'number' && !isNaN(product.bundleQty)
+                ? product.bundleQty
+                : 0,
+        availableBundles:
+            typeof product.availableBundles === 'number' && !isNaN(product.availableBundles)
+                ? product.availableBundles
+                : 0,
+        // Guarantee images is always an array so the frontend never has to check
+        images: Array.isArray(product.images) ? product.images : [],
+        // Guarantee bundleComposition is always an object
+        bundleComposition:
+            product.bundleComposition && typeof product.bundleComposition === 'object'
+                ? product.bundleComposition
+                : {},
+    };
+}
+
 /**
  * Wholesale Product Management Routes
  * Admin-only routes for managing bundle-based products
@@ -27,7 +58,7 @@ const router = express.Router();
 router.get('/', async (req, res, next) => {
     try {
         const products = await getAllWholesaleProducts();
-        res.json({ success: true, data: products });
+        res.json({ success: true, data: products.map(sanitizeProduct) });
     } catch (error) {
         next(error);
     }
@@ -68,7 +99,7 @@ router.get('/style/:styleCode', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
     try {
         const product = await getWholesaleProductById(req.params.id);
-        res.json({ success: true, data: product });
+        res.json({ success: true, data: sanitizeProduct(product as Record<string, unknown>) });
     } catch (error) {
         next(error);
     }
@@ -81,7 +112,7 @@ router.get('/:id', async (req, res, next) => {
 router.get('/slug/:slug', async (req, res, next) => {
     try {
         const product = await getWholesaleProductBySlug(req.params.slug);
-        res.json({ success: true, data: product });
+        res.json({ success: true, data: sanitizeProduct(product as Record<string, unknown>) });
     } catch (error) {
         next(error);
     }

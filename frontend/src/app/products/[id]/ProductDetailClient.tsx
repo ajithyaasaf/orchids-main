@@ -2,12 +2,46 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle } from 'lucide-react';
 import { WholesaleProduct } from '@orchids/shared';
 import { useCartStore } from '@/store/wholesaleCartStore';
 
 interface Props {
     product: WholesaleProduct;
 }
+
+// ---------------------------------------------------------------------------
+// Helpers — never let formatting crash on missing data
+// ---------------------------------------------------------------------------
+
+/** Safely converts a value to a fixed-decimal string. Returns "—" if invalid. */
+function safeFixed(value: number | null | undefined, decimals = 2): string {
+    if (value == null || !isFinite(value) || isNaN(value)) return '—';
+    return value.toFixed(decimals);
+}
+
+/** Safely formats a value as Indian-locale currency string. */
+function safeRupees(value: number | null | undefined): string {
+    if (value == null || !isFinite(value) || isNaN(value)) return '—';
+    return value.toLocaleString('en-IN');
+}
+
+/** Returns true only when we have enough data to allow ordering. */
+function canOrder(product: WholesaleProduct): boolean {
+    return (
+        product.inStock === true &&
+        typeof product.bundlePrice === 'number' &&
+        product.bundlePrice > 0 &&
+        typeof product.bundleQty === 'number' &&
+        product.bundleQty > 0 &&
+        typeof product.availableBundles === 'number' &&
+        product.availableBundles > 0
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function ProductDetailClient({ product }: Props) {
     const router = useRouter();
@@ -19,11 +53,21 @@ export default function ProductDetailClient({ product }: Props) {
         fetchGSTRate();
     }, [fetchGSTRate]);
 
-    const handleAddToCart = () => {
-        if (!product) return;
+    // Safe, fallback-guarded values — no crashes even if DB data is incomplete
+    const safePrice = product.bundlePrice ?? 0;
+    const safeBundleQty = product.bundleQty ?? 0;
+    const safeAvailable = product.availableBundles ?? 0;
+    const pricePerPiece = safeBundleQty > 0 ? safePrice / safeBundleQty : 0;
+    const totalPieces = bundleQty * safeBundleQty;
+    const totalPrice = bundleQty * safePrice;
 
-        if (bundleQty > product.availableBundles) {
-            alert(`Only ${product.availableBundles} bundles available`);
+    const orderAllowed = canOrder(product);
+
+    const handleAddToCart = () => {
+        if (!product || !orderAllowed) return;
+
+        if (bundleQty > safeAvailable) {
+            alert(`Only ${safeAvailable} bundles available`);
             return;
         }
 
@@ -31,8 +75,6 @@ export default function ProductDetailClient({ product }: Props) {
         alert(`Added ${bundleQty} bundle(s) to cart`);
         router.push('/wholesale/cart');
     };
-
-    const totalPieces = bundleQty * product.bundleQty;
 
     return (
         <div className="max-w-6xl mx-auto p-6">
@@ -72,7 +114,7 @@ export default function ProductDetailClient({ product }: Props) {
 
                         <div className="mb-4">
                             <p className="text-2xl font-bold text-primary">
-                                {product.bundleQty} pieces per bundle
+                                {safeBundleQty > 0 ? `${safeBundleQty} pieces per bundle` : 'Bundle size not set'}
                             </p>
                             {product.colorDescription && (
                                 <p className="text-sm text-gray-600 mt-1">
@@ -98,23 +140,32 @@ export default function ProductDetailClient({ product }: Props) {
 
                     {/* Pricing */}
                     <div className="bg-green-50 border border-green-200 p-6 rounded-lg mb-6">
-                        <div className="flex items-baseline gap-2 mb-2">
-                            <span className="text-3xl font-bold text-green-900">
-                                ₹{product.bundlePrice.toFixed(2)}
-                            </span>
-                            <span className="text-gray-600">per bundle</span>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                            ₹{(product.bundlePrice / product.bundleQty).toFixed(2)} per piece
-                        </p>
+                        {safePrice > 0 ? (
+                            <>
+                                <div className="flex items-baseline gap-2 mb-2">
+                                    <span className="text-3xl font-bold text-green-900">
+                                        ₹{safeFixed(safePrice)}
+                                    </span>
+                                    <span className="text-gray-600">per bundle</span>
+                                </div>
+                                <p className="text-sm text-gray-600">
+                                    ₹{safeFixed(pricePerPiece)} per piece
+                                </p>
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-2 text-yellow-700">
+                                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                                <span className="text-sm font-medium">Price not available — contact us for a quote.</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Stock Info */}
                     <div className="mb-6">
                         {product.inStock ? (
                             <div className="text-green-600 font-medium">
-                                ✓ In Stock: {product.availableBundles} bundles available
-                                ({product.totalPieces} total pieces)
+                                ✓ In Stock: {safeAvailable} bundles available
+                                {product.totalPieces != null && `(${product.totalPieces} total pieces)`}
                             </div>
                         ) : (
                             <div className="text-red-600 font-medium">✗ Out of Stock</div>
@@ -122,7 +173,7 @@ export default function ProductDetailClient({ product }: Props) {
                     </div>
 
                     {/* Bundle Selector */}
-                    {product.inStock && (
+                    {orderAllowed ? (
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium mb-2">
@@ -143,7 +194,7 @@ export default function ProductDetailClient({ product }: Props) {
                                                 Math.max(
                                                     1,
                                                     Math.min(
-                                                        product.availableBundles,
+                                                        safeAvailable,
                                                         Number(e.target.value)
                                                     )
                                                 )
@@ -151,12 +202,12 @@ export default function ProductDetailClient({ product }: Props) {
                                         }
                                         className="w-20 h-12 text-center text-xl font-bold border-2 rounded-lg"
                                         min={1}
-                                        max={product.availableBundles}
+                                        max={safeAvailable}
                                     />
                                     <button
                                         onClick={() =>
                                             setBundleQty(
-                                                Math.min(product.availableBundles, bundleQty + 1)
+                                                Math.min(safeAvailable, bundleQty + 1)
                                             )
                                         }
                                         className="w-12 h-12 bg-gray-200 rounded-lg hover:bg-gray-300 font-bold text-xl"
@@ -177,8 +228,17 @@ export default function ProductDetailClient({ product }: Props) {
                             </button>
 
                             <p className="text-center text-gray-600">
-                                Total: ₹{(bundleQty * product.bundlePrice).toFixed(2)}
+                                Total: ₹{safeFixed(totalPrice)}
                             </p>
+                        </div>
+                    ) : product.inStock && (
+                        /* Product is in-stock but has missing price/qty data */
+                        <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="font-semibold text-sm">Pricing information incomplete</p>
+                                <p className="text-xs mt-1">This product is missing price or quantity data. Please contact us to place an order.</p>
+                            </div>
                         </div>
                     )}
                 </div>

@@ -102,9 +102,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
     // Add Sub-category if tags exist
     if (product.tags && product.tags.length > 0) {
-        breadcrumbItems.push({ 
-            name: product.tags[0], 
-            url: `/products?category=${product.category}&tag=${product.tags[0]}` 
+        breadcrumbItems.push({
+            name: product.tags[0],
+            url: `/products?category=${product.category}&tag=${product.tags[0]}`
         });
     }
 
@@ -124,7 +124,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     {/* SEO: Breadcrumb Navigation */}
                     <div className="mb-6 flex items-center justify-between">
                         <Breadcrumbs items={breadcrumbItems} />
-                        <Link 
+                        <Link
                             href={`/products?category=${product.category}`}
                             className="text-sm font-bold text-gray-500 hover:text-primary flex items-center gap-1 transition-colors"
                         >

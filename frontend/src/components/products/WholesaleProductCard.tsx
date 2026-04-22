@@ -40,7 +40,7 @@ export const WholesaleProductCard: React.FC<WholesaleProductCardProps> = ({
             className={`group flex flex-col h-full bg-white transition-all duration-300 ${className}`}
         >
             {/* Image Container */}
-            <div className="relative aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden mb-4">
+            <div className="relative aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden mb-4 border border-gray-100">
                 {mainImage ? (
                     <Image
                         src={mainImage}

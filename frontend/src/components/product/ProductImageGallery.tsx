@@ -18,7 +18,7 @@ export function ProductImageGallery({ images, title }: ProductImageGalleryProps)
 
     if (images.length === 0) {
         return (
-            <div className="aspect-[4/5] bg-gray-100 rounded-2xl flex items-center justify-center">
+            <div className="aspect-[3/4] bg-gray-100 rounded-2xl flex items-center justify-center">
                 <span className="text-gray-400">No Image Available</span>
             </div>
         );
@@ -34,7 +34,7 @@ export function ProductImageGallery({ images, title }: ProductImageGalleryProps)
                             key={index}
                             onClick={() => setActiveIndex(index)}
                             className={cn(
-                                "relative aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all",
+                                "relative aspect-[3/4] bg-white rounded-lg overflow-hidden border-2 transition-all",
                                 activeIndex === index ? "border-primary shadow-sm" : "border-transparent hover:border-gray-200"
                             )}
                         >
@@ -51,7 +51,7 @@ export function ProductImageGallery({ images, title }: ProductImageGalleryProps)
             )}
 
             {/* Main Image Container */}
-            <div className="relative flex-grow aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden shadow-soft">
+            <div className="relative flex-grow aspect-[3/4] bg-gray-50 rounded-2xl overflow-hidden shadow-soft border border-gray-100">
                 <Image
                     src={images[activeIndex]}
                     alt={`${title} - view ${activeIndex + 1}`}
@@ -71,7 +71,7 @@ export function ProductImageGallery({ images, title }: ProductImageGalleryProps)
                             key={index}
                             onClick={() => setActiveIndex(index)}
                             className={cn(
-                                "relative w-20 aspect-square flex-shrink-0 bg-white rounded-lg overflow-hidden border-2 transition-all",
+                                "relative w-20 aspect-[3/4] flex-shrink-0 bg-white rounded-lg overflow-hidden border-2 transition-all",
                                 activeIndex === index ? "border-primary" : "border-gray-200"
                             )}
                         >

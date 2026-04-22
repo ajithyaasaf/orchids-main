@@ -69,7 +69,7 @@ export const RelatedProducts: React.FC<RelatedProductsProps> = ({ category, curr
                         href={`/product/${product.slug}`}
                         className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-all"
                     >
-                        <div className="aspect-[4/5] relative overflow-hidden bg-gray-100">
+                        <div className="aspect-[3/4] relative overflow-hidden bg-gray-100 border border-gray-100">
                             {product.images[0] ? (
                                 <Image
                                     src={product.images[0]}

@@ -114,7 +114,7 @@ export const trackBeginCheckout = (items: any[], totalValue: number) => {
  * Track payment info addition
  * Event: add_payment_info
  */
-export const trackAddPaymentInfo = (items: any[], totalValue: number, paymentType: string = 'phonepe') => {
+export const trackAddPaymentInfo = (items: any[], totalValue: number, paymentType: string = 'razorpay') => {
     pushToDataLayer({
         event: 'add_payment_info',
         ecommerce: {

@@ -1,10 +1,9 @@
-import express, { Request, Response } from 'express';
-import { initiatePayment, checkPaymentStatus } from '../services/phonepeService';
+import express, { Response } from 'express';
+import { createRazorpayOrder, verifyRazorpaySignature } from '../services/razorpayService';
 import { restoreBundleStock } from '../services/wholesaleStockService';
 import { verifyToken, AuthRequest } from '../middleware/auth';
 import { paymentLimiter } from '../middleware/rateLimiter';
 import { collections } from '../config/firebase';
-import admin from 'firebase-admin';
 import logger from '../utils/logger';
 import { getWholesaleOrderById, updateWholesalePaymentStatus } from '../services/wholesaleOrderService';
 
@@ -12,7 +11,14 @@ const router = express.Router();
 
 /**
  * POST /api/payment/create-order
- * Create PhonePe Payment session
+ * Creates a Razorpay order and returns the razorpayOrderId + amount to the frontend.
+ * The frontend uses this to open the Razorpay checkout popup.
+ * 
+ * Security:
+ *  - Authenticated with verifyToken (Firebase JWT)
+ *  - Rate-limited to prevent abuse
+ *  - Amount is read from DB, never from client
+ *  - Only the order owner can initiate payment
  */
 router.post(
     '/create-order',
@@ -34,6 +40,7 @@ router.post(
                 return;
             }
 
+            // SECURITY: Only the order owner can pay for their own order
             if (order.userId !== req.user!.uid) {
                 logger.security('Unauthorized payment creation attempt', { uid: req.user!.uid, orderId });
                 res.status(403).json({ success: false, error: 'Unauthorized' });
@@ -45,24 +52,24 @@ router.post(
                 return;
             }
 
-            // Generate PhonePe URL
-            const phonepeOrder = await initiatePayment(
-                orderId,
-                order.totalAmount,
-                order.userId,
-                order.address.phone
-            );
+            // Create Razorpay order (amount comes from DB, never from client)
+            const { razorpayOrderId } = await createRazorpayOrder(orderId, order.totalAmount);
 
-            // Store Gateway ID
+            // Store the Razorpay order ID for later verification & reconciliation
             await collections.wholesaleOrders.doc(orderId).update({
-                gatewayOrderId: phonepeOrder.merchantTransactionId,
+                gatewayOrderId: razorpayOrderId,
             });
 
-            logger.info(`PhonePe order created: ${orderId}`);
+            logger.info(`Razorpay order created: ${razorpayOrderId} for internal order ${orderId}`);
 
             res.json({
                 success: true,
-                data: phonepeOrder, // { merchantTransactionId, redirectUrl }
+                data: {
+                    razorpayOrderId,
+                    amount: Math.round(order.totalAmount * 100), // in paise for the SDK
+                    currency: 'INR',
+                    orderId, // echo back for frontend convenience
+                },
             });
         } catch (error: any) {
             logger.error('Payment order creation failed', error);
@@ -76,14 +83,25 @@ router.post(
 
 /**
  * POST /api/payment/verify
- * Check PhonePe payment status directly (Server to Server polling upon frontend return)
+ * Called by the frontend AFTER the Razorpay popup succeeds.
+ * Verifies the cryptographic signature — this is the real security gate.
+ * 
+ * Security:
+ *  - The 3 Razorpay values (order_id, payment_id, signature) are verified
+ *    using HMAC-SHA256 with KEY_SECRET that never left this server.
+ *  - A tampered success response from the browser is mathematically impossible to forge.
+ *  - Idempotent: if the order is already 'paid', we skip and return success.
  */
 router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res: Response) => {
     try {
-        const { orderId } = req.body;
+        const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
 
-        if (!orderId) {
-            res.status(400).json({ success: false, error: 'Order ID is required' });
+        // Validate all required fields
+        if (!orderId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+            res.status(400).json({
+                success: false,
+                error: 'Missing payment verification fields (orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature)',
+            });
             return;
         }
 
@@ -93,42 +111,60 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
             return;
         }
 
+        // SECURITY: Only the order owner can verify payment for their own order
         if (order.userId !== req.user!.uid) {
+            logger.security('Unauthorized payment verification attempt', { uid: req.user!.uid, orderId });
             res.status(403).json({ success: false, error: 'Unauthorized' });
             return;
         }
-        
-        // If already paid (maybe webhook was faster), just return success
+
+        // Idempotency: if already paid (maybe webhook was faster), just return success
         if (order.paymentStatus === 'paid') {
-             res.json({ success: true, message: 'Payment already verified' });
-             return;
+            res.json({ success: true, message: 'Payment already verified' });
+            return;
         }
 
-        // Call PhonePe status API directly
-        const statusResponse = await checkPaymentStatus(orderId);
+        // Cross-check: the razorpayOrderId should match what we stored
+        if (order.gatewayOrderId && order.gatewayOrderId !== razorpayOrderId) {
+            logger.security('Razorpay order ID mismatch — possible replay attack', {
+                orderId,
+                expected: order.gatewayOrderId,
+                received: razorpayOrderId,
+            });
+            res.status(400).json({ success: false, error: 'Payment order mismatch' });
+            return;
+        }
 
-        if (statusResponse.success && statusResponse.state === 'COMPLETED') {
-            const updatedOrder = await updateWholesalePaymentStatus(orderId, 'paid', statusResponse.paymentId);
+        // SECURITY: Verify the signature using KEY_SECRET (never exposed to client)
+        const isValid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
 
-            // Invoice Gen
-            try {
-                const { generateInvoice, needsInvoiceGeneration } = await import('../services/invoiceService');
-                if (needsInvoiceGeneration(updatedOrder as any)) {
-                    await generateInvoice(orderId);
-                }
-            } catch (error) {
-                logger.error('Failed to auto-generate invoice', error);
-            }
-
-            res.json({ success: true, message: 'Payment verified successfully' });
-        } else if (statusResponse.state === 'PENDING') {
-            res.status(202).json({ success: true, pending: true, message: 'Payment is still processing' });
-        } else {
-            // Failed
+        if (!isValid) {
+            logger.security('Razorpay signature verification failed — possible tampering', {
+                orderId,
+                razorpayOrderId,
+                razorpayPaymentId,
+            });
             await updateWholesalePaymentStatus(orderId, 'failed');
-            await restoreBundleStock(orderId); // Restore the stock reserved on order creation
-            res.status(400).json({ success: false, error: 'Payment verification failed' });
+            await restoreBundleStock(orderId);
+            res.status(400).json({ success: false, error: 'Payment signature verification failed' });
+            return;
         }
+
+        // ✅ Signature verified — mark order as paid
+        const updatedOrder = await updateWholesalePaymentStatus(orderId, 'paid', razorpayPaymentId);
+
+        // Auto-generate invoice
+        try {
+            const { generateInvoice, needsInvoiceGeneration } = await import('../services/invoiceService');
+            if (needsInvoiceGeneration(updatedOrder as any)) {
+                await generateInvoice(orderId);
+            }
+        } catch (error) {
+            logger.error('Failed to auto-generate invoice after payment verification', error);
+        }
+
+        logger.info(`Payment verified successfully for order ${orderId}, payment: ${razorpayPaymentId}`);
+        res.json({ success: true, message: 'Payment verified successfully' });
     } catch (error: any) {
         logger.error('Payment verification error', error);
         res.status(500).json({ success: false, error: 'Payment verification failed' });

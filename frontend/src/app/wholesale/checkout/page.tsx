@@ -209,7 +209,7 @@ export default function WholesaleCheckoutPage() {
                 return;
             }
 
-            // Initiate PhonePe payment redirect
+            // Initiate Razorpay payment popup
             await initiatePayment(orderId);
         } catch (err: any) {
             setError(err.message);
@@ -218,7 +218,7 @@ export default function WholesaleCheckoutPage() {
     };
 
     const initiatePayment = async (orderId: string) => {
-        // Create PhonePe payment session
+        // Step 1: Create Razorpay order on our backend
         const response = await authenticatedFetch('/api/payment/create-order', {
             method: 'POST',
             body: JSON.stringify({ orderId }),
@@ -227,18 +227,86 @@ export default function WholesaleCheckoutPage() {
         const data = await response.json();
 
         if (!data.success) {
-            throw new Error('Failed to initialize payment');
+            throw new Error(data.error || 'Failed to initialize payment');
         }
 
-        // PhonePe returns a redirect URL — navigate the browser to PhonePe's payment page.
-        // After payment, PhonePe will redirect back to /order-success?id={orderId}
-        // where the verify API is called automatically.
-        const { redirectUrl } = data.data;
+        const { razorpayOrderId, amount } = data.data;
 
-        // Clear cart before redirect since we won't be back on this page
-        clearCart();
+        // Step 2: Open Razorpay checkout popup
+        return new Promise<void>((resolve, reject) => {
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                amount,
+                currency: 'INR',
+                name: 'ORCHID Wholesale',
+                description: `Order #${orderId.slice(0, 8)}`,
+                order_id: razorpayOrderId,
+                // Step 3: On successful payment, verify signature on our backend
+                handler: async (rzpResponse: any) => {
+                    try {
+                        setLoading(true);
+                        const verifyRes = await authenticatedFetch('/api/payment/verify', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                orderId,
+                                razorpayOrderId: rzpResponse.razorpay_order_id,
+                                razorpayPaymentId: rzpResponse.razorpay_payment_id,
+                                razorpaySignature: rzpResponse.razorpay_signature,
+                            }),
+                        });
 
-        window.location.href = redirectUrl;
+                        const verifyData = await verifyRes.json();
+                        if (!verifyData.success) {
+                            throw new Error(verifyData.error || 'Payment verification failed');
+                        }
+
+                        // Success — clear cart and redirect
+                        setIsSuccess(true);
+                        clearCart();
+                        router.push(`/order-success?id=${orderId}`);
+                        resolve();
+                    } catch (err: any) {
+                        setError(err.message || 'Payment verification failed');
+                        setLoading(false);
+                        reject(err);
+                    }
+                },
+                modal: {
+                    ondismiss: () => {
+                        setLoading(false);
+                        setError('Payment was cancelled. You can try again.');
+                        reject(new Error('Payment cancelled by user'));
+                    },
+                    escape: true,
+                    backdropclose: false,
+                },
+                prefill: {
+                    contact: address.phone,
+                    name: address.name,
+                },
+                theme: {
+                    color: '#2D6A4F',
+                },
+                notes: {
+                    internalOrderId: orderId,
+                },
+            };
+
+            try {
+                const rzp = new (window as any).Razorpay(options);
+                
+                // Handle payment failures inside popup
+                rzp.on('payment.failed', (failResponse: any) => {
+                    const errorDesc = failResponse?.error?.description || 'Payment failed. Please try again.';
+                    setError(errorDesc);
+                    setLoading(false);
+                });
+
+                rzp.open();
+            } catch (sdkError) {
+                reject(new Error('Razorpay SDK failed to load. Please refresh and try again.'));
+            }
+        });
     };
 
     if (items.length === 0) {
@@ -594,7 +662,7 @@ export default function WholesaleCheckoutPage() {
                                     <span>100% Secure Transaction</span>
                                 </div>
                                 <span className="w-1 h-1 rounded-full bg-gray-200"></span>
-                                <span>Secured by PhonePe</span>
+                                <span>Secured by Razorpay</span>
                             </div>
                         </div>
                     </div>

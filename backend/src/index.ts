@@ -39,11 +39,11 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "https:", "res.cloudinary.com"],
-            connectSrc: ["'self'", "https://api.phonepe.com", "https://api-preprod.phonepe.com"],
-            frameSrc: ["https://mercury.phonepe.com"],
+            connectSrc: ["'self'", "https://api.razorpay.com", "https://lumberjack.razorpay.com"],
+            frameSrc: ["https://api.razorpay.com", "https://checkout.razorpay.com"],
         },
     },
     hsts: {
@@ -135,8 +135,8 @@ app.use('/api/auth', authRoutes);                // Secure session cookie genera
 app.use('/api/customers', customerRoutes);       // Customer management & analytics
 
 // Shared Infrastructure
-app.use('/api/payment', paymentRoutes);          // PhonePe payment gateway
-app.use('/api/payment', webhookRoutes);          // PhonePe S2S webhook (handles /api/payment/webhook)
+app.use('/api/payment', paymentRoutes);          // Razorpay payment gateway
+app.use('/api/payment', webhookRoutes);          // Razorpay S2S webhook (handles /api/payment/webhook)
 app.use('/api/upload', uploadRoutes);            // Cloudinary image upload
 app.use('/api/settings', settingsRoutes);        // System configuration (GST, etc.)
 app.use('/api/invoices', invoiceRoutes);         // Invoice generation

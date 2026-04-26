@@ -8,7 +8,7 @@ import { useAuthToken } from '@/hooks/useAuthToken';
 
 /**
  * Wholesale Checkout Component
- * Displays cart items with GST breakdown and handles order placement with PhonePe
+ * Displays cart items with GST breakdown and handles order placement with Razorpay
  */
 
 interface CalculatedOrder {
@@ -106,7 +106,7 @@ export default function WholesaleCheckout() {
             // Clear the cart immediately since order is placed and stock is reserved
             clearCart();
 
-            // Initiate PhonePe payment
+            // Initiate Razorpay payment
             await initiatePayment(orderId);
         } catch (err: any) {
             setError(err.message);
@@ -124,12 +124,50 @@ export default function WholesaleCheckout() {
 
             const data = await response.json();
 
-            if (!data.success || !data.data || !data.data.redirectUrl) {
-                throw new Error('Failed to initialize payment gateway');
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to initialize payment gateway');
             }
 
-            // Redirect to PhonePe payment page
-            window.location.href = data.data.redirectUrl;
+            const { razorpayOrderId, amount } = data.data;
+
+            // Open Razorpay checkout popup
+            const rzp = new (window as any).Razorpay({
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                amount,
+                currency: 'INR',
+                name: 'ORCHID Wholesale',
+                description: `Order #${orderId.slice(0, 8)}`,
+                order_id: razorpayOrderId,
+                handler: async (rzpResponse: any) => {
+                    try {
+                        const verifyRes = await authenticatedFetch('/api/payment/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                orderId,
+                                razorpayOrderId: rzpResponse.razorpay_order_id,
+                                razorpayPaymentId: rzpResponse.razorpay_payment_id,
+                                razorpaySignature: rzpResponse.razorpay_signature,
+                            }),
+                        });
+                        const verifyData = await verifyRes.json();
+                        if (!verifyData.success) throw new Error('Verification failed');
+                        clearCart();
+                        router.push(`/order-success?id=${orderId}`);
+                    } catch (err: any) {
+                        setError(err.message);
+                        setLoading(false);
+                    }
+                },
+                modal: {
+                    ondismiss: () => {
+                        setLoading(false);
+                        setError('Payment was cancelled.');
+                    },
+                },
+                theme: { color: '#2D6A4F' },
+            });
+            rzp.open();
         } catch (err: any) {
             setError(err.message);
             setLoading(false);
@@ -288,7 +326,7 @@ export default function WholesaleCheckout() {
                         disabled={loading}
                         className="flex-1 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-300 flex justify-center items-center gap-2"
                     >
-                        {loading ? 'Processing...' : 'Pay with PhonePe (UPI, Card, NetBanking)'}
+                        {loading ? 'Processing...' : 'Pay Now (UPI, Card, NetBanking)'}
                     </button>
                 )}
 

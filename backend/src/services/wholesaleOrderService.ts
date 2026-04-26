@@ -356,7 +356,7 @@ export async function getWholesaleOrderById(
 /** 
  * Update wholesale order payment status.
  * Handles product price locking atomically on success.
- * Called from PhonePe webhook or polling verification.
+ * Called from Razorpay webhook or inline verification.
  */
 export async function updateWholesalePaymentStatus(
     orderId: string,

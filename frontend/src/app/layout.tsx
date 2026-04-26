@@ -6,6 +6,7 @@ import { PromotionalBanner } from '@/components/layout/PromotionalBanner';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ToastProvider } from '@/context/ToastContext';
 import { GoogleTagManager } from '@/components/analytics/GoogleTagManager';
+import Script from 'next/script';
 
 const inter = Inter({
     subsets: ['latin'],
@@ -87,6 +88,7 @@ export default function RootLayout({
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable} overflow-x-hidden`}>
             <body className="font-body antialiased bg-white text-text-primary overflow-x-hidden w-full relative">
+                <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
                 <GoogleTagManager />
                 <ToastProvider>
                     <AuthProvider>

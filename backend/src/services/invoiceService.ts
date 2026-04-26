@@ -124,7 +124,7 @@ export const generateCreditNote = async (
     orderId: string,
     refundAmount: number,
     refundReason: string,
-    refundMethod: 'phonepe' | 'bank_transfer' | 'store_credit' = 'phonepe'
+    refundMethod: 'razorpay' | 'bank_transfer' | 'store_credit' = 'razorpay'
 ): Promise<string> => {
     const order = await getWholesaleOrderById(orderId);
 

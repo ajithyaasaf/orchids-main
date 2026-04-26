@@ -1,5 +1,5 @@
 import { collections } from '../config/firebase';
-import { checkPaymentStatus } from '../services/phonepeService';
+import { checkRazorpayPaymentStatus } from '../services/razorpayService';
 import { updateWholesalePaymentStatus } from '../services/wholesaleOrderService';
 import { restoreBundleStock } from '../services/wholesaleStockService';
 import logger from '../utils/logger';
@@ -9,9 +9,11 @@ import logger from '../utils/logger';
  * Runs periodically to check 'pending' orders older than 30 minutes.
  * If the user abandoned the payment or it failed silently, this script 
  * will mark it as 'failed' and restore the stock, preventing "Ghost Orders".
+ * 
+ * Updated for Razorpay: Uses Razorpay Orders API to fetch payment status.
  */
 export const reconcilePendingOrders = async () => {
-    logger.info('Starting scheduled reconciliation for pending PhonePe orders...');
+    logger.info('Starting scheduled reconciliation for pending Razorpay orders...');
     
     try {
         const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -34,7 +36,7 @@ export const reconcilePendingOrders = async () => {
             const orderData = doc.data();
 
             try {
-                // If it never reached PhonePe (no gatewayOrderId), it's completely abandoned
+                // If it never reached Razorpay (no gatewayOrderId), it's completely abandoned
                 if (!orderData.gatewayOrderId) {
                     logger.info(`Order ${orderId} has no gateway ID. Marking as failed and restoring stock.`);
                     await updateWholesalePaymentStatus(orderId, 'failed');
@@ -42,8 +44,8 @@ export const reconcilePendingOrders = async () => {
                     continue;
                 }
 
-                // Check actual status with PhonePe
-                const status = await checkPaymentStatus(orderId);
+                // Check actual status with Razorpay
+                const status = await checkRazorpayPaymentStatus(orderData.gatewayOrderId);
 
                 if (status.success && status.state === 'COMPLETED') {
                     logger.info(`Reconciliation: Order ${orderId} was actually PAID. Updating...`);
@@ -58,13 +60,18 @@ export const reconcilePendingOrders = async () => {
                     } catch (error) {
                         logger.error(`Reconciliation: Failed to auto-generate invoice for ${orderId}`, error);
                     }
-                } else if (status.state === 'FAILED' || status.state === 'CANCELLED' || status.state === 'AUTHORIZATION_FAILED') {
-                    logger.info(`Reconciliation: Order ${orderId} FAILED. Restoring stock.`);
+                } else if (status.state === 'FAILED') {
+                    logger.info(`Reconciliation: Order ${orderId} FAILED at gateway. Restoring stock.`);
+                    await updateWholesalePaymentStatus(orderId, 'failed');
+                    await restoreBundleStock(orderId);
+                } else if (status.state === 'NO_PAYMENTS') {
+                    // No payment was ever attempted — user likely abandoned
+                    logger.info(`Reconciliation: Order ${orderId} has no payment attempts. Marking as failed.`);
                     await updateWholesalePaymentStatus(orderId, 'failed');
                     await restoreBundleStock(orderId);
                 } else {
-                    // Still pending with bank? Wait for next cycle.
-                    logger.info(`Reconciliation: Order ${orderId} is still ${status.state} at bank. Waiting...`);
+                    // Still pending at bank — wait for next cycle
+                    logger.info(`Reconciliation: Order ${orderId} is still ${status.state}. Waiting...`);
                 }
             } catch (err) {
                 logger.error(`Failed to reconcile order ${orderId}:`, err);

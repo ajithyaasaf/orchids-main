@@ -267,9 +267,11 @@ export const slugToTag = (slug: string): string => {
 };
 
 // Payment Types
-export interface PhonePeOrderData {
-    redirectUrl: string;
-    merchantTransactionId: string;
+export interface RazorpayOrderData {
+    razorpayOrderId: string;
+    amount: number;      // in paise
+    currency: string;
+    orderId: string;     // internal order ID
 }
 
 // Combo/Promotion Types

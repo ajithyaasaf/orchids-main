@@ -109,18 +109,18 @@ export const orderApi = {
 // Payment API
 export const paymentApi = {
     /**
-     * Create PhonePe payment session
+     * Create Razorpay order session
      * SECURITY: Sends orderId instead of amount to prevent price manipulation
      */
     createOrder: (orderId: string) => apiFetch('/api/payment/create-order', {
         method: 'POST',
         body: JSON.stringify({ orderId }),
     }),
-    verify: (data: any) => apiFetch('/api/payment/verify', {
-        method: 'POST',
-        body: JSON.stringify(data),
-    }),
-    getKey: () => apiFetch('/api/payment/key'),
+    verify: (data: { orderId: string; razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) =>
+        apiFetch('/api/payment/verify', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
 };
 
 // Upload API
@@ -370,7 +370,7 @@ export interface CreateRefundPayload {
     orderId: string;
     refundAmount: number;
     refundReason: string;
-    refundMethod?: 'phonepe' | 'bank_transfer' | 'store_credit';
+    refundMethod?: 'razorpay' | 'bank_transfer' | 'store_credit';
 }
 
 export const invoiceApi = {

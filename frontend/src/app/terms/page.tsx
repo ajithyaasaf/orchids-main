@@ -73,7 +73,7 @@ export default function TermsPage() {
                                 <li>Placing an order constitutes an offer to purchase products</li>
                                 <li>We reserve the right to accept or decline any order</li>
                                 <li>Order confirmation will be sent via email after successful payment</li>
-                                <li>Payment is processed securely through PhonePe payment gateway</li>
+                                <li>Payment is processed securely through Razorpay payment gateway</li>
                                 <li>We accept UPI, Credit Cards, Debit Cards, Net Banking, and Wallets</li>
                                 <li>Full payment must be received before order processing</li>
                                 <li>You agree not to dispute valid charges with your payment provider</li>

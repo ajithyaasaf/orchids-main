@@ -10,7 +10,7 @@ import { useAuthToken } from '@/hooks/useAuthToken';
 
 function OrderSuccessContent() {
     const searchParams = useSearchParams();
-    // Support both 'id' (PhonePe redirect) and 'orderId' (Legacy)
+    // Support both 'id' (Razorpay flow) and 'orderId' (Legacy)
     const orderId = searchParams.get('id') || searchParams.get('orderId');
     const [order, setOrder] = useState<WholesaleOrder | null>(null);
     const [loading, setLoading] = useState(true);
@@ -18,48 +18,41 @@ function OrderSuccessContent() {
     const { authenticatedFetch } = useAuthToken();
 
     useEffect(() => {
-        const verifyPaymentStatus = async () => {
+        const checkOrderStatus = async () => {
             if (!orderId) {
                 setLoading(false);
                 return;
             }
 
             try {
-                // Call our backend to verify PhonePe status
-                const response = await authenticatedFetch('/api/payment/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId })
-                });
+                // With Razorpay popup flow, payment verification already happened
+                // inline in the checkout page before navigating here.
+                // We just fetch the order to display its current status.
+                const orderRes = await authenticatedFetch(`/api/wholesale/orders/${orderId}`);
+                const orderData = await orderRes.json();
 
-                const data = await response.json();
-
-                if (data.success) {
-                    if (data.pending) {
-                        setPaymentStatus('pending');
-                    } else {
+                if (orderData.success && orderData.data) {
+                    setOrder(orderData.data);
+                    
+                    if (orderData.data.paymentStatus === 'paid') {
                         setPaymentStatus('success');
+                    } else if (orderData.data.paymentStatus === 'failed') {
+                        setPaymentStatus('failed');
+                    } else {
+                        setPaymentStatus('pending');
                     }
                 } else {
                     setPaymentStatus('failed');
                 }
-
-                // Fetch updated order details
-                const orderRes = await authenticatedFetch(`/api/wholesale/orders/${orderId}`);
-                const orderData = await orderRes.json();
-                if (orderData.success) {
-                    setOrder(orderData.data);
-                }
-
             } catch (error) {
-                console.error('Failed to verify payment:', error);
+                console.error('Failed to fetch order status:', error);
                 setPaymentStatus('failed');
             } finally {
                 setLoading(false);
             }
         };
 
-        verifyPaymentStatus();
+        checkOrderStatus();
     }, [orderId]);
 
     if (loading) {

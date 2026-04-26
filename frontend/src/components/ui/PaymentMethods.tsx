@@ -8,10 +8,10 @@ interface PaymentMethod {
 }
 
 // SVG components for payment icons
-const PhonePeIcon = () => (
+const RazorpayIcon = () => (
     <svg viewBox="0 0 120 40" className="h-8 w-auto">
-        <rect fill="#5f259f" width="120" height="40" rx="4" />
-        <text x="10" y="26" fill="white" fontSize="16" fontWeight="bold" fontFamily="Arial">PhonePe</text>
+        <rect fill="#072654" width="120" height="40" rx="4" />
+        <text x="10" y="26" fill="white" fontSize="14" fontWeight="bold" fontFamily="Arial">Razorpay</text>
     </svg>
 );
 
@@ -60,7 +60,7 @@ const NetBankingIcon = () => (
 );
 
 const PAYMENT_METHODS: PaymentMethod[] = [
-    { name: 'PhonePe', icon: <PhonePeIcon /> },
+    { name: 'Razorpay', icon: <RazorpayIcon /> },
     { name: 'UPI', icon: <UPIIcon /> },
     { name: 'Visa', icon: <VisaIcon /> },
     { name: 'Mastercard', icon: <MastercardIcon /> },

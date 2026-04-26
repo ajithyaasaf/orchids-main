@@ -69,8 +69,8 @@ export function ProductSchema({ product }: ProductSchemaProps) {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.title,
-        description: product.description || `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty} pieces`,
-        image: product.images.length > 0 ? product.images : [`${siteUrl}/images/placeholder.jpg`],
+        description: product.description || `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty || 0} pieces`,
+        image: (product.images && product.images.length > 0) ? product.images : [`${siteUrl}/images/placeholder.jpg`],
         brand: {
             '@type': 'Brand',
             name: 'ORCHID',
@@ -79,7 +79,7 @@ export function ProductSchema({ product }: ProductSchemaProps) {
             '@type': 'Offer',
             url: `${siteUrl}/product/${product.slug || product.id}`,
             priceCurrency: 'INR',
-            price: product.bundlePrice,
+            price: product.bundlePrice ?? 0,
             priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
             availability: product.inStock
                 ? 'https://schema.org/InStock'

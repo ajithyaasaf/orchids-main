@@ -1,4 +1,5 @@
 import { WholesaleProduct } from '@orchids/shared';
+import { getCloudinaryUrl, OG_IMAGE_OPTS } from '@/lib/cloudinaryImage';
 
 /**
  * Format price to Indian Rupee format
@@ -48,12 +49,21 @@ export const isValidPhone = (phone: string): boolean => {
  * Uses centralized pricing utilities to ensure consistent prices
  */
 export const generateProductJsonLd = (product: WholesaleProduct) => {
+    // Build absolute, optimized image URLs for structured data.
+    // Search crawlers (Google, Bing) require absolute URLs — Cloudinary
+    // with OG_IMAGE_OPTS delivers a 1200x630 JPEG, which is the canonical
+    // size for Open Graph and Google's rich results.
+    const structuredImages = product.images
+        .slice(0, 5) // Schema.org recommends max 5 images
+        .map((publicId) => getCloudinaryUrl(publicId, OG_IMAGE_OPTS))
+        .filter(Boolean);
+
     return {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.title,
         description: product.description,
-        image: product.images,
+        image: structuredImages,
         brand: {
             '@type': 'Brand',
             name: 'Wholesale Orchids',

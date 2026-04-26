@@ -11,9 +11,45 @@ import {
     getAllWholesaleProducts,
     deleteWholesaleProduct,
 } from '../services/wholesaleProductService';
+import { WholesaleProduct } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
 
 const router = express.Router();
+
+// ---------------------------------------------------------------------------
+// Sanitizer — applied to every GET response to guarantee type safety.
+// Protects against Firestore documents that are missing optional numeric fields
+// (e.g. a product saved before bundlePrice/bundleQty were required).
+// ---------------------------------------------------------------------------
+
+function sanitizeProduct(product: WholesaleProduct): WholesaleProduct {
+    if (!product || typeof product !== 'object') {
+        return {} as WholesaleProduct;
+    }
+
+    return {
+        ...product,
+        bundlePrice:
+            typeof product.bundlePrice === 'number' && !isNaN(product.bundlePrice)
+                ? product.bundlePrice
+                : 0,
+        bundleQty:
+            typeof product.bundleQty === 'number' && !isNaN(product.bundleQty)
+                ? product.bundleQty
+                : 0,
+        availableBundles:
+            typeof product.availableBundles === 'number' && !isNaN(product.availableBundles)
+                ? product.availableBundles
+                : 0,
+        // Guarantee images is always an array so the frontend never has to check
+        images: Array.isArray(product.images) ? product.images : [],
+        // Guarantee bundleComposition is always an object
+        bundleComposition:
+            product.bundleComposition && typeof product.bundleComposition === 'object'
+                ? product.bundleComposition
+                : {},
+    };
+}
 
 /**
  * Wholesale Product Management Routes
@@ -27,7 +63,7 @@ const router = express.Router();
 router.get('/', async (req, res, next) => {
     try {
         const products = await getAllWholesaleProducts();
-        res.json({ success: true, data: products });
+        res.json({ success: true, data: products.map(sanitizeProduct) });
     } catch (error) {
         next(error);
     }
@@ -62,26 +98,34 @@ router.get('/style/:styleCode', async (req, res, next) => {
 });
 
 /**
- * GET /api/wholesale/products/:id
- * Get single wholesale product by ID
+ * GET /api/wholesale/products/slug/:slug
+ * Get single wholesale product by slug for SEO URLs
+ * IMPORTANT: Must be registered BEFORE /:id to prevent Express from
+ * treating "slug" as a product ID wildcard match.
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/slug/:slug', async (req, res, next) => {
     try {
-        const product = await getWholesaleProductById(req.params.id);
-        res.json({ success: true, data: product });
+        const product = await getWholesaleProductBySlug(req.params.slug);
+        if (!product) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
+        res.json({ success: true, data: sanitizeProduct(product) });
     } catch (error) {
         next(error);
     }
 });
 
 /**
- * GET /api/wholesale/products/slug/:slug
- * Get single wholesale product by slug for SEO URLs
+ * GET /api/wholesale/products/:id
+ * Get single wholesale product by ID
  */
-router.get('/slug/:slug', async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
     try {
-        const product = await getWholesaleProductBySlug(req.params.slug);
-        res.json({ success: true, data: product });
+        const product = await getWholesaleProductById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
+        res.json({ success: true, data: sanitizeProduct(product) });
     } catch (error) {
         next(error);
     }

@@ -15,6 +15,7 @@ import { RecentlyViewedTracker } from '@/components/product/RecentlyViewedTracke
 import { MobileStickyAddToCart } from '@/components/product/MobileStickyAddToCart';
 import { ColorVariants } from '@/components/product/ColorVariants';
 import { Package, Ruler, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { getCloudinaryUrl, OG_IMAGE_OPTS } from '@/lib/cloudinaryImage';
 
 /**
  * Product Detail Page - SEO Optimized
@@ -38,10 +39,17 @@ interface ProductPageProps {
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
     try {
         const product = await wholesaleProductsApi.getBySlug(params.slug);
+        
+        if (!product || !product.title) {
+            return {
+                title: 'Product - Orchid Wholesale',
+                description: 'Wholesale bundle product details',
+            };
+        }
 
         return {
             title: `${product.title} - Wholesale Bundle`,
-            description: product.description || `${product.title} wholesale clothing bundle. ${product.bundleQty} pieces per bundle. Bundle composition: ${Object.entries(product.bundleComposition).map(([size, qty]) => `${qty} ${size}`).join(', ')}. Wholesale price: ₹${product.bundlePrice}`,
+            description: product.description || `${product.title} wholesale clothing bundle. ${product.bundleQty || 0} pieces per bundle. Bundle composition: ${Object.entries(product.bundleComposition || {}).map(([size, qty]) => `${qty} ${size}`).join(', ')}. Wholesale price: ₹${product.bundlePrice || 0}`,
             keywords: [
                 product.title,
                 'wholesale clothing',
@@ -52,14 +60,20 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
             ],
             openGraph: {
                 title: `${product.title} - Wholesale Bundle | ORCHID`,
-                description: `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty} pieces at ₹${product.bundlePrice}`,
-                images: product.images.length > 0 ? [{ url: product.images[0] }] : [],
+                description: `Wholesale ${product.category || 'clothing'} bundle - ${product.bundleQty || 0} pieces at ₹${product.bundlePrice || 0}`,
+                // Use a properly-sized 1200x630 JPEG for social previews.
+                // OG_IMAGE_OPTS applies f_jpg,q_auto,w_1200,h_630,c_fill.
+                images: (product.images && product.images.length > 0)
+                    ? [{ url: getCloudinaryUrl(product.images[0], OG_IMAGE_OPTS), width: 1200, height: 630 }]
+                    : [],
             },
             twitter: {
                 card: 'summary_large_image',
                 title: `${product.title} - Wholesale Bundle`,
-                description: `${product.bundleQty} piece bundle at ₹${product.bundlePrice}`,
-                images: product.images.length > 0 ? [product.images[0]] : [],
+                description: `${product.bundleQty || 0} piece bundle at ₹${product.bundlePrice || 0}`,
+                images: (product.images && product.images.length > 0)
+                    ? [getCloudinaryUrl(product.images[0], OG_IMAGE_OPTS)]
+                    : [],
             },
             robots: {
                 index: product.inStock,
@@ -67,8 +81,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
             },
         };
     } catch (error) {
+        console.error('[Metadata] Failed to fetch product:', error);
         return {
-            title: 'Product Not Found',
+            title: 'Product - Orchid Wholesale',
+            description: 'Wholesale bundle product details',
         };
     }
 }
@@ -90,7 +106,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
     try {
         product = await wholesaleProductsApi.getBySlug(params.slug);
+        
+        if (!product || !product.id) {
+            notFound();
+        }
     } catch (error) {
+        console.error('[ProductPage] Error fetching product:', error);
         notFound();
     }
 
@@ -119,7 +140,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <RecentlyViewedTracker productId={product.id} />
             */}
 
-            <main className="min-h-screen bg-gray-50/50">
+            <main key={params.slug} className="min-h-screen bg-gray-50/50">
                 <div className="container mx-auto px-6 py-12 max-w-7xl">
                     {/* SEO: Breadcrumb Navigation */}
                     <div className="mb-6 flex items-center justify-between">
@@ -136,7 +157,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
                         {/* Left Column: Images (7 columns) */}
                         <div className="lg:col-span-7">
-                            <ProductImageGallery images={product.images} title={product.title} />
+                            <ProductImageGallery 
+                                images={Array.isArray(product.images) ? product.images : []} 
+                                title={product.title} 
+                            />
+                            <RecentlyViewedTracker productId={product.id} />
                         </div>
 
                         {/* Right Column: Product Info (5 columns) */}
@@ -168,12 +193,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                 <div className="mb-6 pb-6 border-b border-gray-100">
                                     <div className="flex items-baseline gap-2.5">
                                         <span className="text-3xl md:text-4xl font-heading font-bold text-primary">
-                                            ₹{product.bundlePrice.toLocaleString('en-IN')}
+                                            ₹{(product.bundlePrice || 0).toLocaleString('en-IN')}
                                         </span>
                                         <span className="text-base text-gray-500 font-medium">/ bundle</span>
                                     </div>
                                     <p className="text-sm text-gray-400 mt-2 font-medium">
-                                        ₹{(product.bundlePrice / product.bundleQty).toFixed(0)} per piece • GST Included
+                                        ₹{((product.bundlePrice || 0) / (product.bundleQty || 1)).toFixed(0)} per piece • GST Included
                                     </p>
                                 </div>
 
@@ -190,7 +215,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                     </div>
 
                                     <div className="grid grid-cols-4 gap-2">
-                                        {Object.entries(product.bundleComposition).map(([size, qty]) => (
+                                        {Object.entries(product.bundleComposition || {}).map(([size, qty]) => (
                                             <div
                                                 key={size}
                                                 className="flex flex-col items-center justify-center bg-gray-50 p-3 rounded-lg border border-transparent hover:border-gray-200 transition-colors"

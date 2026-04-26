@@ -75,7 +75,20 @@ app.use((req, res, next) => {
 // CORS configuration (optimized for performance)
 app.use(
     cors({
-        origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+        origin: (origin, callback) => {
+            // Allow server-to-server requests (no origin, e.g. Vercel SSR → Render)
+            if (!origin) return callback(null, true);
+            const allowed = [
+                'http://localhost:3000',
+                'http://127.0.0.1:3000',
+                process.env.FRONTEND_URL,
+            ].filter(Boolean) as string[];
+            // Also allow any *.vercel.app origin (preview & production deployments)
+            if (allowed.includes(origin) || /^https:\/\/[\w-]+(\.[\w-]+)*\.vercel\.app$/.test(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error(`CORS: Origin ${origin} not allowed`));
+        },
         credentials: true,
         maxAge: 86400, // Cache preflight for 24 hours
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -164,12 +177,12 @@ const server = app.listen(Number(PORT), '0.0.0.0', async () => {
         const { reconcilePendingOrders } = await import('./scheduled/paymentReconciler');
         // Run immediately on startup
         reconcilePendingOrders().catch(err => logger.error('Initial reconciliation failed', err));
-        
+
         // Then run every 15 minutes
         setInterval(() => {
             reconcilePendingOrders().catch(err => logger.error('Scheduled reconciliation failed', err));
         }, 15 * 60 * 1000);
-        
+
         console.log('⏰ Payment reconciler service started (15m interval)');
     } catch (error) {
         logger.error('Failed to start scheduled tasks', error);

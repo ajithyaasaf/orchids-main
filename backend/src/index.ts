@@ -113,6 +113,11 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Uptime Robot ping endpoint to keep server awake
+app.get('/api/ping', (req, res) => {
+    res.status(200).send('pong');
+});
+
 // DIAGNOSTIC: Check Firestore connectivity
 app.get('/api/diagnostic/db', async (req, res) => {
     try {

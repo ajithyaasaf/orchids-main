@@ -96,6 +96,10 @@ app.use(
     })
 );
 
+// CRITICAL: Webhook routes MUST be mounted before express.json() 
+// because signature verification requires the raw unparsed request body.
+app.use('/api/payment', webhookRoutes);
+
 // Body parser middleware with size limits (SECURITY: Prevent DoS via large payloads)
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
@@ -149,7 +153,6 @@ app.use('/api/customers', customerRoutes);       // Customer management & analyt
 
 // Shared Infrastructure
 app.use('/api/payment', paymentRoutes);          // Razorpay payment gateway
-app.use('/api/payment', webhookRoutes);          // Razorpay S2S webhook (handles /api/payment/webhook)
 app.use('/api/upload', uploadRoutes);            // Cloudinary image upload
 app.use('/api/settings', settingsRoutes);        // System configuration (GST, etc.)
 app.use('/api/invoices', invoiceRoutes);         // Invoice generation

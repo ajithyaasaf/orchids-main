@@ -40,24 +40,65 @@ export interface CloudinaryImageOptions {
 }
 
 /**
- * Detect whether a value is already a full URL (starts with http/https or //).
- * This handles legacy products that still have absolute URLs in the database
- * during migration — they are returned as-is without modification.
+ * If a full Cloudinary URL is stored in the database (legacy or bulk-upload),
+ * extract the public_id from it so we can re-apply transformations.
+ *
+ * Handles two formats:
+ *  1. With existing transformations:
+ *     .../image/upload/f_auto,q_auto/wholesale/products/.../1.png
+ *     → public_id: "wholesale/products/.../1.png"
+ *
+ *  2. Without transformations (raw upload):
+ *     .../image/upload/wholesale/products/.../1.png
+ *     → public_id: "wholesale/products/.../1.png"
+ *
+ * Returns null if the URL is not a Cloudinary URL (e.g. an external CDN).
  */
-function isAbsoluteUrl(value: string): boolean {
-  return /^(https?:)?\/\//i.test(value);
+/**
+ * Known Cloudinary single-letter/short transformation keys.
+ * A URL segment is a transformation if every comma-separated part
+ * starts with one of these keys followed by an underscore.
+ * e.g. "c_scale,w_600" → YES | "wholesale" → NO
+ */
+const CLOUDINARY_PARAM_RE =
+  /^(?:w|h|c|q|f|e|g|x|y|z|r|b|l|u|t|ar|fl|bo|co|dpr|pg|vs|du|eo|so|dl)_/;
+
+function isTransformSegment(segment: string): boolean {
+  if (!segment) return false;
+  return segment.split(',').every((part) => CLOUDINARY_PARAM_RE.test(part.trim()));
+}
+
+function extractCloudinaryPublicId(url: string): string | null {
+  const uploadMarker = '/image/upload/';
+  const idx = url.indexOf(uploadMarker);
+  if (idx === -1) return null;
+
+  // Split everything after /image/upload/ into slash-delimited segments
+  const segments = url.slice(idx + uploadMarker.length).split('/');
+
+  // Walk forward, discarding every leading segment that looks like a
+  // Cloudinary transformation (e.g. "c_scale,w_600", "q_auto", "f_auto").
+  // Stop at the first segment that is a real folder or filename.
+  let i = 0;
+  while (i < segments.length && isTransformSegment(segments[i])) {
+    i++;
+  }
+
+  const publicId = segments.slice(i).join('/');
+  return publicId || null;
 }
 
 /**
- * Build an optimized Cloudinary URL from a `public_id`.
+ * Build an optimized Cloudinary URL from a `public_id` or a stored full URL.
  *
  * @example
  * // Returns: https://res.cloudinary.com/my-cloud/image/upload/f_auto,q_auto,w_800/1_kbiftz
  * getCloudinaryUrl('1_kbiftz', { width: 800 })
  *
  * @example
- * // Returns the input unchanged if it's already a full URL (migration safety)
- * getCloudinaryUrl('https://res.cloudinary.com/...', { width: 800 })
+ * // Parses the public_id and rebuilds with transformations — does NOT return raw
+ * getCloudinaryUrl('https://res.cloudinary.com/ajithyaasaf/image/upload/wholesale/products/1.png', { width: 1200 })
+ * // → https://res.cloudinary.com/ajithyaasaf/image/upload/f_auto,q_auto,w_1200,c_fill/wholesale/products/1.png
  */
 export function getCloudinaryUrl(
   publicId: string,
@@ -65,10 +106,17 @@ export function getCloudinaryUrl(
 ): string {
   if (!publicId) return '';
 
-  // Backwards-compatibility: if a full URL is stored, return it as-is.
-  // This prevents breakage during the migration window.
-  if (isAbsoluteUrl(publicId)) {
-    return publicId;
+  // If a full URL is stored (legacy bulk uploads save full https:// URLs),
+  // extract the public_id and fall through to build an optimized URL.
+  // We only bypass optimization for truly non-Cloudinary external URLs.
+  if (/^(https?:)?\/\//i.test(publicId)) {
+    const extracted = extractCloudinaryPublicId(publicId);
+    if (!extracted) {
+      // Genuinely external URL (e.g. a Firebase Storage or S3 link) — return as-is.
+      return publicId;
+    }
+    // Re-enter with the raw public_id — transformations will now be applied.
+    publicId = extracted;
   }
 
   const {
@@ -102,21 +150,24 @@ export function getCloudinaryUrl(
  * />
  */
 export const PRODUCT_CARD_IMG_OPTS: CloudinaryImageOptions = {
-  width: 800,
+  // A card in a 4-column grid is ~300px wide. 400px is plenty for 2x DPR.
+  width: 400,
   quality: 'auto',
   format: 'auto',
   crop: 'fill',
 };
 
 export const PRODUCT_GALLERY_MAIN_OPTS: CloudinaryImageOptions = {
-  width: 1200,
+  // 600px wide: GPU RAM ≈ 600×800×4 ≈ 1.9 MB (Tiny!)
+  // Even with 10 images pre-decoded, it's only 20MB. Zero crash risk.
+  width: 600,
   quality: 'auto:best',
   format: 'auto',
   crop: 'fill',
 };
 
 export const PRODUCT_GALLERY_THUMB_OPTS: CloudinaryImageOptions = {
-  width: 200,
+  width: 150,
   quality: 'auto:eco',
   format: 'auto',
   crop: 'fill',

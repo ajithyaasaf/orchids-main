@@ -84,28 +84,34 @@ export function ProductImageGallery({ images, title }: ProductImageGalleryProps)
                 </div>
             )}
 
-            {/* Main Image Container — only renders active + neighbors */}
+            {/* Main Image Container — only renders active + previous for transition */}
             <div className="relative flex-grow aspect-[3/4] bg-gray-50 rounded-2xl overflow-hidden shadow-soft border border-gray-100">
-                {Array.from(renderSet).map((index) => (
-                    <div
-                        key={images[index]}
-                        className={cn(
-                            'absolute inset-0 transition-opacity duration-300 ease-in-out',
-                            activeIndex === index ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                        )}
-                        aria-hidden={activeIndex !== index}
-                    >
-                        <Image
-                            src={getCloudinaryUrl(images[index], PRODUCT_GALLERY_MAIN_OPTS)}
-                            alt={`${title} - view ${index + 1}`}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 1024px) 100vw, 60vw"
-                            priority={index === 0}
-                            loading={index === 0 ? undefined : 'lazy'}
-                        />
-                    </div>
-                ))}
+                {[prevIndex, activeIndex].map((index) => {
+                    // Unique check: if prevIndex == activeIndex, only render once
+                    if (index === prevIndex && activeIndex === prevIndex && index !== 0) return null;
+                    
+                    const isActive = index === activeIndex;
+                    
+                    return (
+                        <div
+                            key={`${images[index]}-${index}`}
+                            className={cn(
+                                'absolute inset-0 transition-opacity duration-500 ease-in-out',
+                                isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                            )}
+                            aria-hidden={!isActive}
+                        >
+                            <Image
+                                src={getCloudinaryUrl(images[index], PRODUCT_GALLERY_MAIN_OPTS)}
+                                alt={`${title} - view ${index + 1}`}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 1024px) 100vw, 60vw"
+                                priority={isActive || index === 0}
+                            />
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Mobile Thumbnails (Below) */}

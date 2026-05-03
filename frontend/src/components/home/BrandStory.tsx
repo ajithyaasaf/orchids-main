@@ -69,7 +69,7 @@ export function BrandStory() {
                             </h2>
                             <p className="text-lg text-text-secondary mb-8 leading-relaxed">
                                 We bridge the gap between world-class Tirupur manufacturing and Indian retailers.
-                                By sourcing premium brand apparel directly from factories, we ensure you get
+                                By manufacturing and supplying premium brand apparel directly, we ensure you get
                                 unmatched quality at wholesale margins.
                             </p>
 

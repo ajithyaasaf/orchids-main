@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
                     <div>
                         <h3 className="text-white text-xl font-bold mb-4">ORCHID</h3>
                         <p className="text-sm mb-3">
-                            Wholesale clothing supplier from Tirupur. Baby wear, kids clothing, and women's apparel at bulk prices.
+                            Leading manufacturer and wholesale clothing supplier from Tirupur. Premium baby wear, kids clothing, and women's apparel at factory-direct prices.
                         </p>
                         <p className="text-xs text-gray-400">
                             no.3(1)2A, Sivarajan compound,<br />

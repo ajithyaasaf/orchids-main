@@ -644,16 +644,7 @@ export default function WholesaleCheckoutPage() {
                                 )}
                             </button>
 
-                            {/* TODO: REMOVE_AFTER_TESTING - Simple Developer Bypass */}
-                            {process.env.NEXT_PUBLIC_ALLOW_TEST_PAYMENTS === 'true' && calculatedOrder && (
-                                <button
-                                    onClick={() => handlePlaceOrder(true)}
-                                    type="button"
-                                    className="w-full mt-4 py-3 rounded-xl font-bold text-xs border-2 border-dashed border-primary/20 text-primary/60 hover:text-primary hover:bg-primary/5 transition-all"
-                                >
-                                    Skip Payment (Test Mode)
-                                </button>
-                            )}
+
 
 
                             <div className="flex items-center justify-center gap-3 text-xs text-gray-400 font-medium tracking-wide">

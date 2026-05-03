@@ -7,7 +7,7 @@ import { Star } from 'lucide-react';
 const testimonials = [
     {
         id: 1,
-        quote: "The bundle pricing from Orchids transformed our margin structure. The quality of the export surplus is unmatched. Our customers love the newborn collection.",
+        quote: "The bundle pricing from Orchids transformed our margin structure. The quality of the apparel is unmatched. Our customers love the newborn collection.",
         author: "Ramesh K.",
         store: "Kids Paradise Retail, Chennai",
         rating: 5,

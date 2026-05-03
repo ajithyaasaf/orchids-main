@@ -9,7 +9,7 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                // Orchid Export Surplus Store Brand Colors
+                // Orchid Wholesale Store Brand Colors
                 primary: '#E91E8C', // Orchid Magenta (from logo)
                 'primary-dark': '#C01A75', // Darker magenta for hover
                 'primary-light': '#FCE7F3', // Light pink background

@@ -44,7 +44,7 @@ export function NewsletterCta() {
                         </h2>
 
                         <p className="text-xl text-gray-400 mb-10 leading-relaxed">
-                            Get exclusive access to our newest export surplus arrivals,
+                            Get exclusive access to our newest premium arrivals,
                             trend reports, and bulk pricing promotions directly in your inbox.
                         </p>
 

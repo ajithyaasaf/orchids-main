@@ -112,7 +112,7 @@ router.get('/:orderId', verifyToken, async (req: AuthRequest, res: Response) => 
                 // IMPROVEMENT #3: Add when registered
                 // gstin: 'Your GSTIN',
                 // cin: 'Your CIN',
-                // legalEntityName: 'Orchid Export Surplus Store'
+                // legalEntityName: 'Orchid Wholesale Store'
             },
         };
 

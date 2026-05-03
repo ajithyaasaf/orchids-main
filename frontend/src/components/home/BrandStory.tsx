@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
 const benefits = [
-    "Premium Export Surplus Quality",
+    "Premium Export Quality Clothing",
     "Direct Factory Pricing",
     "Stringent Quality Checks",
     "Ethical Manufacturing",
@@ -69,7 +69,7 @@ export function BrandStory() {
                             </h2>
                             <p className="text-lg text-text-secondary mb-8 leading-relaxed">
                                 We bridge the gap between world-class Tirupur manufacturing and Indian retailers.
-                                By sourcing premium export surplus directly from factories, we ensure you get
+                                By sourcing premium brand apparel directly from factories, we ensure you get
                                 unmatched quality at wholesale margins.
                             </p>
 

@@ -21,7 +21,7 @@ const BUSINESS_CONFIG = {
     // Add these when registered:
     // gstin: 'Your GSTIN',
     // cin: 'Your CIN',
-    // legalEntityName: 'Orchid Export Surplus Store'
+    // legalEntityName: 'Orchid Wholesale Store'
 };
 
 /**

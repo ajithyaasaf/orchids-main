@@ -41,6 +41,10 @@ export interface CreateOrderInput {
      * Optional coupon code
      */
     couponCode?: string;
+    /**
+     * Skip Razorpay checkout flow (TESTING ONLY)
+     */
+    isTestMode?: boolean;
 }
 
 export interface CreateOrderResult {

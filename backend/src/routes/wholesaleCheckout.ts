@@ -35,45 +35,52 @@ router.post('/calculate', verifyToken, async (req, res, next) => {
             });
         }
 
-        // Validate and build order items
+        // ── 4. Fetch All Products in Bulk (Optimization) ─────────────────────
+        const productIds = items.map(i => i.productId);
+        const productSnapshots = await Promise.all(
+            productIds.map(id => getWholesaleProductById(id))
+        );
+
         const calculatedItems = [];
         const errors: string[] = [];
 
-        for (const item of items) {
-            try {
-                const product = await getWholesaleProductById(item.productId);
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const product = productSnapshots[i];
 
-                // Check stock availability
-                if (!product.inStock || product.availableBundles < item.bundlesOrdered) {
-                    errors.push(
-                        `Insufficient stock for ${product.title}. Available: ${product.availableBundles} bundles`
-                    );
-                    continue;
-                }
-
-                // Validate stock
-                const stockValidation = validateBundleStock(product, item.bundlesOrdered);
-                if (!stockValidation.valid) {
-                    errors.push(stockValidation.message!);
-                    continue;
-                }
-
-                // Calculate line total
-                const lineTotal = product.bundlePrice * item.bundlesOrdered;
-
-                calculatedItems.push({
-                    productId: product.id,
-                    productTitle: product.title,
-                    productImage: product.images[0] || '',
-                    bundleQty: product.bundleQty,
-                    bundleComposition: product.bundleComposition,
-                    bundlesOrdered: item.bundlesOrdered,
-                    pricePerBundle: product.bundlePrice,
-                    lineTotal,
-                });
-            } catch (error) {
-                errors.push(`Error processing product ${item.productId}`);
+            if (!product) {
+                errors.push(`Product ${item.productId} not found`);
+                continue;
             }
+
+            // Check stock availability
+            if (!product.inStock || product.availableBundles < item.bundlesOrdered) {
+                errors.push(
+                    `Insufficient stock for ${product.title}. Available: ${product.availableBundles} bundles`
+                );
+                continue;
+            }
+
+            // Validate stock logic
+            const stockValidation = validateBundleStock(product, item.bundlesOrdered);
+            if (!stockValidation.valid) {
+                errors.push(stockValidation.message!);
+                continue;
+            }
+
+            // Calculate line total
+            const lineTotal = product.bundlePrice * item.bundlesOrdered;
+
+            calculatedItems.push({
+                productId: product.id,
+                productTitle: product.title,
+                productImage: product.images[0] || '',
+                bundleQty: product.bundleQty,
+                bundleComposition: product.bundleComposition,
+                bundlesOrdered: item.bundlesOrdered,
+                pricePerBundle: product.bundlePrice,
+                lineTotal,
+            });
         }
 
         if (errors.length > 0) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * Global Error Boundary for the Next.js Frontend.
@@ -14,8 +14,8 @@ export default function GlobalError({
     reset: () => void;
 }) {
     useEffect(() => {
-        // Output the error to telemetry/logging service if applicable
-        console.error('SSR or Component Error:', error);
+        // Output the error to telemetry/logging service
+        logger.error('SSR or Component Error:', error);
     }, [error]);
 
     return (

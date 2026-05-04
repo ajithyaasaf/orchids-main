@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { logger } from '../utils/logger';
 
 /**
  * Custom error class
@@ -25,7 +26,7 @@ export const errorHandler = (
     res: Response,
     next: NextFunction
 ): void => {
-    console.error('Error:', err);
+    logger.error('Unhandled API Error', err);
 
     // Handle AppError
     if (err instanceof AppError) {

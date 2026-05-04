@@ -8,6 +8,8 @@ import { PRODUCT_CATEGORIES } from '@orchids/shared';
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap
  */
 
+import { logger } from '@/lib/logger';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -54,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.7,
         }));
     } catch (error) {
-        console.error('Error fetching products for sitemap:', error);
+        logger.error('Error fetching products for sitemap:', error);
         // Continue with empty product list if API fails
     }
 

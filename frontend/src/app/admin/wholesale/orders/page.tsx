@@ -11,6 +11,8 @@ import {
     FileText, Phone, StickyNote, TrendingUp, ShoppingBag,
     Loader2, CheckCircle2, IndianRupee
 } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useToast } from '@/context/ToastContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -86,6 +88,7 @@ import { StatCardSkeleton, TableRowSkeleton } from '@/components/ui/Skeleton';
 
 export default function AdminOrdersPage() {
     const { authenticatedFetch, loading: authLoading } = useAuthToken();
+    const { showToast } = useToast();
 
     // List state
     const [orders, setOrders] = useState<any[]>([]);
@@ -109,6 +112,20 @@ export default function AdminOrdersPage() {
     const [discountModal, setDiscountModal] = useState(false);
     const [discountAmount, setDiscountAmount] = useState(0);
     const [discountReason, setDiscountReason] = useState('');
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
     const apiBase = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api`;
 
     // ─── Data Loading ─────────────────────────────────────────────────────────
@@ -199,28 +216,35 @@ export default function AdminOrdersPage() {
             setTrackingModal(true);
             return;
         }
-        const confirmed = window.confirm(`Change status to "${newStatus}"?`);
-        if (!confirmed) return;
-
-        try {
-            setUpdatingId(orderId);
-            await wholesaleOrdersApi.updateStatus(orderId, newStatus, `Changed to ${newStatus} by admin`);
-            setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, orderStatus: newStatus } : o));
-            if (selectedOrder?.id === orderId) {
-                await refreshSelectedOrder(orderId);
+        setConfirmModal({
+            isOpen: true,
+            title: 'Confirm Status Change',
+            message: `Are you sure you want to change this order status to "${newStatus}"?`,
+            confirmText: 'Update Status',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    setUpdatingId(orderId);
+                    await wholesaleOrdersApi.updateStatus(orderId, newStatus, `Changed to ${newStatus} by admin`);
+                    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, orderStatus: newStatus } : o));
+                    if (selectedOrder?.id === orderId) {
+                        await refreshSelectedOrder(orderId);
+                    }
+                    showToast(`Status updated to ${newStatus}`, 'success');
+                    loadStats();
+                } catch (err: any) {
+                    showToast(err.message || 'Failed to update status', 'error');
+                } finally {
+                    setUpdatingId(null);
+                }
             }
-            loadStats();
-        } catch (err: any) {
-            alert(`Update failed: ${err.message}`);
-        } finally {
-            setUpdatingId(null);
-        }
+        } as any);
     };
 
     const handleAddTracking = async () => {
         if (!selectedOrder) return;
         if (!trackingNumber.trim() || !courierName.trim()) {
-            alert('Please enter both courier name and tracking number.');
+            showToast('Please enter both courier name and tracking number.', 'error');
             return;
         }
         try {
@@ -243,8 +267,9 @@ export default function AdminOrdersPage() {
             setTrackingNumber('');
             setCourierName('');
             loadStats();
+            showToast('Order marked as shipped', 'success');
         } catch (err: any) {
-            alert(`Failed: ${err.message}`);
+            showToast(`Failed: ${err.message}`, 'error');
         } finally {
             setUpdatingId(null);
         }
@@ -261,14 +286,15 @@ export default function AdminOrdersPage() {
             });
             setNoteText('');
             await refreshSelectedOrder(selectedOrder.id);
+            showToast('Note added', 'success');
         } catch (err: any) {
-            alert(`Failed: ${err.message}`);
+            showToast(`Failed: ${err.message}`, 'error');
         }
     };
 
     const handleApplyDiscount = async () => {
         if (!selectedOrder || !discountReason || discountReason.trim().length < 10) {
-            alert('Reason must be at least 10 characters');
+            showToast('Reason must be at least 10 characters', 'error');
             return;
         }
         try {
@@ -286,11 +312,12 @@ export default function AdminOrdersPage() {
                 await refreshSelectedOrder(selectedOrder.id);
                 loadOrders();
                 loadStats();
+                showToast('Discount applied', 'success');
             } else {
-                alert(json.error);
+                showToast(json.error, 'error');
             }
         } catch (err: any) {
-            alert(`Failed: ${err.message}`);
+            showToast(`Failed: ${err.message}`, 'error');
         }
     };
 
@@ -727,6 +754,11 @@ export default function AdminOrdersPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                {...confirmModal}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
 
             {/* ─── Tracking Modal ──────────────────────────────────────────── */}
             {trackingModal && (

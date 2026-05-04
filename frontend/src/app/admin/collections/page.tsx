@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { Plus, Eye, Edit, Trash2, Globe, Calendar, Sparkles } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/Skeleton';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useToast } from '@/context/ToastContext';
 
 /**
  * Admin Collections Management Page
@@ -19,6 +21,21 @@ export default function AdminCollectionsPage() {
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'active' | 'draft' | 'archived'>('all');
+    const { showToast } = useToast();
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
 
     useEffect(() => {
         loadCollections();
@@ -31,23 +48,30 @@ export default function AdminCollectionsPage() {
             setCollections(data);
         } catch (error: any) {
             console.error('Failed to load collections:', error);
-            alert('Failed to load collections: ' + error.message);
+            showToast('Failed to load collections: ' + error.message, 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (id: string, name: string) => {
-        if (!confirm(`Archive collection "${name}"? This will hide it from customers but keep the data.`)) {
-            return;
-        }
-
-        try {
-            await collectionApi.delete(id);
-            await loadCollections();
-        } catch (error: any) {
-            alert('Failed to archive collection: ' + error.message);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: 'Archive Collection',
+            message: `Archive collection "${name}"? This will hide it from customers but keep the data.`,
+            type: 'warning',
+            confirmText: 'Archive',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await collectionApi.delete(id);
+                    showToast('Collection archived successfully', 'success');
+                    await loadCollections();
+                } catch (error: any) {
+                    showToast('Failed to archive collection: ' + error.message, 'error');
+                }
+            }
+        });
     };
 
     const getStatusBadge = (status: Collection['status']) => {
@@ -225,6 +249,11 @@ export default function AdminCollectionsPage() {
                     ))}
                 </div>
             )}
+            
+            <ConfirmModal
+                {...confirmModal}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

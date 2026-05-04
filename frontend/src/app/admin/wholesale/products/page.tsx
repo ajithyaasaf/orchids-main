@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { WholesaleProduct } from '@orchids/shared';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useToast } from '@/context/ToastContext';
 
 /**
  * Admin Product List Page
@@ -14,9 +16,24 @@ import { TableRowSkeleton } from '@/components/ui/Skeleton';
 
 export default function AdminProductListPage() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [products, setProducts] = useState<WholesaleProduct[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
 
     useEffect(() => {
         // Wait a bit for Firebase auth to initialize
@@ -41,17 +58,23 @@ export default function AdminProductListPage() {
     };
 
     const handleDelete = async (id: string, title: string) => {
-        if (!confirm(`Delete "${title}"? This action cannot be undone.`)) {
-            return;
-        }
-
-        try {
-            await wholesaleProductsApi.delete(id);
-            alert('Product deleted successfully');
-            loadProducts();
-        } catch (err: any) {
-            alert(`Failed to delete: ${err.message}`);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Product',
+            message: `Are you sure you want to delete "${title}"? This action cannot be undone.`,
+            type: 'danger',
+            confirmText: 'Delete Now',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await wholesaleProductsApi.delete(id);
+                    showToast('Product deleted successfully', 'success');
+                    loadProducts();
+                } catch (err: any) {
+                    showToast(`Failed to delete: ${err.message}`, 'error');
+                }
+            }
+        });
     };
 
     return (
@@ -214,6 +237,11 @@ export default function AdminProductListPage() {
                     </table>
                 </div>
             )}
+
+            <ConfirmModal
+                {...confirmModal}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { comboApi } from '@/lib/api';
 import { ComboOffer } from '@orchids/shared';
 import { useToast } from '@/context/ToastContext';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 import { TableRowSkeleton } from '@/components/ui/Skeleton';
 
@@ -14,6 +15,20 @@ export default function CombosPage() {
     const [combos, setCombos] = useState<ComboOffer[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
 
     useEffect(() => {
         fetchCombos();
@@ -42,15 +57,23 @@ export default function CombosPage() {
     };
 
     const handleDelete = async (comboId: string) => {
-        if (!confirm('Are you sure you want to delete this combo?')) return;
-
-        try {
-            await comboApi.admin.delete(comboId);
-            await fetchCombos();
-            showToast('Combo deleted successfully', 'success');
-        } catch (err: any) {
-            showToast(`Failed to delete combo: ${err.message}`, 'error');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Combo',
+            message: 'Are you sure you want to delete this combo?',
+            type: 'danger',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await comboApi.admin.delete(comboId);
+                    await fetchCombos();
+                    showToast('Combo deleted successfully', 'success');
+                } catch (err: any) {
+                    showToast(`Failed to delete combo: ${err.message}`, 'error');
+                }
+            }
+        });
     };
 
     const getComboStatus = (combo: ComboOffer) => {
@@ -198,6 +221,11 @@ export default function CombosPage() {
             )}
         </>
     )}
+    
+    <ConfirmModal
+        {...confirmModal}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+    />
 </div>
 );
 }

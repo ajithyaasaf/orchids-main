@@ -8,6 +8,8 @@ import { Coupon } from '@orchids/shared';
 import { Plus, Edit2, Trash2, Tag, Calendar, Users, TrendingUp, X } from 'lucide-react';
 
 import { TableRowSkeleton } from '@/components/ui/Skeleton';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useToast } from '@/context/ToastContext';
 
 export default function AdminCouponsPage() {
     const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -15,6 +17,21 @@ export default function AdminCouponsPage() {
     const [showForm, setShowForm] = useState(false);
     const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
     const [error, setError] = useState('');
+    const { showToast } = useToast();
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
 
     // Form state
     const [formData, setFormData] = useState({
@@ -116,14 +133,23 @@ export default function AdminCouponsPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to deactivate this coupon?')) return;
-
-        try {
-            await couponApi.delete(id);
-            fetchCoupons();
-        } catch (error) {
-            setError('Failed to delete coupon');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: 'Deactivate Coupon',
+            message: 'Are you sure you want to deactivate this coupon?',
+            type: 'warning',
+            confirmText: 'Deactivate',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await couponApi.delete(id);
+                    showToast('Coupon deactivated successfully', 'success');
+                    fetchCoupons();
+                } catch (error) {
+                    showToast('Failed to deactivate coupon', 'error');
+                }
+            }
+        });
     };
 
     const resetForm = () => {
@@ -620,6 +646,11 @@ export default function AdminCouponsPage() {
                     )}
                 </div>
             )}
+            
+            <ConfirmModal
+                {...confirmModal}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

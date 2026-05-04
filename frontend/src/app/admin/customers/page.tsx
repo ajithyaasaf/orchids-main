@@ -5,6 +5,7 @@ import { customerApi } from '@/lib/api';
 import type { CustomerInsight } from '@orchids/shared';
 
 import { TableRowSkeleton } from '@/components/ui/Skeleton';
+import { useToast } from '@/context/ToastContext';
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<CustomerInsight[]>([]);
@@ -16,6 +17,7 @@ export default function CustomersPage() {
     const [hasMore, setHasMore] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<CustomerInsight | null>(null);
     const [isExporting, setIsExporting] = useState(false);
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchCustomers();
@@ -71,8 +73,9 @@ export default function CustomersPage() {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+            showToast('Export successful', 'success');
         } catch (err: any) {
-            alert('Failed to export: ' + err.message);
+            showToast('Failed to export: ' + err.message, 'error');
         } finally {
             setIsExporting(false);
         }
@@ -83,7 +86,7 @@ export default function CustomersPage() {
             const response = await customerApi.getById(userId);
             setSelectedCustomer(response.data);
         } catch (err: any) {
-            alert('Failed to load customer details: ' + err.message);
+            showToast('Failed to load customer details: ' + err.message, 'error');
         }
     };
 

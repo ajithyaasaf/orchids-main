@@ -50,7 +50,23 @@ function LoginForm() {
                 router.replace('/profile');
             }
         } catch (err: any) {
-            setError(err.message || 'Failed to login. Please check your credentials.');
+            let userFriendlyMessage = 'Failed to login. Please check your credentials.';
+            
+            // Map raw Firebase errors to user-friendly messages
+            if (err.message?.includes('auth/invalid-credential') || err.message?.includes('auth/wrong-password') || err.message?.includes('auth/user-not-found')) {
+                userFriendlyMessage = 'Invalid email or password.';
+            } else if (err.message?.includes('auth/too-many-requests')) {
+                userFriendlyMessage = 'Too many failed login attempts. Please try again later.';
+            } else if (err.message?.includes('auth/api-key-not-valid') || err.message?.includes('auth/invalid-api-key')) {
+                userFriendlyMessage = 'System configuration error. Please contact support.';
+            } else if (err.message?.includes('network-request-failed')) {
+                userFriendlyMessage = 'Network error. Please check your internet connection.';
+            } else if (err.message) {
+                // Remove the "Firebase:" prefix if it exists but keep the core message if it's not a known code
+                userFriendlyMessage = err.message.replace('Firebase:', '').trim();
+            }
+
+            setError(userFriendlyMessage);
         } finally {
             setLoading(false);
         }

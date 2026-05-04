@@ -37,6 +37,10 @@ export interface CreateOrderInput {
      * Idempotency key to prevent double-orders on retry 
      */
     idempotencyKey: string;
+    /**
+     * Optional coupon code
+     */
+    couponCode?: string;
 }
 
 export interface CreateOrderResult {
@@ -130,6 +134,51 @@ export async function createWholesaleOrder(
         // Read all product docs atomically + user doc
         const productSnapshots = await tx.getAll(...productRefs);
         const userDoc = await tx.get(userRef);
+        
+        // Handle Coupon if provided
+        let appliedCouponData: any = null;
+        let couponDiscount = 0;
+        
+        if (input.couponCode) {
+            const normalizedCode = input.couponCode.toUpperCase().trim();
+            const couponSnapshot = await tx.get(
+                collections.coupons.where('code', '==', normalizedCode).limit(1)
+            );
+            
+            if (couponSnapshot.empty) {
+                throw new AppError('Invalid coupon code', 400);
+            }
+            
+            const couponDoc = couponSnapshot.docs[0];
+            const coupon = couponDoc.data() as any;
+            
+            // Validation logic inside transaction
+            const now = new Date();
+            const validFrom = coupon.validFrom?.toDate ? coupon.validFrom.toDate() : new Date(coupon.validFrom);
+            const validUntil = coupon.validUntil?.toDate ? coupon.validUntil.toDate() : new Date(coupon.validUntil);
+            
+            if (!coupon.active || now < validFrom || now > validUntil) {
+                throw new AppError('Coupon is no longer active or has expired', 400);
+            }
+            
+            if (coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) {
+                throw new AppError('Coupon usage limit reached', 400);
+            }
+            
+            const userUsageCount = (coupon.usedBy || []).filter((id: string) => id === userId).length;
+            if (userUsageCount >= (coupon.perUserLimit || 1)) {
+                throw new AppError('You have already used this coupon', 400);
+            }
+            
+            appliedCouponData = {
+                couponId: couponDoc.id,
+                code: coupon.code,
+                type: coupon.type,
+                value: coupon.value,
+                maxDiscount: coupon.maxDiscount,
+                minOrder: coupon.minOrder
+            };
+        }
 
         // Build verified line items using server-side prices
         serverCalculatedItems = [];
@@ -184,7 +233,26 @@ export async function createWholesaleOrder(
         }
 
         // ── 5. Server-Side Total Calculation (Zero Trust) ──────────────────
-        const totals = await calculateOrderTotal(serverCalculatedItems);
+        let couponDiscountAmount = 0;
+        if (appliedCouponData) {
+            const subtotal = serverCalculatedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+            
+            if (appliedCouponData.minOrder && subtotal < appliedCouponData.minOrder) {
+                throw new AppError(`Minimum order value of ₹${appliedCouponData.minOrder} required for this coupon`, 400);
+            }
+            
+            if (appliedCouponData.type === 'flat') {
+                couponDiscountAmount = appliedCouponData.value;
+            } else {
+                couponDiscountAmount = (subtotal * appliedCouponData.value) / 100;
+                if (appliedCouponData.maxDiscount && couponDiscountAmount > appliedCouponData.maxDiscount) {
+                    couponDiscountAmount = appliedCouponData.maxDiscount;
+                }
+            }
+            couponDiscountAmount = Math.min(couponDiscountAmount, subtotal);
+        }
+
+        const totals = await calculateOrderTotal(serverCalculatedItems, 0, couponDiscountAmount);
 
         // ── 6. Price Integrity Check ────────────────────────────────────────
         // Warn if the client expected a different price (e.g., price changed mid-session)
@@ -210,6 +278,12 @@ export async function createWholesaleOrder(
             adminDiscount: 0,
             totalAmount: totals.totalAmount,
             adminDiscountHistory: [],
+            appliedCoupon: appliedCouponData ? {
+                couponId: appliedCouponData.couponId,
+                code: appliedCouponData.code,
+                discount: couponDiscountAmount,
+                appliedAt: new Date()
+            } : undefined,
 
             // Payment & Status handling
             paymentStatus: isTestMode ? 'paid' : 'pending',
@@ -307,7 +381,7 @@ export async function createWholesaleOrder(
             }
         }
 
-        // ── 8. Decrement Stock Atomically ────────────────────────────────────
+        // ── 8. Decrement Stock & Update Coupon Atomically ────────────────────
         for (const { ref, newStock, newReserved, newTotal } of stockUpdates) {
             tx.update(ref, {
                 availableBundles: newStock,
@@ -315,6 +389,15 @@ export async function createWholesaleOrder(
                 totalPieces: newTotal,
                 inStock: newStock > 0,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
+        
+        if (appliedCouponData) {
+            const couponRef = collections.coupons.doc(appliedCouponData.couponId);
+            tx.update(couponRef, {
+                usedCount: admin.firestore.FieldValue.increment(1),
+                usedBy: admin.firestore.FieldValue.arrayUnion(userId),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
         }
     });

@@ -34,17 +34,19 @@ export const calculateBundlePrice = async (
 };
 
 /**
- * Calculate total order amount with optional admin discount
+ * Calculate total order amount with optional admin discount and coupons
  */
 export const calculateOrderTotal = async (
     items: WholesaleBundleItem[],
-    adminDiscount: number = 0
+    adminDiscount: number = 0,
+    couponDiscount: number = 0
 ): Promise<{
     subtotal: number;
     gstRate: number;
     gst: number;
     shipping: number;
     adminDiscount: number;
+    couponDiscount: number;
     totalAmount: number;
 }> => {
     const settings = await getSettings();
@@ -56,7 +58,7 @@ export const calculateOrderTotal = async (
     // Calculate shipping based on subtotal
     const shipping = await calculateShipping(subtotal);
 
-    const totalAmount = subtotal + gst + shipping - adminDiscount;
+    const totalAmount = subtotal + gst + shipping - adminDiscount - couponDiscount;
 
     return {
         subtotal,
@@ -64,6 +66,7 @@ export const calculateOrderTotal = async (
         gst,
         shipping,
         adminDiscount,
+        couponDiscount,
         totalAmount: Math.max(0, totalAmount),
     };
 };

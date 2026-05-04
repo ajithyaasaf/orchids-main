@@ -36,7 +36,7 @@ import logger from '../utils/logger';
  */
 router.post('/', verifyToken, async (req: AuthRequest, res, next) => {
     try {
-        const { cartItems, address, expectedTotalAmount, idempotencyKey, isTestMode } = req.body;
+        const { cartItems, address, expectedTotalAmount, idempotencyKey, isTestMode, couponCode } = req.body;
         const userId = req.user!.uid;
 
         if (!cartItems || !address || !idempotencyKey) {
@@ -53,6 +53,7 @@ router.post('/', verifyToken, async (req: AuthRequest, res, next) => {
             expectedTotalAmount,
             idempotencyKey,
             isTestMode, // Passed to service for dummy test bypass
+            couponCode,
         });
 
         res.status(201).json({

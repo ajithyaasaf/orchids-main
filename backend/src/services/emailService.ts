@@ -11,6 +11,8 @@ if (!resend) {
 }
 const FROM_EMAIL = process.env.FROM_EMAIL || 'orders@orchids.store';
 
+import { logger } from '../utils/logger';
+
 /**
  * Send order confirmation email
  */
@@ -20,7 +22,7 @@ export const sendOrderConfirmationEmail = async (
 ): Promise<boolean> => {
   try {
     if (!resend) {
-      console.warn('⚠️ Email service not configured. Skipping order confirmation email.');
+      logger.warn('Email service not configured. Skipping order confirmation email.');
       return false;
     }
 
@@ -33,10 +35,10 @@ export const sendOrderConfirmationEmail = async (
       html: emailHtml,
     });
 
-    console.log(`✅ Order confirmation email sent to ${customerEmail}`);
+    logger.info(`Order confirmation email sent to ${customerEmail} for order ${order.id}`);
     return true;
   } catch (error) {
-    console.error('❌ Failed to send order confirmation email:', error);
+    logger.error(`Failed to send order confirmation email to ${customerEmail}:`, error);
     return false;
   }
 };

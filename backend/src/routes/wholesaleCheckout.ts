@@ -4,7 +4,9 @@ import { getWholesaleProductById } from '../services/wholesaleProductService';
 import { calculateOrderTotal } from '../services/wholesalePricingService';
 import { validateBundleStock } from '../services/wholesalePricingService';
 import { logisticsService } from '../services/logisticsService';
+import { validateCoupon } from '../services/couponService';
 import { AppError } from '../middleware/errorHandler';
+import logger from '../utils/logger';
 
 const router = express.Router();
 
@@ -21,9 +23,10 @@ interface CheckoutItem {
 
 router.post('/calculate', verifyToken, async (req, res, next) => {
     try {
-        const { items, address } = req.body as {
+        const { items, address, couponCode } = req.body as {
             items: CheckoutItem[];
             address: any;
+            couponCode?: string;
         };
 
         // Validate address
@@ -99,16 +102,34 @@ router.post('/calculate', verifyToken, async (req, res, next) => {
         }
 
         // Calculate totals with dynamic GST
-        const totals = await calculateOrderTotal(calculatedItems);
+        let couponDiscount = 0;
+        let appliedCoupon = null;
+        
+        if (couponCode) {
+            const subtotal = calculatedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+            const couponResult = await validateCoupon(couponCode, (req as any).user.uid, subtotal);
+            
+            if (couponResult.valid && couponResult.coupon) {
+                couponDiscount = couponResult.discount;
+                appliedCoupon = {
+                    code: couponResult.coupon.code,
+                    discount: couponDiscount,
+                };
+            }
+        }
+
+        const totals = await calculateOrderTotal(calculatedItems, 0, couponDiscount);
 
         res.json({
             success: true,
             data: {
                 items: calculatedItems,
+                appliedCoupon,
                 ...totals,
             },
         });
     } catch (error) {
+        logger.error('Checkout calculation failed:', error);
         next(error);
     }
 });

@@ -3,12 +3,27 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { logger } from '../utils/logger';
+
 // Initialize Firebase Admin SDK
 const initializeFirebase = () => {
+    const requiredEnv = [
+        'FIREBASE_PROJECT_ID',
+        'FIREBASE_PRIVATE_KEY',
+        'FIREBASE_CLIENT_EMAIL'
+    ];
+
+    const missing = requiredEnv.filter(k => !process.env[k]);
+    if (missing.length > 0) {
+        const errorMsg = `CRITICAL: Missing required Firebase environment variables: ${missing.join(', ')}`;
+        console.error(errorMsg);
+        process.exit(1);
+    }
+
     try {
-        const privateKey = process.env.FIREBASE_PRIVATE_KEY
-            ? process.env.FIREBASE_PRIVATE_KEY.replace(/^"(.*)"$/, '$1').replace(/\\n/g, '\n')
-            : undefined;
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY!
+            .replace(/^"(.*)"$/, '$1')
+            .replace(/\\n/g, '\n');
 
         admin.initializeApp({
             credential: admin.credential.cert({

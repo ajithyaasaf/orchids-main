@@ -5,6 +5,7 @@ import {
     getDashboardAnalytics,
     rebuildAnalyticsCache
 } from '../services/dashboardService';
+import logger from '../utils/logger';
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.get('/analytics', verifyToken, requireAdmin, async (req: Request, res: Re
             data: analytics,
         });
     } catch (error: any) {
-        console.error('Failed to get dashboard analytics:', error);
+        logger.error('Failed to get dashboard analytics:', error);
         res.status(500).json({
             success: false,
             error: error.message,
@@ -37,7 +38,7 @@ router.get('/analytics', verifyToken, requireAdmin, async (req: Request, res: Re
  */
 router.post('/analytics/rebuild', verifyToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        console.log('Starting analytics cache rebuild...');
+        logger.info('Starting analytics cache rebuild...');
         const analytics = await rebuildAnalyticsCache();
 
         res.json({
@@ -46,7 +47,7 @@ router.post('/analytics/rebuild', verifyToken, requireAdmin, async (req: Request
             message: 'Analytics cache rebuilt successfully',
         });
     } catch (error: any) {
-        console.error('Failed to rebuild analytics:', error);
+        logger.error('Failed to rebuild analytics:', error);
         res.status(500).json({
             success: false,
             error: error.message,

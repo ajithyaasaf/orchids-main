@@ -12,6 +12,7 @@ import { getComboAnalytics, getAllCombosAnalytics, trackComboEvent } from '../se
 import { verifyToken, optionalAuth } from '../middleware/auth';
 import { WholesaleCheckoutBundle } from '../services/comboPricingService';
 import { requireAdmin, requireSuperAdmin } from '../middleware/roleCheck';
+import logger from '../utils/logger';
 
 const router = express.Router();
 
@@ -129,12 +130,10 @@ router.post('/validate', async (req: Request, res: Response) => {
  */
 router.get('/', verifyToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        console.log('===== COMBO LIST ENDPOINT HIT =====');
-        console.log('User:', (req as any).user ? {
-            uid: (req as any).user.uid,
-            email: (req as any).user.email,
-            role: (req as any).user.role
-        } : 'NO USER');
+        logger.info('Combo list endpoint requested', {
+            uid: (req as any).user?.uid,
+            role: (req as any).user?.role
+        });
 
         const combos = await getAllCombos();
 
@@ -144,7 +143,7 @@ router.get('/', verifyToken, requireAdmin, async (req: Request, res: Response) =
             count: combos.length,
         });
     } catch (error: any) {
-        console.error('Error in GET /combos:', error);
+        logger.error('Error in GET /combos:', error);
         res.status(500).json({
             success: false,
             error: error.message,

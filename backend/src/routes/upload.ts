@@ -3,6 +3,7 @@ import multer from 'multer';
 import { uploadImage } from '../services/imageService';
 import { verifyToken, AuthRequest } from '../middleware/auth';
 import { requireAdmin } from '../middleware/roleCheck';
+import logger from '../utils/logger';
 
 const router = express.Router();
 
@@ -34,9 +35,9 @@ router.post(
     upload.single('image'),
     async (req: AuthRequest, res: Response) => {
         try {
-            console.log('📸 Upload request received');
-            console.log('User:', req.user);
-            console.log('File:', req.file ? { name: req.file.originalname, size: req.file.size, mimetype: req.file.mimetype } : 'No file');
+            logger.info('📸 Upload request received');
+            logger.info('User:', req.user);
+            logger.info('File:', req.file ? { name: req.file.originalname, size: req.file.size, mimetype: req.file.mimetype } : 'No file');
 
             if (!req.file) {
                 console.error('❌ No file in request');
@@ -47,9 +48,9 @@ router.post(
                 return;
             }
 
-            console.log('🔄 Uploading to Cloudinary...');
+            logger.info('🔄 Uploading to Cloudinary...');
             const result = await uploadImage(req.file.buffer, req.file.originalname);
-            console.log('✅ Upload successful:', result);
+            logger.info('✅ Upload successful:', result);
 
             res.json({
                 success: true,
@@ -57,8 +58,7 @@ router.post(
                 message: 'Image uploaded successfully',
             });
         } catch (error: any) {
-            console.error('❌ Upload error:', error);
-            console.error('Error stack:', error.stack);
+            logger.error('❌ Upload error:', error);
             res.status(error.statusCode || 500).json({
                 success: false,
                 error: error.message || 'Failed to upload image',

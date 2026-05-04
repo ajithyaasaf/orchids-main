@@ -17,15 +17,15 @@ export const getDashboardAnalytics = async (): Promise<DashboardAnalytics> => {
     const cacheDoc = await collections.analytics.doc(ANALYTICS_DOC_ID).get();
 
     if (!cacheDoc.exists) {
-        console.log('Analytics cache not found, rebuilding...');
+        logger.info('Analytics cache not found, rebuilding...');
         return await rebuildAnalyticsCache();
     }
 
     const cached = cacheDoc.data() as DashboardAnalytics;
 
-    // Get fresh customer metrics
-    const usersSnapshot = await collections.users.where('role', '==', 'customer').get();
-    const totalCustomers = usersSnapshot.size;
+    // Get fresh customer metrics using optimized aggregation
+    const usersSnapshot = await collections.users.where('role', '==', 'customer').count().get();
+    const totalCustomers = usersSnapshot.data().count;
 
     return {
         ...cached,

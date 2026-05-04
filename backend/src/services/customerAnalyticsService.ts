@@ -256,9 +256,9 @@ export const getAllCustomersWithInsights = async (
         query = query.where('totalSpent', '>=', filters.minSpent);
     }
 
-    // Get total count
-    const totalSnapshot = await query.get();
-    const total = totalSnapshot.size;
+    // Get total count using optimized aggregation
+    const totalSnapshot = await query.count().get();
+    const total = totalSnapshot.data().count;
 
     // CURSOR PAGINATION (not offset - more efficient)
     if (lastDocId) {

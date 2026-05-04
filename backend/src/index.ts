@@ -83,7 +83,7 @@ app.use(
                 'http://127.0.0.1:3000',
                 process.env.FRONTEND_URL,
             ].filter(Boolean) as string[];
-            // Also allow any *.vercel.app origin (preview & production deployments)
+            
             if (allowed.includes(origin) || /^https:\/\/[\w-]+(\.[\w-]+)*\.vercel\.app$/.test(origin)) {
                 return callback(null, true);
             }
@@ -118,35 +118,37 @@ app.get('/api/ping', (req, res) => {
     res.status(200).send('pong');
 });
 
-// DIAGNOSTIC: Check Firestore connectivity
-app.get('/api/diagnostic/db', async (req, res) => {
-    try {
-        const { collections } = await import('./config/firebase');
-        const productsCount = (await collections.products.get()).size;
-        const wholesaleProductsCount = (await collections.wholesaleProducts.get()).size;
-        const ordersCount = (await collections.orders.get()).size;
-        const wholesaleOrdersCount = (await collections.wholesaleOrders.get()).size;
-        const usersCount = (await collections.users.get()).size;
+// DIAGNOSTIC: Check Firestore connectivity (ONLY IN DEVELOPMENT)
+if (process.env.NODE_ENV !== 'production') {
+    app.get('/api/diagnostic/db', async (req, res) => {
+        try {
+            const { collections } = await import('./config/firebase');
+            // Use count() for efficiency
+            const productsCount = (await collections.products.count().get()).data().count;
+            const wholesaleProductsCount = (await collections.wholesaleProducts.count().get()).data().count;
+            const ordersCount = (await collections.orders.count().get()).data().count;
+            const wholesaleOrdersCount = (await collections.wholesaleOrders.count().get()).data().count;
+            const usersCount = (await collections.users.count().get()).data().count;
 
-        res.json({
-            success: true,
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            counts: {
-                products: productsCount,
-                wholesaleProducts: wholesaleProductsCount,
-                orders: ordersCount,
-                wholesaleOrders: wholesaleOrdersCount,
-                users: usersCount
-            }
-        });
-    } catch (error: any) {
-        res.status(500).json({
-            success: false,
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
-    }
-});
+            res.json({
+                success: true,
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                counts: {
+                    products: productsCount,
+                    wholesaleProducts: wholesaleProductsCount,
+                    orders: ordersCount,
+                    wholesaleOrders: wholesaleOrdersCount,
+                    users: usersCount
+                }
+            });
+        } catch (error: any) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    });
+}
 
 // API Routes - Wholesale Platform
 app.use('/api/coupons', couponRoutes);           // Promotions: Coupon system (wholesale)

@@ -33,10 +33,10 @@ export interface CreateOrderInput {
      * against our server-calculated value to detect stale-price scenarios.
      */
     expectedTotalAmount?: number;
-    /** Idempotency key to prevent double-orders on retry */
+    /** 
+     * Idempotency key to prevent double-orders on retry 
+     */
     idempotencyKey: string;
-    /** TODO: REMOVE_AFTER_TESTING - Internal bypass flag */
-    isTestMode?: boolean;
 }
 
 export interface CreateOrderResult {
@@ -89,7 +89,10 @@ async function findExistingOrder(
 export async function createWholesaleOrder(
     input: CreateOrderInput
 ): Promise<CreateOrderResult> {
-    const { userId, address, cartItems, expectedTotalAmount, idempotencyKey, isTestMode } = input;
+    const { userId, address, cartItems, expectedTotalAmount, idempotencyKey } = input;
+    
+    // Internal bypass flag (Only enabled if EXPLICITLY set in env)
+    const isTestMode = process.env.ALLOW_TEST_PAYMENTS === 'true' && process.env.NODE_ENV !== 'production';
 
     // ── 1. Idempotency Check ──────────────────────────────────────────────
     const existingOrder = await findExistingOrder(userId, idempotencyKey);
@@ -208,13 +211,13 @@ export async function createWholesaleOrder(
             totalAmount: totals.totalAmount,
             adminDiscountHistory: [],
 
-            // Payment & Status Bypass (TODO: REMOVE_AFTER_TESTING)
-            paymentStatus: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'paid' : 'pending',
-            gatewayOrderId: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'test_bypass' : '',
-            gatewayPaymentId: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? `test_payment_${Date.now()}` : '',
+            // Payment & Status handling
+            paymentStatus: isTestMode ? 'paid' : 'pending',
+            gatewayOrderId: isTestMode ? 'test_bypass' : '',
+            gatewayPaymentId: isTestMode ? `test_payment_${Date.now()}` : '',
 
             // Order lifecycle
-            orderStatus: isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? 'processing' : 'placed',
+            orderStatus: isTestMode ? 'processing' : 'placed',
             statusHistory: [
                 {
                     status: 'placed',
@@ -222,7 +225,7 @@ export async function createWholesaleOrder(
                     changedAt: new Date(),
                     notes: 'Order placed by customer',
                 },
-                ...(isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true' ? [{
+                ...(isTestMode ? [{
                     status: 'processing',
                     changedBy: userId,
                     changedAt: new Date(),
@@ -316,8 +319,8 @@ export async function createWholesaleOrder(
         }
     });
 
-    // ── 9. Post-Creation Bypass Logic (TODO: REMOVE_AFTER_TESTING) ─────────
-    if (isTestMode && process.env.ALLOW_TEST_PAYMENTS === 'true') {
+    // ── 9. Post-Creation Logic ─────────────────────────────────────────────
+    if (isTestMode) {
         try {
             const { generateInvoice, needsInvoiceGeneration } = await import('./invoiceService');
             const createdOrder = await getWholesaleOrderById(orderId!);

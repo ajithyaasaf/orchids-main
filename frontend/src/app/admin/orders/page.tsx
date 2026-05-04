@@ -7,6 +7,7 @@ import { Package, Clock, Truck, CheckCircle, XCircle, FileText, Package as BoxIc
 import { useToast } from '@/context/ToastContext';
 import { useAuthStore } from '@/store/authStore';
 import { auth } from '@/lib/firebase';
+import { logger } from '@/lib/logger';
 
 const statusConfig: Record<WholesaleOrder['orderStatus'], any> = {
     placed: { label: 'Placed', icon: Package, color: 'text-primary' },
@@ -37,7 +38,7 @@ export default function AdminOrdersPage() {
             const { data } = await orderApi.getAll();
             setOrders(data);
         } catch (error) {
-            console.error('Failed to load orders:', error);
+            logger.error('Failed to load orders:', error);
         } finally {
             setLoading(false);
         }
@@ -72,7 +73,7 @@ export default function AdminOrdersPage() {
             // Clean up after a delay to ensure the PDF opens
             setTimeout(() => window.URL.revokeObjectURL(url), 1000);
         } catch (error) {
-            console.error('View invoice error:', error);
+            logger.error('View invoice error:', error);
             showToast('Failed to view invoice', 'error');
         }
     };
@@ -99,7 +100,7 @@ export default function AdminOrdersPage() {
             window.URL.revokeObjectURL(url);
             showToast('Invoice downloaded successfully', 'success');
         } catch (error) {
-            console.error('Download invoice error:', error);
+            logger.error('Download invoice error:', error);
             showToast('Failed to download invoice', 'error');
         } finally {
             setDownloadingInvoice(null);
@@ -128,7 +129,7 @@ export default function AdminOrdersPage() {
             window.URL.revokeObjectURL(url);
             showToast('Packing slip downloaded successfully', 'success');
         } catch (error) {
-            console.error('Download packing slip error:', error);
+            logger.error('Download packing slip error:', error);
             showToast('Failed to download packing slip', 'error');
         } finally {
             setDownloadingPackingSlip(null);

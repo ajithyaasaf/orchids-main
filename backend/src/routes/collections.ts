@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { collectionService } from '../services/collectionService';
-import { verifyToken, requireSuperAdmin, AuthRequest } from '../middleware/auth';
+import { verifyToken, AuthRequest } from '../middleware/auth';
+import { requireSuperAdmin } from '../middleware/roleCheck';
 import { Collection } from '@orchids/shared';
 
 const router = Router();

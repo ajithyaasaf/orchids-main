@@ -16,7 +16,13 @@ interface CalculatedOrder {
     subtotal: number;
     gstRate: number;
     gst: number;
+    shipping: number;
+    couponDiscount: number;
     totalAmount: number;
+    appliedCoupon?: {
+        code: string;
+        discount: number;
+    };
 }
 
 export default function WholesaleCheckout() {
@@ -38,6 +44,7 @@ export default function WholesaleCheckout() {
     const [calculatedOrder, setCalculatedOrder] = useState<CalculatedOrder | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [couponCode, setCouponCode] = useState('');
 
     useEffect(() => {
         fetchGSTRate();
@@ -57,8 +64,12 @@ export default function WholesaleCheckout() {
                 bundlesOrdered: item.bundlesOrdered,
             }));
 
-            const result = await wholesaleCheckoutApi.calculate(checkoutItems, address);
+            const result = await wholesaleCheckoutApi.calculate(checkoutItems, address, couponCode);
             setCalculatedOrder(result);
+            
+            if (couponCode && !result.appliedCoupon) {
+                setError('The coupon code provided is invalid or could not be applied.');
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -92,6 +103,7 @@ export default function WholesaleCheckout() {
                     address,
                     expectedTotalAmount: calculatedOrder.totalAmount,
                     idempotencyKey,
+                    couponCode: couponCode || undefined,
                 }),
             });
 
@@ -296,6 +308,16 @@ export default function WholesaleCheckout() {
                             <span>GST ({(calculatedOrder.gstRate * 100).toFixed(0)}%):</span>
                             <span className="font-semibold">₹{calculatedOrder.gst.toFixed(2)}</span>
                         </div>
+                        <div className="flex justify-between">
+                            <span>Shipping:</span>
+                            <span className="font-semibold">₹{calculatedOrder.shipping || 0}</span>
+                        </div>
+                        {calculatedOrder.couponDiscount > 0 && (
+                            <div className="flex justify-between text-green-600 font-medium">
+                                <span>Coupon Discount ({calculatedOrder.appliedCoupon?.code}):</span>
+                                <span>-₹{calculatedOrder.couponDiscount.toFixed(2)}</span>
+                            </div>
+                        )}
                         <div className="border-t pt-2 flex justify-between text-lg font-bold">
                             <span>Total:</span>
                             <span className="text-green-600">
@@ -304,8 +326,19 @@ export default function WholesaleCheckout() {
                         </div>
                     </div>
                 ) : (
-                    <div className="text-center text-gray-500">
-                        Click "Calculate Order" to see final price with GST
+                    <div className="space-y-4">
+                        <div className="text-center text-gray-500 text-sm">
+                            Click "Calculate Order" to see final price with GST & Shipping
+                        </div>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                placeholder="Have a coupon code?"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                className="flex-1 px-4 py-2 border rounded-lg text-sm uppercase"
+                            />
+                        </div>
                     </div>
                 )}
             </div>

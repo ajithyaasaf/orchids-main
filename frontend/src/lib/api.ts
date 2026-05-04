@@ -97,10 +97,10 @@ export const orderApi = {
     getByUserId: (userId: string) => apiFetch(`/api/wholesale/orders/user/${userId}`),
     getAll: (params?: Record<string, any>) => {
         const query = params ? `?${new URLSearchParams(params).toString()}` : '';
-        return apiFetch(`/api/orders/admin/all${query}`);
+        return apiFetch(`/api/wholesale/orders${query}`);
     },
     updateStatus: (id: string, orderStatus: string) =>
-        apiFetch(`/api/orders/${id}/status`, {
+        apiFetch(`/api/wholesale/orders/${id}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ orderStatus }),
         }),
@@ -205,9 +205,9 @@ export const shippingApi = {
 
 // Checkout API
 export const checkoutApi = {
-    calculate: (items: any[], pincode: string, couponCode?: string) => apiFetch('/api/checkout/calculate', {
+    calculate: (items: any[], address: any, couponCode?: string) => apiFetch('/api/wholesale/checkout/calculate', {
         method: 'POST',
-        body: JSON.stringify({ items, pincode, couponCode }),
+        body: JSON.stringify({ items, address, couponCode }),
     }),
 };
 

@@ -59,6 +59,14 @@ export interface DashboardAnalytics {
         revenue: number;
         orders: number;
     }>;
+
+    // Status Counts
+    placedCount: number;
+    processingCount: number;
+    shippedCount: number;
+    deliveredCount: number;
+    cancelledCount: number;
+    unpaidAmount: number;
 }
 
 export interface CustomerFilters {

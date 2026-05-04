@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth';
 import { auth } from '../config/firebase';
+import logger from '../utils/logger';
 
 type AllowedRole = 'superadmin' | 'admin' | 'customer';
 
@@ -9,17 +10,8 @@ type AllowedRole = 'superadmin' | 'admin' | 'customer';
  */
 export const requireRole = (allowedRoles: AllowedRole[]) => {
     return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-        console.log('==== ROLE CHECK MIDDLEWARE ====');
-        console.log('Required roles:', allowedRoles);
-        console.log('User exists?:', !!req.user);
-        console.log('User data:', req.user ? {
-            uid: req.user.uid,
-            email: req.user.email,
-            role: req.user.role
-        } : 'NO USER');
-
         if (!req.user) {
-            console.log('❌ REJECTED: No user');
+            logger.warn('Access rejected: No user session found');
             res.status(401).json({
                 success: false,
                 error: 'Unauthorized: Authentication required',
@@ -28,31 +20,53 @@ export const requireRole = (allowedRoles: AllowedRole[]) => {
         }
 
         const userRole = req.user.role as AllowedRole;
-        console.log('Checking if', userRole, 'is in', allowedRoles);
 
         if (!allowedRoles.includes(userRole)) {
-            console.log(`⚠️ Token role '${userRole}' failed. Checking fresh claims via Admin SDK...`);
+            logger.warn(`Token role '${userRole}' insufficient. Checking fresh claims & Firestore...`, {
+                uid: req.user.uid,
+                email: req.user.email,
+                required: allowedRoles
+            });
 
             try {
-                // FALLBACK: Fetch fresh user record from Firebase Admin
-                // This handles cases where custom claims were updated but token is stale
+                // FALLBACK 1: Check fresh custom claims from Auth
                 const freshUser = await auth.getUser(req.user.uid);
-                const freshRole = (freshUser.customClaims?.role as AllowedRole) || 'customer';
+                let finalRole = (freshUser.customClaims?.role as AllowedRole);
 
-                console.log(`🔍 Fresh server-side role: '${freshRole}'`);
+                // FALLBACK 2: Check Firestore 'users' collection (The source of truth in the UI)
+                if (!finalRole || !allowedRoles.includes(finalRole)) {
+                    const { collections } = await import('../config/firebase');
+                    const userDoc = await collections.users.doc(req.user.uid).get();
+                    const dbRole = userDoc.exists ? (userDoc.data()?.role as AllowedRole) : null;
 
-                if (allowedRoles.includes(freshRole)) {
-                    console.log('✅ PASSED: Fresh server claims verified (Token was stale)');
-                    // Update request user with fresh role
-                    req.user.role = freshRole;
+                    if (dbRole) {
+                        logger.info(`Source of Truth: Firestore role '${dbRole}' found for user ${req.user.uid}`);
+                        
+                        // SELF-HEALING: If DB has the role but Auth doesn't, sync them now
+                        if (dbRole !== finalRole) {
+                            logger.info(`Self-Healing: Syncing Firestore role '${dbRole}' to Firebase Auth custom claims...`);
+                            await auth.setCustomUserClaims(req.user.uid, { ...freshUser.customClaims, role: dbRole });
+                            finalRole = dbRole;
+                        }
+                    }
+                }
+
+                if (finalRole && allowedRoles.includes(finalRole)) {
+                    logger.info(`Access granted after sync: Role '${finalRole}' verified for ${req.user.uid}`);
+                    // Update request user with fresh role for the rest of this request
+                    req.user.role = finalRole;
                     next();
                     return;
                 }
             } catch (err) {
-                console.error('❌ Failed to fetch fresh claims:', err);
+                logger.error('Critical failure in role verification fallback:', err);
             }
 
-            console.log('❌ REJECTED: Role mismatch');
+            logger.security('Access denied: Role mismatch', {
+                uid: req.user.uid,
+                foundRole: userRole,
+                requiredRoles: allowedRoles
+            });
             res.status(403).json({
                 success: false,
                 error: `Forbidden: Insufficient permissions. Required: ${allowedRoles.join(' or ')}. Found role: '${userRole}'`,
@@ -60,7 +74,7 @@ export const requireRole = (allowedRoles: AllowedRole[]) => {
             return;
         }
 
-        console.log('✅ PASSED: Role check successful');
+        logger.debug('Access granted: Role verified');
         next();
     };
 };

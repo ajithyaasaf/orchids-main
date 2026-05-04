@@ -23,7 +23,11 @@ router.get('/analytics', verifyToken, requireAdmin, async (req: Request, res: Re
             data: analytics,
         });
     } catch (error: any) {
-        logger.error('Failed to get dashboard analytics:', error);
+        if (typeof logger !== 'undefined' && logger.error) {
+            logger.error('Failed to get dashboard analytics:', error);
+        } else {
+            console.error('Failed to get dashboard analytics (logger missing):', error);
+        }
         res.status(500).json({
             success: false,
             error: error.message,
@@ -47,7 +51,11 @@ router.post('/analytics/rebuild', verifyToken, requireAdmin, async (req: Request
             message: 'Analytics cache rebuilt successfully',
         });
     } catch (error: any) {
-        logger.error('Failed to rebuild analytics:', error);
+        if (typeof logger !== 'undefined' && logger.error) {
+            logger.error('Failed to rebuild analytics:', error);
+        } else {
+            console.error('Failed to rebuild analytics (logger missing):', error);
+        }
         res.status(500).json({
             success: false,
             error: error.message,

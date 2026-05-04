@@ -353,9 +353,9 @@ export const wholesaleDashboardApi = {
  */
 export const wholesaleCheckoutApi = {
     /**
-     * Calculate order totals with dynamic GST
+     * Calculate order totals with dynamic GST and optional coupon
      */
-    calculate: async (items: any[], address: any) => {
+    calculate: async (items: any[], address: any, couponCode?: string) => {
         const token = await getAuthToken();
 
         const response = await apiFetch(`${API_BASE}/wholesale/checkout/calculate`, {
@@ -364,7 +364,7 @@ export const wholesaleCheckoutApi = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ items, address }),
+            body: JSON.stringify({ items, address, couponCode }),
         });
 
         const data = await response.json();
@@ -374,6 +374,34 @@ export const wholesaleCheckoutApi = {
 
         return data.data;
     },
+};
+
+/**
+ * Coupon API Client
+ */
+export const couponApi = {
+    /**
+     * Validate coupon code
+     */
+    validate: async (code: string, subtotal: number) => {
+        const token = await getAuthToken();
+        
+        const response = await apiFetch(`${API_BASE}/coupons/validate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ code, subtotal }),
+        });
+        
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to validate coupon');
+        }
+        
+        return data;
+    }
 };
 
 /**

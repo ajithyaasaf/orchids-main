@@ -1,5 +1,6 @@
 import { collections, db } from '../config/firebase';
 import type { DashboardAnalytics, WholesaleOrder, WholesaleBundleItem } from '@orchids/shared';
+import logger from '../utils/logger';
 
 const ANALYTICS_DOC_ID = 'wholesale_dashboard_cache';
 
@@ -16,8 +17,9 @@ const isWholesaleItem = (item: any): item is WholesaleBundleItem => {
 export const getDashboardAnalytics = async (): Promise<DashboardAnalytics> => {
     const cacheDoc = await collections.analytics.doc(ANALYTICS_DOC_ID).get();
 
-    if (!cacheDoc.exists) {
-        logger.info('Analytics cache not found, rebuilding...');
+    if (!cacheDoc.exists || (cacheDoc.data() as any).placedCount === undefined) {
+        if (logger) logger.info('Analytics cache incomplete or missing, rebuilding...');
+        else console.log('Analytics cache incomplete or missing, rebuilding...');
         return await rebuildAnalyticsCache();
     }
 
@@ -138,18 +140,18 @@ export const rebuildAnalyticsCache = async (): Promise<DashboardAnalytics> => {
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const thisYear = new Date(now.getFullYear(), 0, 1);
 
-    const ordersSnapshot = await collections.wholesaleOrders
-        .where('paymentStatus', '==', 'paid')
-        .where('orderStatus', '!=', 'cancelled')
-        .get();
-
-    const orders = ordersSnapshot.docs.map(d => ({
+    const allOrdersSnapshot = await collections.wholesaleOrders.get();
+    
+    const allOrders = allOrdersSnapshot.docs.map(d => ({
         ...d.data(),
         createdAt: d.data().createdAt?.toDate(),
         updatedAt: d.data().updatedAt?.toDate(),
     })) as any[];
 
-    console.log(`Processing ${orders.length} wholesale orders...`);
+    // Paid orders for revenue metrics
+    const orders = allOrders.filter(o => o.paymentStatus === 'paid' && o.orderStatus !== 'cancelled');
+
+    console.log(`Processing ${allOrders.length} total wholesale orders (${orders.length} paid)...`);
 
     // Calculate metrics
     const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -257,6 +259,13 @@ export const rebuildAnalyticsCache = async (): Promise<DashboardAnalytics> => {
         topProducts,
         topStates,
         revenueTrend,
+        // Fulfillment Metrics
+        placedCount: allOrders.filter(o => o.orderStatus === 'placed').length,
+        processingCount: allOrders.filter(o => o.orderStatus === 'processing').length,
+        shippedCount: allOrders.filter(o => o.orderStatus === 'shipped').length,
+        deliveredCount: allOrders.filter(o => o.orderStatus === 'delivered').length,
+        cancelledCount: allOrders.filter(o => o.orderStatus === 'cancelled').length,
+        unpaidAmount: allOrders.filter(o => o.paymentStatus !== 'paid' && o.orderStatus !== 'cancelled').reduce((sum, o) => sum + (o.totalAmount || 0), 0),
     };
 
     await collections.analytics.doc(ANALYTICS_DOC_ID).set(analytics);

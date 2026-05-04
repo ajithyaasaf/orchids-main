@@ -110,7 +110,44 @@ export default function AnalyticsPage() {
                         />
                     </div>
 
-                    {/* Customer Metrics */}
+                    {/* Fulfillment Pipeline Metrics - NEW SECTION */}
+                    <div className="mb-8">
+                        <h2 className="text-xl font-bold mb-4 text-gray-900">Fulfillment Pipeline</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                            <MetricCard
+                                title="Placed"
+                                value={(analytics.placedCount || 0).toLocaleString()}
+                                subtitle="Pending initial review"
+                                color="indigo"
+                            />
+                            <MetricCard
+                                title="Processing"
+                                value={(analytics.processingCount || 0).toLocaleString()}
+                                subtitle="In preparation"
+                                color="blue"
+                            />
+                            <MetricCard
+                                title="Shipped"
+                                value={(analytics.shippedCount || 0).toLocaleString()}
+                                subtitle="In transit"
+                                color="purple"
+                            />
+                            <MetricCard
+                                title="Delivered"
+                                value={(analytics.deliveredCount || 0).toLocaleString()}
+                                subtitle="Fulfillment complete"
+                                color="green"
+                            />
+                            <MetricCard
+                                title="Cancelled"
+                                value={(analytics.cancelledCount || 0).toLocaleString()}
+                                subtitle="Total cancellations"
+                                color="slate"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Customer & Financial Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <MetricCard
                             title="Total Customers"
@@ -119,15 +156,15 @@ export default function AnalyticsPage() {
                             color="indigo"
                         />
                         <MetricCard
-                            title="Returning Customer Rate"
-                            value={`${analytics.returningCustomerRate.toFixed(1)}%`}
-                            subtitle="Customers with 2+ orders"
+                            title="Unpaid Liability"
+                            value={`₹${(analytics.unpaidAmount || 0).toLocaleString()}`}
+                            subtitle="Outstanding receivables"
                             color="pink"
                         />
                         <MetricCard
-                            title="Customer Lifetime"
-                            value={analytics.totalCustomers > 0 ? `₹${Math.round(analytics.totalRevenue / analytics.totalCustomers).toLocaleString()}` : '₹0'}
-                            subtitle="Avg revenue per customer"
+                            title="Returning Rate"
+                            value={`${analytics.returningCustomerRate.toFixed(1)}%`}
+                            subtitle="Customers with 2+ orders"
                             color="teal"
                         />
                     </div>
@@ -228,6 +265,7 @@ function MetricCard({
         indigo: 'from-indigo-500 to-indigo-600',
         pink: 'from-pink-500 to-pink-600',
         teal: 'from-teal-500 to-teal-600',
+        slate: 'from-slate-500 to-slate-600',
     };
 
     return (

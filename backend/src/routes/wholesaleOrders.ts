@@ -267,17 +267,15 @@ router.get('/stats/summary', verifyToken, requireAdmin, async (req, res, next) =
         
         const stats = {
             total: analytics.totalOrders,
-            pending: analytics.ordersToday, // Approximation or use targeted counts
-            processing: 0, // Placeholder if not in cache
-            shipped: 0,
-            delivered: 0,
-            cancelled: 0,
-            unpaidAmount: 0,
+            pending: analytics.placedCount,
+            processing: analytics.processingCount,
+            shipped: analytics.shippedCount,
+            delivered: analytics.deliveredCount,
+            cancelled: analytics.cancelledCount,
+            unpaidAmount: analytics.unpaidAmount,
             totalRevenue: analytics.totalRevenue,
         };
 
-        // For more granular stats, we should expand the cache or use targeted counts
-        // but fetching all orders is NOT acceptable.
         res.json({ success: true, data: stats });
     } catch (error) {
         logger.error('Failed to fetch order summary stats:', error);

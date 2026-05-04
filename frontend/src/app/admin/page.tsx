@@ -33,23 +33,30 @@ export default function AdminDashboard() {
                     wholesaleDashboardApi.getAnalytics().catch(() => null),
                 ]);
 
-                const pendingOrders = orders.filter(
-                    (o: any) => o.orderStatus === 'placed' || o.orderStatus === 'confirmed'
-                );
-
-                const totalRevenue = orders
-                    .filter((o: any) => o.paymentStatus === 'paid')
-                    .reduce((sum: number, o: any) => sum + o.totalAmount, 0);
-
-                setStats({
-                    totalProducts: products.length,
-                    totalOrders: orders.length,
-                    pendingOrders: pendingOrders.length,
-                    revenue: totalRevenue,
-                });
-
                 if (analyticsData) {
                     setAnalytics(analyticsData);
+                    setStats({
+                        totalProducts: products.length,
+                        totalOrders: analyticsData.totalOrders,
+                        pendingOrders: analyticsData.placedCount + analyticsData.processingCount,
+                        revenue: analyticsData.totalRevenue,
+                    });
+                } else {
+                    // Fallback to local calculation if analytics fails
+                    const pendingOrdersCount = orders.filter(
+                        (o: any) => o.orderStatus === 'placed' || o.orderStatus === 'confirmed' || o.orderStatus === 'processing'
+                    ).length;
+
+                    const totalRevenue = orders
+                        .filter((o: any) => o.paymentStatus === 'paid')
+                        .reduce((sum: number, o: any) => sum + o.totalAmount, 0);
+
+                    setStats({
+                        totalProducts: products.length,
+                        totalOrders: orders.length,
+                        pendingOrders: pendingOrdersCount,
+                        revenue: totalRevenue,
+                    });
                 }
             } catch (error) {
                 console.error('Failed to load stats:', error);

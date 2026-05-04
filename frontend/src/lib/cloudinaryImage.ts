@@ -12,12 +12,11 @@
  *    not a database migration.
  */
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? '';
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dj1tmb6yr';
 
-if (!CLOUD_NAME && typeof window !== 'undefined') {
+if (CLOUD_NAME === 'dj1tmb6yr' && !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) {
   console.warn(
-    '[Orchid] NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set. ' +
-      'Images will not load. Add it to your .env.local file.'
+    '[Orchid] NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set in environment. Using fallback cloud name.'
   );
 }
 

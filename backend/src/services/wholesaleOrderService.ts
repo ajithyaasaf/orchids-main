@@ -99,8 +99,8 @@ export async function createWholesaleOrder(
 ): Promise<CreateOrderResult> {
     const { userId, address, cartItems, expectedTotalAmount, idempotencyKey } = input;
     
-    // Internal bypass flag (Only enabled if EXPLICITLY set in env)
-    const isTestMode = process.env.ALLOW_TEST_PAYMENTS === 'true' && process.env.NODE_ENV !== 'production';
+    // Internal bypass flag: Only bypass if the client requests it AND the server allows it.
+    const isTestMode = input.isTestMode === true && process.env.ALLOW_TEST_PAYMENTS === 'true' && process.env.NODE_ENV !== 'production';
 
     // ── 1. Idempotency Check ──────────────────────────────────────────────
     const existingOrder = await findExistingOrder(userId, idempotencyKey);

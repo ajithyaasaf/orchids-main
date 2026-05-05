@@ -42,12 +42,14 @@ function LoginForm() {
             const user = useAuthStore.getState().user;
             
             // Manual redirect ONLY after successful backend session creation
+            // We use window.location.href instead of router.replace to bypass Next.js Router Cache
+            // which might have cached a previous middleware redirect from unauthenticated attempts.
             if (redirectPath) {
-                router.replace(redirectPath);
+                window.location.href = redirectPath;
             } else if (user?.role === 'superadmin' || user?.role === 'admin') {
-                router.replace('/admin');
+                window.location.href = '/admin';
             } else {
-                router.replace('/profile');
+                window.location.href = '/profile';
             }
         } catch (err: any) {
             let userFriendlyMessage = 'Failed to login. Please check your credentials.';

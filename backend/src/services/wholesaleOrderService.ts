@@ -282,12 +282,14 @@ export async function createWholesaleOrder(
             adminDiscount: 0,
             totalAmount: totals.totalAmount,
             adminDiscountHistory: [],
-            appliedCoupon: appliedCouponData ? {
-                couponId: appliedCouponData.couponId,
-                code: appliedCouponData.code,
-                discount: couponDiscountAmount,
-                appliedAt: new Date()
-            } : undefined,
+            ...(appliedCouponData ? {
+                appliedCoupon: {
+                    couponId: appliedCouponData.couponId,
+                    code: appliedCouponData.code,
+                    discount: couponDiscountAmount,
+                    appliedAt: new Date()
+                }
+            } : {}),
 
             // Payment & Status handling
             paymentStatus: isTestMode ? 'paid' : 'pending',

@@ -84,7 +84,9 @@ app.use(
                 process.env.FRONTEND_URL,
             ].filter(Boolean) as string[];
             
-            if (allowed.includes(origin) || /^https:\/\/[\w-]+(\.[\w-]+)*\.vercel\.app$/.test(origin)) {
+            if (allowed.includes(origin) || 
+                /^https:\/\/[\w-]+(\.[\w-]+)*\.vercel\.app$/.test(origin) || 
+                /^https:\/\/(www\.)?orchidhub\.in$/.test(origin)) {
                 return callback(null, true);
             }
             return callback(new Error(`CORS: Origin ${origin} not allowed`));

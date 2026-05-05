@@ -316,8 +316,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchTerm, products, vis
                 </div>
             </div>
         )}
-    </>
-);
+        </>
+    );
+};
 
 /**
  * Empty Search State Component

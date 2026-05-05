@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AlertTriangle } from 'lucide-react';
 import { WholesaleProduct } from '@orchids/shared';
 import { useCartStore } from '@/store/wholesaleCartStore';
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 interface Props {
     product: WholesaleProduct;
@@ -83,7 +84,7 @@ export default function ProductDetailClient({ product }: Props) {
                 <div>
                     {product.images.length > 0 ? (
                         <img
-                            src={product.images[0]}
+                            src={getCloudinaryUrl(product.images[0], { width: 800 })}
                             alt={product.title}
                             className="w-full rounded-lg shadow-lg"
                         />

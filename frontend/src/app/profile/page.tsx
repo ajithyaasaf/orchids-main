@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { AddressManager } from '@/components/ui/AddressManager';
 import { auth } from '@/lib/firebase';
 import { formatDateOnly, formatRelative } from '@/lib/dateUtils';
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 type ProfileTab = 'profile' | 'addresses' | 'orders';
 
@@ -216,7 +217,7 @@ export default function ProfilePage() {
                                                             {order.items && order.items[0]?.productImage ? (
                                                                 <>
                                                                     <img
-                                                                        src={order.items[0].productImage}
+                                                                        src={getCloudinaryUrl(order.items[0].productImage, { width: 150 })}
                                                                         alt={order.items[0].productTitle}
                                                                         className="w-full h-full object-cover"
                                                                     />

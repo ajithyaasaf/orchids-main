@@ -17,6 +17,8 @@ import { Testimonials } from '@/components/home/Testimonials';
 import { ProductCarousel } from '@/components/home/ProductCarousel';
 import { NewsletterCta } from '@/components/home/NewsletterCta';
 
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
+
 /**
  * ORCHID Wholesale Clothing - Premium Homepage
  * Server-side rendered for SEO with wholesale product catalog
@@ -59,7 +61,7 @@ export default async function HomePage() {
                         {/* Desktop Image (Hidden on mobile) */}
                         <div className="hidden md:block absolute inset-0">
                             <Image
-                                src="/images/hero images/Banner_1_windows.jpg"
+                                src={getCloudinaryUrl('Banner_1_windows.jpg', { width: 1920 })}
                                 alt="ORCHID Wholesale Clothing - Premium Apparel from Tirupur"
                                 fill
                                 className="object-cover"
@@ -70,7 +72,7 @@ export default async function HomePage() {
                         {/* Mobile Image (Visible on mobile only) */}
                         <div className="block md:hidden absolute inset-0">
                             <Image
-                                src="/images/hero images/Banner_1_mobile.jpg"
+                                src={getCloudinaryUrl('Banner_1_mobile.jpg', { width: 1080 })}
                                 alt="ORCHID Wholesale Clothing - Mobile Collection"
                                 fill
                                 className="object-cover"

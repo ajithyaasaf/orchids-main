@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCartStore as useWholesaleCartStore } from '@/store/wholesaleCartStore';
 import Image from 'next/image';
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 /**
  * Wholesale Shopping Cart Page
@@ -77,7 +78,7 @@ export default function WholesaleCartPage() {
                                 <div className="w-32 h-40 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden relative border border-gray-100">
                                     {item.product.images.length > 0 ? (
                                         <img
-                                            src={item.product.images[0]}
+                                            src={getCloudinaryUrl(item.product.images[0], { width: 200 })}
                                             alt={item.product.title}
                                             className="w-full h-full object-cover"
                                         />

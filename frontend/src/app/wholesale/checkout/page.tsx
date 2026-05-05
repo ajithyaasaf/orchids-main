@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { wholesaleCheckoutApi } from '@/lib/api/wholesaleApi';
 import { auth } from '@/lib/firebase';
 import { useAuthToken } from '@/hooks/useAuthToken';
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 /**
  * Wholesale Checkout Page
@@ -546,7 +547,11 @@ export default function WholesaleCheckoutPage() {
                                     <div key={item.product.id} className="flex gap-4 items-start">
                                         <div className="w-16 h-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
                                             {item.product.images.length > 0 && (
-                                                <img src={item.product.images[0]} alt="" className="w-full h-full object-cover" />
+                                                <img 
+                                                    src={getCloudinaryUrl(item.product.images[0], { width: 160 })} 
+                                                    alt="" 
+                                                    className="w-full h-full object-cover" 
+                                                />
                                             )}
                                         </div>
                                         <div className="flex-1">

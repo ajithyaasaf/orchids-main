@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collection } from '@orchids/shared';
 import { ArrowRight, Clock, Sparkles } from 'lucide-react';
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 interface CollectionShowcaseProps {
     collections: Collection[];
@@ -89,7 +90,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({ collection, priority = 
             {collection.thumbnailImage ? (
                 <div className="absolute inset-0">
                     <Image
-                        src={collection.thumbnailImage.url}
+                        src={getCloudinaryUrl(collection.thumbnailImage.url, { width: 600 })}
                         alt={collection.thumbnailImage.alt || collection.name}
                         fill
                         priority={priority}

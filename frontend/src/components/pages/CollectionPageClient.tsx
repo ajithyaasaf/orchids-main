@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Collection, WholesaleProduct } from '@orchids/shared';
 import { WholesaleProductCard } from '@/components/products/WholesaleProductCard';
 import { Clock, Sparkles } from 'lucide-react';
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 interface CollectionPageClientProps {
     collection: Collection;
@@ -81,7 +82,7 @@ export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ coll
                 {collection.bannerImage && (
                     <>
                         <Image
-                            src={collection.bannerImage.url}
+                            src={getCloudinaryUrl(collection.bannerImage.url, { width: 1920 })}
                             alt={collection.bannerImage.alt || collection.name}
                             fill
                             priority

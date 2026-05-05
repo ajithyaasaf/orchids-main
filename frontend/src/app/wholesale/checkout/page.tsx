@@ -86,13 +86,26 @@ export default function WholesaleCheckoutPage() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(address));
     }, [address]);
 
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    // ── Track Zustand Hydration ──────────────────────────────────────────
+    useEffect(() => {
+        setIsHydrated(useWholesaleCartStore.persist.hasHydrated());
+        const unsub = useWholesaleCartStore.persist.onFinishHydration(() => setIsHydrated(true));
+        return () => {
+            if (unsub) unsub();
+        };
+    }, []);
+
     useEffect(() => {
         fetchGSTRate();
+    }, []);
 
-        if (items.length === 0 && !isSuccess) {
+    useEffect(() => {
+        if (isHydrated && items.length === 0 && !isSuccess) {
             router.push('/products');
         }
-    }, [items, isSuccess]);
+    }, [items, isSuccess, isHydrated]);
 
     // ── Pincode Watcher (Edge Case: City/State Mapping) ──────────────────
     useEffect(() => {
@@ -309,6 +322,10 @@ export default function WholesaleCheckoutPage() {
             }
         });
     };
+
+    if (!isHydrated) {
+        return null;
+    }
 
     if (items.length === 0) {
         return null;

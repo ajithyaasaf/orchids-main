@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore as useWholesaleCartStore } from '@/store/wholesaleCartStore';
 import Image from 'next/image';
@@ -25,6 +26,18 @@ export default function WholesaleCartPage() {
         getTotalPieces,
         gstRate,
     } = useWholesaleCartStore();
+
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    useEffect(() => {
+        setIsHydrated(useWholesaleCartStore.persist.hasHydrated());
+        const unsub = useWholesaleCartStore.persist.onFinishHydration(() => setIsHydrated(true));
+        return () => { if (unsub) unsub(); };
+    }, []);
+
+    if (!isHydrated) {
+        return null; // Prevent hydration mismatch
+    }
 
     if (items.length === 0) {
         return (

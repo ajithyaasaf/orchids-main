@@ -14,8 +14,22 @@
 const fmt = (n: number) =>
     new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
-const fmtDate = (d: Date | any): string => {
-    const date = d?.toDate ? d.toDate() : d instanceof Date ? d : new Date(d);
+const fmtDate = (value: any): string => {
+    if (!value) return 'N/A';
+    let date: Date | null = null;
+
+    if (value && typeof value === 'object') {
+        if ('seconds' in value) date = new Date(value.seconds * 1000);
+        else if ('_seconds' in value) date = new Date(value._seconds * 1000);
+        else if (value.toDate) date = value.toDate();
+    }
+
+    if (!date) {
+        const parsed = new Date(value);
+        date = isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    if (!date) return 'N/A';
     return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
@@ -151,8 +165,9 @@ export function printTaxInvoice(order: any): void {
         <div>
             <div class="brand-name">🌸 ORCHID HUB</div>
             <div class="brand-sub">Wholesale Fashion — Factory Direct</div>
-            <div class="brand-sub" style="margin-top:6px">Madurai, Tamil Nadu, India</div>
-            <div class="brand-sub">support@orchidhub.in | +91 99446 55868</div>
+            <div class="brand-sub" style="margin-top:6px">no.3(1)2A, Sivarajan compound, appachi Nagar extension,</div>
+            <div class="brand-sub">2nd Street, Kongu main road, Tirupur - 641607</div>
+            <div class="brand-sub">support@orchidhub.in | +91 75399 60399</div>
         </div>
         <div style="text-align:right">
             <div class="invoice-title">Tax Invoice</div>
@@ -367,8 +382,8 @@ export function printDeliveryChallan(order: any): void {
                 <div class="bold" style="font-size:14px">🌸 Orchid Hub</div>
                 <div class="small" style="line-height:1.6;margin-top:2px">
                     Wholesale Fashion — Factory Direct<br/>
-                    Madurai, Tamil Nadu, India<br/>
-                    +91 99446 55868
+                    Tirupur, Tamil Nadu - 641607<br/>
+                    +91 75399 60399
                 </div>
             </div>
             <div style="text-align:center">

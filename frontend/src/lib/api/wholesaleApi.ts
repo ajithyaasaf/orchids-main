@@ -1,7 +1,14 @@
 import { WholesaleProduct } from '@orchids/shared';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
+const getApiBase = () => {
+    if (typeof window !== 'undefined') {
+        return '/api';
+    }
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+};
+
+const API_BASE = getApiBase();
 
 /**
  * Get Authentication Token

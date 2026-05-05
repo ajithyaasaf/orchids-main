@@ -599,9 +599,13 @@ export default function AdminOrdersPage() {
                                             href={`https://wa.me/91${selectedOrder.address.phone.replace(/\D/g, '')}?text=${buildWhatsAppMessage(selectedOrder)}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-medium"
+                                            className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-medium transition-colors"
                                         >
-                                            <MessageSquare className="w-3.5 h-3.5" />
+                                            <img 
+                                                src="https://upload.wikimedia.org/wikipedia/commons/5/5e/WhatsApp_icon.png" 
+                                                alt="WhatsApp" 
+                                                className="w-4 h-4 object-contain" 
+                                            />
                                             Notify via WhatsApp
                                         </a>
                                     )}
@@ -616,9 +620,9 @@ export default function AdminOrdersPage() {
                                 <div className="space-y-2">
                                     {selectedOrder.items?.map((item: any, i: number) => (
                                         <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 text-sm">
-                                            <div className="w-10 h-10 bg-white rounded border border-gray-200 overflow-hidden shrink-0">
+                                            <div className="w-12 h-16 bg-white rounded-lg border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center p-1">
                                                 {item.productImage ? (
-                                                    <img src={item.productImage} alt={item.productTitle} className="w-full h-full object-cover" />
+                                                    <img src={item.productImage} alt={item.productTitle} className="max-w-full max-h-full object-contain" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center bg-gray-50">
                                                         <Package className="w-4 h-4 text-gray-300" />

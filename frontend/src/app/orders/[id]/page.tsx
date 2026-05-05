@@ -245,12 +245,12 @@ export default function OrderStatusPage() {
                 <div className="space-y-4">
                     {order.items.map((item: any, index: number) => (
                         <div key={index} className="flex gap-4 pb-6 border-b last:border-0 border-gray-100">
-                            <div className="w-20 h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                            <div className="w-24 h-32 bg-white rounded-xl overflow-hidden border border-gray-100 shrink-0 flex items-center justify-center p-2">
                                 {item.productImage ? (
                                     <img
-                                        src={item.productImage}
+                                        src={getCloudinaryUrl(item.productImage, { width: 300 })}
                                         alt={item.productTitle}
-                                        className="w-full h-full object-cover"
+                                        className="max-w-full max-h-full object-contain"
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">

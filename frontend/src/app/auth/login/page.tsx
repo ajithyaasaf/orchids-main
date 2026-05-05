@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { auth } from '@/lib/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
@@ -12,23 +13,47 @@ function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectPath = searchParams.get('redirect');
-    const { signIn, user } = useAuthStore();
+    const { signIn, user, initialized } = useAuthStore();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Initial check: if already logged in, redirect away
+    // ─── Session Repair & Auto-Redirect ───────────────────────────
+    // If the user is already logged in to Firebase, we need to ensure 
+    // the Server-side session cookie is also valid before redirecting.
     useEffect(() => {
-        if (!user || loading) return;
+        if (!user || loading || !initialized) return;
 
-        if (redirectPath) {
-            router.replace(redirectPath);
-        } else if (user.role === 'superadmin' || user.role === 'admin') {
-            router.replace('/admin');
-        } else {
-            router.replace('/profile');
-        }
-    }, [user, redirectPath, router, loading]);
+        const syncAndRedirect = async () => {
+            try {
+                setLoading(true);
+                // Sync session cookie with backend
+                const idToken = await auth.currentUser?.getIdToken(true);
+                if (idToken) {
+                    await fetch('/api/auth/session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken }),
+                    });
+                }
+
+                // Now safe to redirect
+                if (redirectPath) {
+                    window.location.href = redirectPath;
+                } else if (user.role === 'superadmin' || user.role === 'admin') {
+                    window.location.href = '/admin';
+                } else {
+                    window.location.href = '/profile';
+                }
+            } catch (err) {
+                console.error('Session sync failed:', err);
+                setError('Session synchronization failed. Please sign in manually.');
+                setLoading(false);
+            }
+        };
+
+        syncAndRedirect();
+    }, [user, initialized, redirectPath]); // Removed loading from deps to avoid re-triggering during sync
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

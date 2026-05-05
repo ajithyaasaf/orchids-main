@@ -213,13 +213,13 @@ export default function ProfilePage() {
                                             <div className="flex flex-col md:flex-row md:items-start justify-between mb-6 gap-4">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-3 mb-2">
-                                                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center shrink-0 overflow-hidden border relative group">
+                                                        <div className="w-14 h-20 bg-white rounded-lg flex items-center justify-center shrink-0 overflow-hidden border relative group p-1">
                                                             {order.items && order.items[0]?.productImage ? (
                                                                 <>
                                                                     <img
                                                                         src={getCloudinaryUrl(order.items[0].productImage, { width: 150 })}
                                                                         alt={order.items[0].productTitle}
-                                                                        className="w-full h-full object-cover"
+                                                                        className="max-w-full max-h-full object-contain"
                                                                     />
                                                                     {order.items.length > 1 && (
                                                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none transition-opacity group-hover:bg-black/20">

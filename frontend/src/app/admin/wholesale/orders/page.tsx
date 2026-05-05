@@ -643,7 +643,7 @@ export default function AdminOrdersPage() {
                                 </h3>
                                 <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
                                     <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>₹{selectedOrder.subtotal?.toFixed(2)}</span></div>
-                                    <div className="flex justify-between"><span className="text-gray-600">GST ({selectedOrder.gstRate}%)</span><span>₹{selectedOrder.gst?.toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-600">GST ({(selectedOrder.gstRate * 100).toFixed(0)}%)</span><span>₹{selectedOrder.gst?.toFixed(2)}</span></div>
                                     {selectedOrder.shipping > 0 && (
                                         <div className="flex justify-between"><span className="text-gray-600">Shipping</span><span>₹{selectedOrder.shipping?.toFixed(2)}</span></div>
                                     )}

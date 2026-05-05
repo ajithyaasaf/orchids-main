@@ -5,36 +5,38 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 
-// Category image map — update paths here when real photos are available
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
+
+// Category image map — Using Cloudinary public IDs for dynamic management
 const categories = [
     {
         name: 'Newborn Collection',
         href: '/products?category=newborn',
-        image: '/images/more collection to explore/new born.png',
+        image: 'new_born',
         bg: 'bg-pink-50',
     },
     {
         name: 'Girls Wear',
         href: '/products?category=girls',
-        image: '/images/more collection to explore/girl.png',
+        image: 'girl',
         bg: 'bg-rose-50',
     },
     {
         name: 'Boys Wear',
         href: '/products?category=boys',
-        image: '/images/more collection to explore/boy.png',
+        image: 'boy',
         bg: 'bg-sky-50',
     },
     {
         name: "Women's Apparel",
         href: '/products?category=women',
-        image: '/images/more collection to explore/women.png',
+        image: 'women',
         bg: 'bg-purple-50',
     },
     {
         name: "Men's Apparel",
         href: '/products?category=mens',
-        image: '/images/more collection to explore/men.png',
+        image: 'men',
         bg: 'bg-slate-50',
     },
 ];
@@ -57,7 +59,7 @@ export function CircularCategories() {
                                 className={`relative w-24 h-24 md:w-32 md:h-32 xl:w-40 xl:h-40 rounded-full overflow-hidden shadow-sm border-[3px] border-transparent group-hover:border-primary group-hover:shadow-md transition-all duration-300 ${category.bg}`}
                             >
                                 <Image
-                                    src={category.image}
+                                    src={getCloudinaryUrl(category.image, { width: 320 })}
                                     alt={category.name}
                                     fill
                                     className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"

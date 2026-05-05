@@ -7,40 +7,42 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Category image map — update paths when real photos are available
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
+
+// Category image map — Using Cloudinary IDs for dynamic management
 const collections = [
     {
         id: 'newborn',
         title: 'Newborn Collection',
-        image: '/images/more collection to explore/new born.png',
+        image: 'new_born',
         bg: '#fdf2f8',
         href: '/products?category=newborn',
     },
     {
         id: 'girls',
         title: 'Girls Wear',
-        image: '/images/more collection to explore/girl.png',
+        image: 'girl',
         bg: '#fff1f2',
         href: '/products?category=girls',
     },
     {
         id: 'boys',
         title: 'Boys Wear',
-        image: '/images/more collection to explore/boy.png',
+        image: 'boy',
         bg: '#f0f9ff',
         href: '/products?category=boys',
     },
     {
         id: 'women',
         title: "Women's Apparel",
-        image: '/images/more collection to explore/women.png',
+        image: 'women',
         bg: '#faf5ff',
         href: '/products?category=women',
     },
     {
         id: 'mens',
         title: "Men's Apparel",
-        image: '/images/more collection to explore/men.png',
+        image: 'men',
         bg: '#f8fafc',
         href: '/products?category=mens',
     },
@@ -99,7 +101,7 @@ export function ArchedCollections() {
 
                                             <div className="relative w-[90%] h-[95%] z-20">
                                                 <Image
-                                                    src={collection.image}
+                                                    src={getCloudinaryUrl(collection.image, { width: 600 })}
                                                     alt={collection.title}
                                                     fill
                                                     className="object-cover object-bottom transition-transform duration-700 group-hover:scale-105"

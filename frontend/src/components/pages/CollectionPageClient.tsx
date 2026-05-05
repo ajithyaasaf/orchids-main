@@ -41,6 +41,20 @@ export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ coll
             : null
     );
 
+    // Pagination state
+    const ITEMS_PER_PAGE = 12;
+    const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
+
+    const paginatedProducts = useMemo(() => {
+        return products.slice(0, visibleItems);
+    }, [products, visibleItems]);
+
+    const hasMore = visibleItems < products.length;
+
+    const handleLoadMore = () => {
+        setVisibleItems(prev => prev + ITEMS_PER_PAGE);
+    };
+
     // Update countdown timer every second
     React.useEffect(() => {
         if (!collection.displaySettings.showCountdown || !collection.endDate) return;
@@ -173,11 +187,28 @@ export const CollectionPageClient: React.FC<CollectionPageClientProps> = ({ coll
 
                     {/* Products Grid */}
                     {products.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {products.map(product => (
-                                <WholesaleProductCard key={product.id} product={product} />
-                            ))}
-                        </div>
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {paginatedProducts.map(product => (
+                                    <WholesaleProductCard key={product.id} product={product} />
+                                ))}
+                            </div>
+
+                            {/* Load More Button */}
+                            {hasMore && (
+                                <div className="mt-12 text-center">
+                                    <button
+                                        onClick={handleLoadMore}
+                                        className="inline-flex items-center justify-center px-8 py-3 border border-primary text-primary font-bold rounded-full hover:bg-primary hover:text-white transition-all duration-300"
+                                    >
+                                        Load More Bundles
+                                    </button>
+                                    <p className="text-sm text-gray-400 mt-4">
+                                        Showing {paginatedProducts.length} of {products.length} bundles
+                                    </p>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </section>

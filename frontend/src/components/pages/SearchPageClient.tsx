@@ -72,6 +72,15 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
     const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_asc' | 'price_desc'>('newest');
     const [isSearching, setIsSearching] = useState(false);
 
+    // Pagination state
+    const ITEMS_PER_PAGE = 12;
+    const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
+
+    // Reset pagination when search term changes
+    useEffect(() => {
+        setVisibleItems(ITEMS_PER_PAGE);
+    }, [debouncedSearchTerm, sortBy]);
+
     // Apply 300ms debounce to the search input
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -156,6 +165,10 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
         setSortBy(e.target.value as typeof sortBy);
     };
 
+    const handleLoadMore = () => {
+        setVisibleItems(prev => prev + ITEMS_PER_PAGE);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // Prevent form submission from reloading page, handled by reactivity
@@ -217,6 +230,8 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
                 <SearchResults
                     searchTerm={debouncedSearchTerm}
                     products={displayedProducts}
+                    visibleItems={visibleItems}
+                    onLoadMore={handleLoadMore}
                 />
             ) : (
                 <EmptySearchState totalProducts={initialProducts.length} />
@@ -235,10 +250,19 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
 interface SearchResultsProps {
     searchTerm: string;
     products: WholesaleProduct[];
+    visibleItems: number;
+    onLoadMore: () => void;
 }
 
-const SearchResults: React.FC<SearchResultsProps> = ({ searchTerm, products }) => (
-    <>
+const SearchResults: React.FC<SearchResultsProps> = ({ searchTerm, products, visibleItems, onLoadMore }) => {
+    const paginatedProducts = useMemo(() => {
+        return products.slice(0, visibleItems);
+    }, [products, visibleItems]);
+
+    const hasMore = visibleItems < products.length;
+
+    return (
+        <>
         {/* Results Count */}
         <div className="mb-6 flex items-center justify-between">
             <p className="text-gray-600">
@@ -248,11 +272,28 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchTerm, products }) =
 
         {/* Products Grid or Empty State */}
         {products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {products.map((product) => (
-                    <WholesaleProductCard key={product.id} product={product} />
-                ))}
-            </div>
+            <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {paginatedProducts.map((product) => (
+                        <WholesaleProductCard key={product.id} product={product} />
+                    ))}
+                </div>
+
+                {/* Load More Button */}
+                {hasMore && (
+                    <div className="mt-12 text-center">
+                        <button
+                            onClick={onLoadMore}
+                            className="inline-flex items-center justify-center px-8 py-3 border border-primary text-primary font-bold rounded-full hover:bg-primary hover:text-white transition-all duration-300"
+                        >
+                            Load More Results
+                        </button>
+                        <p className="text-sm text-gray-400 mt-4">
+                            Showing {paginatedProducts.length} of {products.length} bundles
+                        </p>
+                    </div>
+                )}
+            </>
         ) : (
             <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />

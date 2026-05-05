@@ -21,6 +21,10 @@ export default function AdminProductListPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    
     // Confirmation Modal State
     const [confirmModal, setConfirmModal] = useState<{
         isOpen: boolean;
@@ -140,7 +144,9 @@ export default function AdminProductListPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {products.map((product) => (
+                            {products
+                                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                .map((product) => (
                                 <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div>
@@ -235,6 +241,31 @@ export default function AdminProductListPage() {
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Pagination Footer */}
+                    {products.length > itemsPerPage && (
+                        <div className="bg-gray-50 border-t border-gray-100 px-6 py-4 flex items-center justify-between">
+                            <div className="text-sm text-gray-500">
+                                Showing <span className="font-medium text-gray-700">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium text-gray-700">{Math.min(currentPage * itemsPerPage, products.length)}</span> of <span className="font-medium text-gray-700">{products.length}</span> products
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Previous
+                                </button>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(products.length / itemsPerPage), p + 1))}
+                                    disabled={currentPage === Math.ceil(products.length / itemsPerPage)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 

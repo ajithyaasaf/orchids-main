@@ -39,9 +39,9 @@ export const useCartStore = create<CartStore>()(
     persist(
         (set, get) => ({
             items: [],
-            gstRate: 0.18, // Default, will be fetched from API
+            gstRate: 0.05, // Default changed from 0.18
             isLoadingGST: false,
-
+ 
             // Fetch GST rate from settings API
             fetchGSTRate: async () => {
                 set({ isLoadingGST: true });
@@ -51,14 +51,14 @@ export const useCartStore = create<CartStore>()(
                     const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
                     const response = await fetch(`${apiUrl}/settings`);
                     const data = await response.json();
-
+ 
                     if (data.success) {
                         const settings = data.data;
-                        set({ gstRate: settings.gstEnabled ? settings.gstRate : 0 });
+                        // Still set global rate for fallback, but main logic is now dynamic
+                        set({ gstRate: settings.gstEnabled ? (settings.gstRate || 0.05) : 0 });
                     }
                 } catch (error) {
                     console.error('Failed to fetch GST rate:', error);
-                    // Keep default 0.18
                 } finally {
                     set({ isLoadingGST: false });
                 }
@@ -121,7 +121,12 @@ export const useCartStore = create<CartStore>()(
             },
 
             getGST: () => {
-                return get().getSubtotal() * get().gstRate;
+                const items = get().items;
+                return items.reduce((sum, item) => {
+                    const pricePerPiece = item.product.bundlePrice / item.product.bundleQty;
+                    const itemGstRate = pricePerPiece > 2500 ? 0.18 : 0.05;
+                    return sum + (item.bundlesOrdered * item.product.bundlePrice * itemGstRate);
+                }, 0);
             },
 
             getTotal: () => {

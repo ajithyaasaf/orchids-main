@@ -15,7 +15,7 @@ export const getSettings = async (): Promise<Settings> => {
             // Initialize with defaults for greenfield deployment
             const defaults: Settings = {
                 // Wholesale GST configuration
-                gstRate: 0.18,
+                gstRate: 0.05,
                 gstEnabled: true,
                 businessName: 'Wholesale Orchids',
                 businessAddress: '',

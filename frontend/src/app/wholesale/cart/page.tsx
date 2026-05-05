@@ -196,7 +196,7 @@ export default function WholesaleCartPage() {
                                     <span className="font-semibold text-gray-900">₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-500 text-sm">
-                                    <span>GST Extra ({(gstRate * 100).toFixed(0)}%)</span>
+                                    <span>GST Extra ({(subtotal > 0 ? (gst / subtotal) * 100 : 5).toFixed(0)}%)</span>
                                     <span className="font-semibold text-gray-900">₹{gst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between items-end pt-4">

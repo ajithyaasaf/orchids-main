@@ -9,8 +9,9 @@ import {
     Package, RefreshCw, Search, AlertCircle, X, Truck,
     MessageSquare, MapPin, CreditCard, Clock, ChevronRight,
     FileText, Phone, StickyNote, TrendingUp, ShoppingBag,
-    Loader2, CheckCircle2, IndianRupee
+    Loader2, CheckCircle2, IndianRupee, Printer
 } from 'lucide-react';
+import { printTaxInvoice, printDeliveryChallan } from '@/lib/printDocuments';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { useToast } from '@/context/ToastContext';
 
@@ -736,6 +737,32 @@ export default function AdminOrdersPage() {
                                         Add
                                     </button>
                                 </div>
+                            </section>
+
+                            {/* ── Print Documents ─────────────────────────── */}
+                            <section>
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                                    <Printer className="w-3.5 h-3.5 inline mr-1" />Print Documents
+                                </h3>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => printTaxInvoice(selectedOrder)}
+                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-gray-900 hover:bg-gray-700 text-white rounded-xl text-sm font-semibold transition-colors"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        Tax Invoice
+                                    </button>
+                                    <button
+                                        onClick={() => printDeliveryChallan(selectedOrder)}
+                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold transition-colors"
+                                    >
+                                        <Truck className="w-4 h-4" />
+                                        Delivery Challan
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-2">
+                                    Both documents open in a new window. Use browser\'s Print → Save as PDF.
+                                </p>
                             </section>
 
                             {/* Payment IDs */}

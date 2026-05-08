@@ -107,13 +107,58 @@ export default function WholesaleCheckoutPage() {
         }
     }, [items, isSuccess, isHydrated]);
 
-    // ── Pincode Watcher (Edge Case: City/State Mapping) ──────────────────
+    const [isValidatingPincode, setIsValidatingPincode] = useState(false);
+
+    // ── Pincode Watcher (Auto-fill City/State) ──────────────────
     useEffect(() => {
-        if (address.pincode.length === 6) {
-            // Future: Call a pincode API to auto-fill City/State
-            // For now, we clear errors and trigger serviceability check if needed
-            setError('');
+        // Edge case: Clear validation error if user starts backspacing
+        if (address.pincode.length > 0 && address.pincode.length < 6) {
+            setError(prev => prev === 'Invalid Pincode. Please check and try again.' ? '' : prev);
+            return;
         }
+
+        const abortController = new AbortController();
+
+        const validatePincode = async () => {
+            if (address.pincode.length === 6) {
+                setIsValidatingPincode(true);
+                try {
+                    const response = await fetch(`https://api.postalpincode.in/pincode/${address.pincode}`, {
+                        signal: abortController.signal
+                    });
+                    
+                    if (!response.ok) throw new Error('API down');
+                    
+                    const data = await response.json();
+
+                    if (data && data[0] && data[0].Status === 'Success') {
+                        const postOffice = data[0].PostOffice[0];
+                        updateAddress({
+                            city: postOffice.District || postOffice.Region || postOffice.Name || '',
+                            state: postOffice.State || ''
+                        });
+                        setError(prev => prev === 'Invalid Pincode. Please check and try again.' ? '' : prev);
+                    } else {
+                        setError('Invalid Pincode. Please check and try again.');
+                        updateAddress({ city: '', state: '' });
+                    }
+                } catch (err: any) {
+                    if (err.name === 'AbortError') return; // Ignore aborted fetch (race condition prevented)
+                    console.error('Pincode validation API failed:', err);
+                    // Fallback: If external API fails, don't block the user from manually typing
+                    setError(prev => prev === 'Invalid Pincode. Please check and try again.' ? '' : prev);
+                } finally {
+                    setIsValidatingPincode(false);
+                }
+            }
+        };
+
+        const timeoutId = setTimeout(validatePincode, 400); // Debounce to prevent API spam
+        
+        return () => {
+            clearTimeout(timeoutId);
+            abortController.abort(); // Cancel pending fetch if user types quickly
+        };
     }, [address.pincode]);
 
     const updateAddress = (updates: Partial<typeof address>) => {
@@ -461,19 +506,26 @@ export default function WholesaleCheckoutPage() {
                                                     maxLength={10}
                                                 />
                                             </div>
-                                            <div className="col-span-2 sm:col-span-1">
+                                            <div className="col-span-2 sm:col-span-1 relative">
                                                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Pincode</label>
-                                                <input
-                                                    type="text"
-                                                    name="postal-code"
-                                                    autoComplete="postal-code"
-                                                    value={address.pincode}
-                                                    onChange={(e) => updateAddress({ pincode: e.target.value.replace(/\D/g, '') })}
-                                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
-                                                    placeholder="6-digit pincode"
-                                                    maxLength={6}
-                                                    required
-                                                />
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        name="postal-code"
+                                                        autoComplete="postal-code"
+                                                        value={address.pincode}
+                                                        onChange={(e) => updateAddress({ pincode: e.target.value.replace(/\D/g, '') })}
+                                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+                                                        placeholder="6-digit pincode"
+                                                        maxLength={6}
+                                                        required
+                                                    />
+                                                    {isValidatingPincode && (
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="col-span-2">
                                                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Detailed Address</label>

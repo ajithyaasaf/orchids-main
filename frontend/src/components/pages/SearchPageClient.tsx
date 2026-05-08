@@ -76,13 +76,13 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
     const ITEMS_PER_PAGE = 12;
     const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
 
+    // Apply 300ms debounce to the search input
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
     // Reset pagination when search term changes
     useEffect(() => {
         setVisibleItems(ITEMS_PER_PAGE);
     }, [debouncedSearchTerm, sortBy]);
-
-    // Apply 300ms debounce to the search input
-    const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
     // ========================================
     // Fuse.js Initialization (Fuzzy Search)
@@ -97,7 +97,7 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
                 { 
                     name: 'sizes', 
                     weight: 1, 
-                    getFn: (product) => Object.keys(product.bundleComposition) 
+                    getFn: (product: any) => Object.keys(product.bundleComposition) 
                 }
             ],
             threshold: 0.3,         // How fuzzy the match can be (0.0 = perfect, 1.0 = anything)
@@ -143,7 +143,7 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
 
         // Fuse returns an array of { item: Product, refIndex: number, ... }
         const results = fuse.search(debouncedSearchTerm);
-        return results.map(result => result.item);
+        return results.map((result: any) => result.item);
     }, [initialProducts, debouncedSearchTerm, fuse]);
 
     // Sort the filtered products

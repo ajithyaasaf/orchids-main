@@ -23,6 +23,7 @@ export default function CombosPage() {
         message: string;
         onConfirm: () => void;
         type?: 'danger' | 'warning' | 'info';
+        confirmText?: string;
     }>({
         isOpen: false,
         title: '',

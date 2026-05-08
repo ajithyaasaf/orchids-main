@@ -32,6 +32,7 @@ export default function AdminProductListPage() {
         message: string;
         onConfirm: () => void;
         type?: 'danger' | 'warning' | 'info';
+        confirmText?: string;
     }>({
         isOpen: false,
         title: '',

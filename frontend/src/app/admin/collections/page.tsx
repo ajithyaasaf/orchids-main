@@ -30,6 +30,7 @@ export default function AdminCollectionsPage() {
         message: string;
         onConfirm: () => void;
         type?: 'danger' | 'warning' | 'info';
+        confirmText?: string;
     }>({
         isOpen: false,
         title: '',

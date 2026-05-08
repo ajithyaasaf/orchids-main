@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { WholesaleOrder } from '@orchids/shared';
 import Link from 'next/link';
 import { Truck, Package, Calendar, MapPin, CreditCard, Tag, ArrowLeft } from 'lucide-react';
+import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 /**
  * Order Status Page

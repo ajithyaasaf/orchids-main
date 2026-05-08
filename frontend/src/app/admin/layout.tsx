@@ -16,7 +16,7 @@ const navGroups = [
         title: 'Overview',
         items: [
             { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-            { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+            { href: '/admin/analytics', label: 'Analytics', icon: BarChart3, superadminOnly: true },
         ]
     },
     {
@@ -31,8 +31,8 @@ const navGroups = [
         title: 'Marketing',
         items: [
             { href: '/admin/collections', label: 'Collections', icon: Sparkles, superadminOnly: true },
-            { href: '/admin/combos', label: 'Combos', icon: Gift },
-            { href: '/admin/coupons', label: 'Coupons', icon: Tag },
+            { href: '/admin/combos', label: 'Combos', icon: Gift, superadminOnly: true },
+            { href: '/admin/coupons', label: 'Coupons', icon: Tag, superadminOnly: true },
         ]
     },
     {

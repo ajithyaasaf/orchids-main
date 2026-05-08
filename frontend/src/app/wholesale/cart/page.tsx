@@ -207,10 +207,9 @@ export default function WholesaleCartPage() {
 
                             <button
                                 onClick={() => router.push('/wholesale/checkout')}
-                                className="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all mb-4 flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all mb-4 flex items-center justify-center"
                             >
                                 Proceed to Checkout
-                                <span className="text-xl">🔒</span>
                             </button>
 
                             <button

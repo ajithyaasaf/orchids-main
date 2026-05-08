@@ -140,9 +140,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
                             <nav className="space-y-6 pb-6">
                                 {navGroups.map((group) => {
-                                    const visibleItems = group.items.filter(item =>
-                                        !(item.superadminOnly && user.role !== 'superadmin')
-                                    );
+                                    const visibleItems = group.items.filter(item => {
+                                        if (item.superadminOnly && user?.role !== 'superadmin') {
+                                            return false;
+                                        }
+                                        return true;
+                                    });
 
                                     if (visibleItems.length === 0) return null;
 

@@ -8,7 +8,7 @@ import { AddToCartSection } from '@/components/product/AddToCartSection';
 import { ProductImageGallery } from '@/components/product/ProductImageGallery';
 import { PincodeCheck } from '@/components/product/PincodeCheck';
 import { WhatsAppInquiry } from '@/components/product/WhatsAppInquiry';
-import { SocialShare } from '@/components/product/SocialShare';
+
 import { RelatedProducts } from '@/components/product/RelatedProducts';
 import { RecentlyViewedProducts } from '@/components/product/RecentlyViewedProducts';
 import { RecentlyViewedTracker } from '@/components/product/RecentlyViewedTracker';
@@ -198,7 +198,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                         <span className="text-base text-gray-500 font-medium">/ bundle</span>
                                     </div>
                                     <p className="text-sm text-gray-400 mt-2 font-medium">
-                                        ₹{((product.bundlePrice || 0) / (product.bundleQty || 1)).toFixed(0)} per piece • GST Included
+                                        ₹{((product.bundlePrice || 0) / (product.bundleQty || 1)).toFixed(0)} per piece
                                     </p>
                                 </div>
 
@@ -250,8 +250,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                 </div>
                             )}
 
-                            {/* Social Share Section */}
-                            <SocialShare title={product.title} slug={product.slug} />
+                            {/* Social Share Section Removed per request */}
 
                             {/* Wholesale Value Props */}
                             <div className="grid grid-cols-3 gap-4 py-6 border-t border-gray-100">

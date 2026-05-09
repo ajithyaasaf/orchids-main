@@ -167,7 +167,7 @@ export function printTaxInvoice(order: any): void {
             <div class="brand-sub">Wholesale Fashion — Factory Direct</div>
             <div class="brand-sub" style="margin-top:6px">no.3(1)2A, Sivarajan compound, appachi Nagar extension,</div>
             <div class="brand-sub">2nd Street, Kongu main road, Tirupur - 641607</div>
-            <div class="brand-sub">support@orchidhub.in | +91 75399 60399</div>
+            <div class="brand-sub">orchidkidswearhub@gmail.com | +91 75399 60399</div>
         </div>
         <div style="text-align:right">
             <div class="invoice-title">Tax Invoice</div>
@@ -289,7 +289,7 @@ export function printTaxInvoice(order: any): void {
             <div>
                 <div class="bold">Orchid Hub Wholesale</div>
                 <div>This is a computer-generated invoice and does not require a physical signature.</div>
-                <div style="margin-top:4px">For queries: support@orchidhub.in</div>
+                <div style="margin-top:4px">For queries: orchidkidswearhub@gmail.com</div>
             </div>
             <div style="text-align:right">
                 <div class="label">Authorised Signatory</div>

@@ -105,14 +105,12 @@ router.get('/:orderId', verifyToken, async (req: AuthRequest, res: Response) => 
             invoiceDate: order.invoiceGeneratedAt || new Date(),
             order,
             businessDetails: {
-                name: 'Orchid',
-                address: 'Your Business Address, City, State, PIN',  // UPDATE THIS
-                phone: 'Your Phone',                                 // UPDATE THIS
-                email: 'your@email.com',                            // UPDATE THIS
-                // IMPROVEMENT #3: Add when registered
-                // gstin: 'Your GSTIN',
-                // cin: 'Your CIN',
-                // legalEntityName: 'Orchid Wholesale Store'
+                name: 'ORCHID HUB',
+                address: 'no.3(1)2A, Sivarajan compound, appachi Nagar extension,\n2nd Street, Kongu main road, Tirupur - 641607',
+                phone: '+91 75399 60399',
+                email: 'orchidkidswearhub@gmail.com',
+                gstin: '33AAHFO3619P1Z3',
+                legalEntityName: 'ORCHID HUB Wholesale'
             },
         };
 

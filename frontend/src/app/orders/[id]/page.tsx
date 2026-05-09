@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { WholesaleOrder } from '@orchids/shared';
 import Link from 'next/link';
-import { Truck, Package, Calendar, MapPin, CreditCard, Tag, ArrowLeft } from 'lucide-react';
+import { Truck, Package, Calendar, MapPin, CreditCard, Tag, ArrowLeft, FileText } from 'lucide-react';
 import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 /**
@@ -353,10 +353,15 @@ export default function OrderStatusPage() {
                     Continue Shopping
                 </Link>
                 <button
-                    onClick={() => window.print()}
-                    className="px-6 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50"
+                    onClick={() => {
+                        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                        const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+                        window.open(`${apiUrl}/invoices/${order.id}?download=false`, '_blank');
+                    }}
+                    className="px-6 py-3 border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
                 >
-                    Print Order
+                    <FileText className="w-5 h-5" />
+                    Download Tax Invoice
                 </button>
             </div>
 

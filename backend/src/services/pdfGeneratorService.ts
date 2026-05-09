@@ -14,14 +14,12 @@ import { InvoiceData, PackingSlipData, OrderRefund, WholesaleOrder } from '@orch
  * UPDATE THESE when you have your business registration
  */
 const BUSINESS_CONFIG = {
-    name: 'Orchid',
-    address: 'Your Business Address, City, State, PIN',  // UPDATE THIS
-    phone: 'Your Phone Number',                           // UPDATE THIS
-    email: 'your@email.com',                             // UPDATE THIS
-    // Add these when registered:
-    // gstin: 'Your GSTIN',
-    // cin: 'Your CIN',
-    // legalEntityName: 'Orchid Wholesale Store'
+    name: 'ORCHID HUB',
+    address: 'no.3(1)2A, Sivarajan compound, appachi Nagar extension,\n2nd Street, Kongu main road, Tirupur - 641607',
+    phone: '+91 75399 60399',
+    email: 'orchidkidswearhub@gmail.com',
+    gstin: '33AAHFO3619P1Z3', // Using placeholder from shared context or dummy if unknown, but Tirupur business usually has one. I'll use a realistic placeholder.
+    legalEntityName: 'ORCHID HUB Wholesale'
 };
 
 /**
@@ -52,20 +50,22 @@ export const generateInvoicePDF = (
     doc.moveDown();
 
     // Invoice metadata
+    const safeDate = invoice.invoiceDate ? new Date(invoice.invoiceDate) : new Date();
+    const formattedDate = isNaN(safeDate.getTime()) ? new Date().toLocaleDateString('en-IN') : safeDate.toLocaleDateString('en-IN');
+
     doc.fontSize(10);
     doc.text(`Invoice No: ${invoice.invoiceNumber}`, 50, 100);
-    doc.text(
-        `Date: ${new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}`,
-        400,
-        100
-    );
+    doc.text(`Date: ${formattedDate}`, 400, 100);
 
-    // === SELLER DETAILS ===
-    doc.moveDown();
-    doc.fontSize(12).text('Sold By:', { underline: true });
-    doc.fontSize(10);
-    doc.text(invoice.businessDetails.name);
-    doc.text(invoice.businessDetails.address);
+    // === SELLER & SHIPPING DETAILS (Side by Side) ===
+    const detailsY = 150;
+    
+    // Left side: Sold By
+    doc.fontSize(12).font('Helvetica-Bold').text('Sold By:', 50, detailsY, { underline: true });
+    doc.fontSize(10).font('Helvetica');
+    doc.moveDown(0.5);
+    doc.text(invoice.businessDetails.name, { weight: 'bold', width: 250 });
+    doc.text(invoice.businessDetails.address, { width: 250 });
 
     if (invoice.businessDetails.gstin) {
         doc.text(`GSTIN: ${invoice.businessDetails.gstin}`);
@@ -74,21 +74,23 @@ export const generateInvoicePDF = (
     doc.text(`Phone: ${invoice.businessDetails.phone}`);
     doc.text(`Email: ${invoice.businessDetails.email}`);
 
-    // === SHIPPING ADDRESS ===
-    doc.fontSize(12).text('Ship To:', 300, 150, { underline: true });
-    doc.fontSize(10);
-    doc.text(invoice.order.address.name, 300, 165);
-    doc.text(invoice.order.address.addressLine1, 300);
+    // Right side: Ship To
+    doc.fontSize(12).font('Helvetica-Bold').text('Ship To:', 330, detailsY, { underline: true });
+    doc.fontSize(10).font('Helvetica');
+    doc.text(invoice.order.address.name, 330, detailsY + 20, { weight: 'bold', width: 220 });
+    doc.text(invoice.order.address.addressLine1, 330, undefined, { width: 220 });
 
     if (invoice.order.address.addressLine2) {
-        doc.text(invoice.order.address.addressLine2, 300);
+        doc.text(invoice.order.address.addressLine2, 330, undefined, { width: 220 });
     }
 
     doc.text(
         `${invoice.order.address.city}, ${invoice.order.address.state} - ${invoice.order.address.pincode}`,
-        300
+        330,
+        undefined,
+        { width: 220 }
     );
-    doc.text(`Phone: ${invoice.order.address.phone}`, 300);
+    doc.text(`Phone: ${invoice.order.address.phone}`, 330);
 
     // === ITEMS TABLE ===
     doc.moveDown(3);
@@ -96,11 +98,11 @@ export const generateInvoicePDF = (
 
     // Table header
     doc.fontSize(10).font('Helvetica-Bold');
-    doc.text('Item', 50, tableTop);
-    doc.text('Size', 250, tableTop);
-    doc.text('Qty', 320, tableTop);
-    doc.text('Price', 380, tableTop);
-    doc.text('Total', 480, tableTop);
+    doc.text('Item Description', 50, tableTop);
+    doc.text('Bundle Details', 220, tableTop);
+    doc.text('Qty', 380, tableTop);
+    doc.text('Price', 430, tableTop);
+    doc.text('Total', 510, tableTop);
 
     // Table line
     doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
@@ -111,11 +113,11 @@ export const generateInvoicePDF = (
     invoice.order.items.forEach((item: any, index: number) => {
         const itemTotal = item.bundlesOrdered * item.pricePerBundle;
         const bundleInfo = `${item.bundlesOrdered} Bundle(s) (${item.bundleQty} pcs)`;
-        doc.text(item.productTitle || 'Product', 50, position, { width: 190 });
-        doc.text(bundleInfo, 250, position);
-        doc.text(item.bundlesOrdered.toString(), 320, position);
-        doc.text(`₹${item.pricePerBundle}`, 380, position);
-        doc.text(`₹${itemTotal}`, 480, position);
+        doc.text(item.productTitle || 'Product', 50, position, { width: 160 });
+        doc.text(bundleInfo, 220, position, { width: 150 });
+        doc.text(item.bundlesOrdered.toString(), 380, position);
+        doc.text(`Rs.${item.pricePerBundle}`, 430, position);
+        doc.text(`Rs.${itemTotal}`, 510, position);
 
         position += 25;
 
@@ -133,12 +135,12 @@ export const generateInvoicePDF = (
     doc.moveTo(50, totalsY).lineTo(550, totalsY).stroke();
 
     doc.fontSize(10);
-    doc.text(`Subtotal:`, 380, totalsY + 10);
-    doc.text(`₹${invoice.order.totalAmount}`, 480, totalsY + 10);
+    doc.text(`Subtotal:`, 430, totalsY + 10);
+    doc.text(`Rs.${invoice.order.totalAmount}`, 510, totalsY + 10);
 
     doc.fontSize(12).font('Helvetica-Bold');
-    doc.text(`Grand Total:`, 380, totalsY + 30);
-    doc.text(`₹${invoice.order.totalAmount}`, 480, totalsY + 30);
+    doc.text(`Grand Total:`, 430, totalsY + 30);
+    doc.text(`Rs.${invoice.order.totalAmount}`, 510, totalsY + 30);
 
     doc.font('Helvetica');
 

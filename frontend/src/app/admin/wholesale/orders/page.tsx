@@ -708,38 +708,7 @@ export default function AdminOrdersPage() {
                                 </div>
                             </section>
 
-                            {/* Admin Notes */}
-                            <section>
-                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                                    <StickyNote className="w-3.5 h-3.5 inline mr-1" />Internal Notes
-                                </h3>
-                                {(selectedOrder.adminNotes || []).length > 0 && (
-                                    <div className="space-y-2 mb-3">
-                                        {selectedOrder.adminNotes.map((n: any, i: number) => (
-                                            <div key={i} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
-                                                <p className="text-gray-800">{n.text}</p>
-                                                <p className="text-xs text-gray-400 mt-1">{formatDate(n.addedAt)}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="flex gap-2">
-                                    <textarea
-                                        value={noteText}
-                                        onChange={(e) => setNoteText(e.target.value)}
-                                        placeholder="Add an internal note..."
-                                        rows={2}
-                                        className="flex-1 text-sm border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
-                                    />
-                                    <button
-                                        onClick={handleAddNote}
-                                        disabled={!noteText.trim()}
-                                        className="px-3 py-2 bg-gray-900 text-white rounded-lg text-sm disabled:opacity-40 hover:bg-gray-800"
-                                    >
-                                        Add
-                                    </button>
-                                </div>
-                            </section>
+
 
                             {/* ── Print Documents ─────────────────────────── */}
                             <section>

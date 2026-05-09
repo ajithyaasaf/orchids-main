@@ -38,7 +38,7 @@ const navGroups = [
     {
         title: 'System',
         items: [
-            { href: '/admin/settings', label: 'Settings', icon: Settings },
+            { href: '/admin/settings', label: 'Settings', icon: Settings, superadminOnly: true },
         ]
     }
 ];

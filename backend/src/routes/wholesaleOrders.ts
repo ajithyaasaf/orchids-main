@@ -23,6 +23,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 
 import { createWholesaleOrder } from '../services/wholesaleOrderService';
 import { getDashboardAnalytics } from '../services/dashboardService';
+import { updateCustomerCacheOnCancellation } from '../services/customerAnalyticsService';
 import logger from '../utils/logger';
 
 /**
@@ -114,6 +115,16 @@ router.patch('/:id/status', verifyToken, requireAdmin, async (req, res, next) =>
             statusHistory: admin.firestore.FieldValue.arrayUnion(statusEntry),
             updatedAt: new Date(),
         });
+
+        // If cancelling a paid order, reverse the customer analytics cache
+        if (orderStatus === 'cancelled') {
+            try {
+                await updateCustomerCacheOnCancellation({ ...order, id: orderId });
+            } catch (cacheError) {
+                logger.error(`Failed to update customer cache on cancellation for order ${orderId}:`, cacheError);
+                // Non-fatal: cache can be rebuilt via /api/customers/resync
+            }
+        }
 
         res.json({
             success: true,

@@ -6,6 +6,7 @@ import { paymentLimiter } from '../middleware/rateLimiter';
 import { collections } from '../config/firebase';
 import logger from '../utils/logger';
 import { getWholesaleOrderById, updateWholesalePaymentStatus } from '../services/wholesaleOrderService';
+import { updateCustomerCacheOnOrder } from '../services/customerAnalyticsService';
 
 const router = express.Router();
 
@@ -152,6 +153,13 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
 
         // ✅ Signature verified — mark order as paid
         const updatedOrder = await updateWholesalePaymentStatus(orderId, 'paid', razorpayPaymentId);
+
+        // Update customer analytics cache (non-fatal)
+        try {
+            await updateCustomerCacheOnOrder(updatedOrder);
+        } catch (error) {
+            logger.error('Failed to update customer cache after payment verify', error);
+        }
 
         // Auto-generate invoice
         try {

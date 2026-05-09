@@ -3,7 +3,7 @@ import type {
     CustomerInsight,
     CustomerMetadata,
     CustomerFilters,
-    WholesaleOrder as Order,
+    WholesaleOrder,
     User
 } from '@orchids/shared';
 
@@ -15,39 +15,39 @@ import type {
  * - Online: Count when paymentStatus === 'paid'
  * - COD: Count when paymentStatus === 'pending' && orderStatus === 'delivered'
  */
-export const updateCustomerCacheOnOrder = async (order: Order): Promise<void> => {
-    // CRITICAL: For COD orders, wait until delivered before counting
-    // For online payments, count immediately when paid
-    const shouldCount = order.paymentStatus === 'paid' ||
-        (order.paymentStatus === 'pending' && order.orderStatus === 'delivered');
-
-    if (!shouldCount) return;
+export const updateCustomerCacheOnOrder = async (order: WholesaleOrder): Promise<void> => {
+    // For wholesale: count immediately when payment is 'paid'
+    if (order.paymentStatus !== 'paid') return;
 
     const userRef = collections.users.doc(order.userId);
 
     await db.runTransaction(async (transaction) => {
         const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists) throw new Error('User not found');
+        if (!userDoc.exists) {
+            // User doc may not exist for some wholesale users — skip gracefully
+            return;
+        }
 
         const user = userDoc.data() as User;
         const newTotalOrders = (user.totalOrders || 0) + 1;
         const newTotalSpent = (user.totalSpent || 0) + order.totalAmount;
         const newAOV = newTotalSpent / newTotalOrders;
+        const orderDate = order.createdAt instanceof Date ? order.createdAt : new Date(order.createdAt);
+        const firstOrderDate = user.firstOrderDate || orderDate;
 
-        // Determine segment
         const segment = determineSegment({
             totalOrders: newTotalOrders,
             totalSpent: newTotalSpent,
-            lastOrderDate: order.createdAt,
-            firstOrderDate: user.firstOrderDate || order.createdAt,
+            lastOrderDate: orderDate,
+            firstOrderDate,
         });
 
         transaction.update(userRef, {
             totalOrders: newTotalOrders,
             totalSpent: newTotalSpent,
             averageOrderValue: newAOV,
-            lastOrderDate: order.createdAt,
-            firstOrderDate: user.firstOrderDate || order.createdAt,
+            lastOrderDate: orderDate,
+            firstOrderDate,
             segment,
             segmentUpdatedAt: new Date(),
         });
@@ -58,21 +58,20 @@ export const updateCustomerCacheOnOrder = async (order: Order): Promise<void> =>
  * CRITICAL: Update customer cache when order is cancelled
  * Must be called when order status changes to 'cancelled'
  */
-export const updateCustomerCacheOnCancellation = async (order: Order): Promise<void> => {
-    if (order.paymentStatus !== 'paid') return; // Only adjust if was counted
+export const updateCustomerCacheOnCancellation = async (order: WholesaleOrder): Promise<void> => {
+    if (order.paymentStatus !== 'paid') return; // Only adjust if it was counted
 
     const userRef = collections.users.doc(order.userId);
 
     await db.runTransaction(async (transaction) => {
         const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists) throw new Error('User not found');
+        if (!userDoc.exists) return; // Skip gracefully
 
         const user = userDoc.data() as User;
         const newTotalOrders = Math.max(0, (user.totalOrders || 1) - 1);
         const newTotalSpent = Math.max(0, (user.totalSpent || 0) - order.totalAmount);
         const newAOV = newTotalOrders > 0 ? newTotalSpent / newTotalOrders : 0;
 
-        // Recalculate segment after cancellation
         const segment = determineSegment({
             totalOrders: newTotalOrders,
             totalSpent: newTotalSpent,
@@ -95,14 +94,14 @@ export const updateCustomerCacheOnCancellation = async (order: Order): Promise<v
  * Must be called when refund is issued (partial or full)
  */
 export const updateCustomerCacheOnRefund = async (
-    order: Order,
+    order: WholesaleOrder,
     refundAmount: number
 ): Promise<void> => {
     const userRef = collections.users.doc(order.userId);
 
     await db.runTransaction(async (transaction) => {
         const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists) throw new Error('User not found');
+        if (!userDoc.exists) return; // Skip gracefully
 
         const user = userDoc.data() as User;
         const newTotalSpent = Math.max(0, (user.totalSpent || 0) - refundAmount);
@@ -179,17 +178,22 @@ export const getCustomerInsight = async (userId: string): Promise<CustomerInsigh
 
     const user = userDoc.data() as User;
 
-    // Fetch order history
-    const ordersSnapshot = await collections.orders
+    // Fetch wholesale order history (correct collection)
+    const ordersSnapshot = await collections.wholesaleOrders
         .where('userId', '==', userId)
         .orderBy('createdAt', 'desc')
         .get();
 
     const orders = ordersSnapshot.docs.map(doc => ({
+        id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-    })) as Order[];
+        createdAt: doc.data().createdAt?.toDate?.() ?? new Date(doc.data().createdAt),
+        updatedAt: doc.data().updatedAt?.toDate?.() ?? new Date(doc.data().updatedAt),
+    })) as WholesaleOrder[];
+
+    const firstOrderDate = user.firstOrderDate
+        ? (user.firstOrderDate instanceof Date ? user.firstOrderDate : new Date(user.firstOrderDate as any))
+        : new Date();
 
     return {
         ...user,
@@ -197,10 +201,10 @@ export const getCustomerInsight = async (userId: string): Promise<CustomerInsigh
             totalOrders: user.totalOrders || 0,
             totalSpent: user.totalSpent || 0,
             averageOrderValue: user.averageOrderValue || 0,
-            firstOrderDate: user.firstOrderDate || new Date(),
+            firstOrderDate,
             lastOrderDate: user.lastOrderDate,
             lifetime: user.firstOrderDate
-                ? Math.floor((Date.now() - user.firstOrderDate.getTime()) / (1000 * 60 * 60 * 24))
+                ? Math.floor((Date.now() - firstOrderDate.getTime()) / (1000 * 60 * 60 * 24))
                 : 0,
             favoriteCategory: calculateFavoriteCategory(orders),
             favoriteProducts: calculateFavoriteProducts(orders),
@@ -214,20 +218,20 @@ export const getCustomerInsight = async (userId: string): Promise<CustomerInsigh
  * Calculate favorite category from order history
  * Returns undefined for now - would need product data lookup
  */
-const calculateFavoriteCategory = (orders: Order[]): string | undefined => {
-    // TODO: Implement category aggregation when product data is accessible
-    return undefined;
+const calculateFavoriteCategory = (orders: WholesaleOrder[]): string | undefined => {
+    return undefined; // Category aggregation not applicable for bundle-based wholesale
 };
 
 /**
- * Calculate top 3 favorite products from order history
+ * Calculate top 3 most-ordered products from wholesale order history
+ * Uses bundlesOrdered (not quantity) as the wholesale unit
  */
-const calculateFavoriteProducts = (orders: Order[]): string[] => {
+const calculateFavoriteProducts = (orders: WholesaleOrder[]): string[] => {
     const productCounts: Record<string, number> = {};
 
     orders.forEach(order => {
-        order.items.forEach((item: any) => {
-            productCounts[item.productId] = (productCounts[item.productId] || 0) + item.quantity;
+        order.items.forEach(item => {
+            productCounts[item.productId] = (productCounts[item.productId] || 0) + item.bundlesOrdered;
         });
     });
 
@@ -246,6 +250,7 @@ export const getAllCustomersWithInsights = async (
     limit = 20,
     lastDocId?: string
 ): Promise<{ customers: CustomerInsight[]; total: number; lastDocId?: string }> => {
+    // Query all users who have placed wholesale orders (role = 'customer' or have totalOrders cached)
     let query = collections.users.where('role', '==', 'customer');
 
     // Apply filters using cached fields (fast!)
@@ -311,36 +316,37 @@ export const recalculateAllCustomerMetrics = async (): Promise<{ processed: numb
         try {
             const userId = userDoc.id;
 
-            // Calculate from orders (source of truth)
-            const ordersSnapshot = await collections.orders
+            // Source of truth: wholesaleOrders collection (paid + not cancelled)
+            const ordersSnapshot = await collections.wholesaleOrders
                 .where('userId', '==', userId)
                 .where('paymentStatus', '==', 'paid')
-                .where('orderStatus', '!=', 'cancelled')
                 .get();
 
-            const orders = ordersSnapshot.docs.map(d => ({
-                ...d.data(),
-                createdAt: d.data().createdAt?.toDate(),
-            })) as Order[];
+            const orders = ordersSnapshot.docs
+                .map(d => ({
+                    ...d.data(),
+                    id: d.id,
+                    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
+                }))
+                .filter(o => o.orderStatus !== 'cancelled') as WholesaleOrder[];
 
             const totalOrders = orders.length;
             const totalSpent = orders.reduce((sum, o) => sum + o.totalAmount, 0);
             const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
-            const firstOrderDate = orders.length > 0
-                ? orders.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0].createdAt
-                : undefined;
-            const lastOrderDate = orders.length > 0
-                ? orders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt
-                : undefined;
+
+            const sorted = [...orders].sort(
+                (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+            const firstOrderDate = sorted.length > 0 ? sorted[0].createdAt : undefined;
+            const lastOrderDate = sorted.length > 0 ? sorted[sorted.length - 1].createdAt : undefined;
 
             const segment = determineSegment({
                 totalOrders,
                 totalSpent,
-                lastOrderDate,
-                firstOrderDate,
+                lastOrderDate: lastOrderDate instanceof Date ? lastOrderDate : undefined,
+                firstOrderDate: firstOrderDate instanceof Date ? firstOrderDate : undefined,
             });
 
-            // Update user doc
             await collections.users.doc(userId).update({
                 totalOrders,
                 totalSpent,
@@ -369,24 +375,19 @@ export const exportCustomersToCSV = async (filters?: CustomerFilters): Promise<s
     let allCustomers: User[] = [];
     let lastDoc: any = null;
 
-    // Fetch in batches to avoid large read operations
     while (true) {
         let query = collections.users.where('role', '==', 'customer').limit(BATCH_SIZE);
-
-        if (lastDoc) {
-            query = query.startAfter(lastDoc);
-        }
+        if (lastDoc) query = query.startAfter(lastDoc);
 
         const snapshot = await query.get();
         if (snapshot.empty) break;
 
         allCustomers.push(...snapshot.docs.map(d => d.data() as User));
         lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-        if (snapshot.docs.length < BATCH_SIZE) break; // Last batch
+        if (snapshot.docs.length < BATCH_SIZE) break;
     }
 
-    // Apply filters
+    // Apply in-memory filters
     let filtered = allCustomers;
     if (filters?.segment) {
         filtered = filtered.filter(u => u.segment === filters.segment);
@@ -399,10 +400,16 @@ export const exportCustomersToCSV = async (filters?: CustomerFilters): Promise<s
         );
     }
 
-    // Generate CSV
-    const headers = 'Email,Name,Phone,Total Orders,Total Spent,Segment,Last Order,First Order\n';
+    // Safe date formatter
+    const fmtDate = (d: any) => {
+        if (!d) return '';
+        const dt = d instanceof Date ? d : d.toDate ? d.toDate() : new Date(d);
+        return dt.toISOString();
+    };
+
+    const headers = 'Email,Name,Phone,Total Orders,Total Spent (₹),Segment,Last Order,First Order\n';
     const rows = filtered.map(u =>
-        `${u.email},"${u.name}",${u.phone || ''},${u.totalOrders || 0},${u.totalSpent || 0},${u.segment || 'inactive'},${u.lastOrderDate?.toISOString() || ''},${u.firstOrderDate?.toISOString() || ''}`
+        `${u.email},"${u.name}",${u.phone || ''},${u.totalOrders || 0},${u.totalSpent || 0},${u.segment || 'inactive'},${fmtDate(u.lastOrderDate)},${fmtDate(u.firstOrderDate)}`
     ).join('\n');
 
     return headers + rows;

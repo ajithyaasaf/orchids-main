@@ -3,6 +3,7 @@ import { verifyRazorpayWebhookSignature } from '../services/razorpayService';
 import { RAZORPAY_CONFIG } from '../config/razorpay';
 import { getWholesaleOrderById, updateWholesalePaymentStatus } from '../services/wholesaleOrderService';
 import { restoreBundleStock } from '../services/wholesaleStockService';
+import { updateCustomerCacheOnOrder } from '../services/customerAnalyticsService';
 import logger from '../utils/logger';
 
 const router = express.Router();
@@ -94,6 +95,15 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
             const updatedOrder = await updateWholesalePaymentStatus(orderId, 'paid', razorpayPaymentId);
             logger.info(`Webhook: Order ${orderId} marked as PAID (payment: ${razorpayPaymentId})`);
+
+            // Update customer analytics cache
+            try {
+                await updateCustomerCacheOnOrder(updatedOrder);
+                logger.info(`Webhook: Customer cache updated for order ${orderId}`);
+            } catch (error) {
+                logger.error('Webhook: Failed to update customer cache', error);
+                // Non-fatal: cache can be rebuilt via /api/customers/resync
+            }
 
             // Auto-generate invoice
             try {

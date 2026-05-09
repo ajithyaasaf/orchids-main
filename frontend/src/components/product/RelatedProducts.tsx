@@ -16,16 +16,26 @@ interface RelatedProductsProps {
 export const RelatedProducts: React.FC<RelatedProductsProps> = ({ category, currentProductId }) => {
     const [products, setProducts] = useState<WholesaleProduct[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isFallback, setIsFallback] = useState(false);
 
     useEffect(() => {
         const fetchRelated = async () => {
             try {
-                const allInCategory = await wholesaleProductsApi.getByCategory(category);
-                // Filter out current product and limit to 4
-                const filtered = allInCategory
-                    .filter(p => p.id !== currentProductId)
-                    .slice(0, 4);
-                setProducts(filtered);
+                let related = await wholesaleProductsApi.getByCategory(category);
+                let fallback = false;
+
+                // Filter current product first to check real count
+                let filtered = related.filter(p => p.id !== currentProductId);
+
+                // If no other products in same category, fallback to latest products
+                if (filtered.length === 0) {
+                    const allProducts = await wholesaleProductsApi.getAll();
+                    filtered = allProducts.filter(p => p.id !== currentProductId);
+                    fallback = true;
+                }
+
+                setProducts(filtered.slice(0, 4));
+                setIsFallback(fallback);
             } catch (error) {
                 console.error('Failed to fetch related products:', error);
             } finally {
@@ -53,12 +63,14 @@ export const RelatedProducts: React.FC<RelatedProductsProps> = ({ category, curr
     return (
         <section className="py-12 border-t border-gray-100 mt-12">
             <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-heading font-bold text-gray-900">You May Also Like</h2>
+                <h2 className="text-2xl font-heading font-bold text-gray-900">
+                    {isFallback ? 'Latest Products' : 'You May Also Like'}
+                </h2>
                 <Link 
-                    href={`/products?category=${category}`}
+                    href={isFallback ? '/products' : `/products?category=${category}`}
                     className="text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1 group"
                 >
-                    View All {category}
+                    {isFallback ? 'View All Products' : `View All ${category}`}
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
             </div>

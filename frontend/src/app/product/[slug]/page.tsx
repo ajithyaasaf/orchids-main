@@ -284,9 +284,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         <RelatedProducts category={product.category} currentProductId={product.id} />
                     )}
 
-                    {/* Recently Viewed Section (User History) (Currently Hidden)
+                    {/* Recently Viewed Section (User History) */}
                     <RecentlyViewedProducts currentProductId={product.id} />
-                    */}
                 </div>
             </main>
 

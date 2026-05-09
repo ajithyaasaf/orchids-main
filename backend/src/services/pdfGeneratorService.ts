@@ -59,7 +59,7 @@ export const generateInvoicePDF = (
 
     // === SELLER & SHIPPING DETAILS (Side by Side) ===
     const detailsY = 150;
-    
+
     // Left side: Sold By
     doc.fontSize(12).font('Helvetica-Bold').text('Sold By:', 50, detailsY, { underline: true });
     doc.fontSize(10).font('Helvetica');
@@ -113,23 +113,23 @@ export const generateInvoicePDF = (
     invoice.order.items.forEach((item: any, index: number) => {
         const itemTotal = item.bundlesOrdered * item.pricePerBundle;
         const pricePerPiece = Math.round(item.pricePerBundle / item.bundleQty);
-        
+
         // Product title with Style Code if available
-        const displayTitle = item.styleCode 
+        const displayTitle = item.styleCode
             ? `${item.productTitle} [${item.styleCode}]`
             : item.productTitle || 'Product';
 
         const bundleInfo = `${item.bundlesOrdered} Bundle(s) (${item.bundleQty} pcs)`;
-        
+
         doc.text(displayTitle, 50, position, { width: 160 });
         doc.text(bundleInfo, 220, position, { width: 150 });
         doc.text(item.bundlesOrdered.toString(), 380, position);
-        
+
         // Show bundle price + per piece breakdown
         doc.text(`Rs.${item.pricePerBundle}`, 430, position);
         doc.fontSize(7).text(`(Rs.${pricePerPiece}/pc)`, 430, position + 10);
         doc.fontSize(10); // Reset for next line
-        
+
         doc.text(`Rs.${itemTotal}`, 510, position);
 
         position += 30; // Increased spacing for the per-piece subtext
@@ -154,7 +154,7 @@ export const generateInvoicePDF = (
     doc.fontSize(12).font('Helvetica-Bold');
     doc.text(`Grand Total:`, 430, totalsY + 30);
     doc.text(`Rs.${invoice.order.totalAmount}`, 510, totalsY + 30);
-    
+
     doc.fontSize(8).font('Helvetica-Oblique');
     doc.text(`(Inclusive of all taxes & GST)`, 430, totalsY + 45);
     doc.font('Helvetica');

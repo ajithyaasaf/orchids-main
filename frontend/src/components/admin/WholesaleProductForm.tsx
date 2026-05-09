@@ -154,8 +154,9 @@ export default function WholesaleProductForm({
     // Bundle composition helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    const totalPcs = Object.values(form.bundleComposition).reduce((a, b) => a + b, 0);
-    const isValidComposition = totalPcs === form.bundleQty;
+    const totalPcs = Object.values(form.bundleComposition).reduce((a, b) => a + (Number(b) || 0), 0);
+    // Treat empty string bundleQty as 0 for validation purposes
+    const isValidComposition = totalPcs === (Number(form.bundleQty) || 0);
 
     /** When category changes, clear the composition to avoid stale size keys */
     const handleCategoryChange = (newCategoryId: string) => {
@@ -172,11 +173,12 @@ export default function WholesaleProductForm({
     };
 
     /** Update a single size key in the composition */
-    const updateSize = (size: string, qty: number) => {
+    const updateSize = (size: string, value: string) => {
         handleFieldChange({
             bundleComposition: {
                 ...form.bundleComposition,
-                [size]: Math.max(0, qty),
+                // Allow empty string to temporarily exist in state so backspace works
+                [size]: value === '' ? ('' as any) : Math.max(0, Number(value)),
             },
         });
     };
@@ -386,7 +388,22 @@ export default function WholesaleProductForm({
                         <input
                             type="number"
                             value={form.bundleQty}
-                            onChange={e => handleFieldChange({ bundleQty: Number(e.target.value) })}
+                            onChange={e => {
+                                const val = e.target.value;
+                                const newQty = val === '' ? ('' as any) : Number(val);
+                                const oldQty = Number(form.bundleQty) || 0;
+                                
+                                let updates: Partial<WholesaleJobFormData> = { bundleQty: newQty };
+                                
+                                // Preserve the per-piece price if quantity changes
+                                if (oldQty > 0 && form.bundlePrice !== '' && Number(form.bundlePrice) > 0) {
+                                    const piecePrice = Number(form.bundlePrice) / oldQty;
+                                    updates.bundlePrice = piecePrice * (Number(newQty) || 0);
+                                }
+                                
+                                handleFieldChange(updates);
+                            }}
+                            onWheel={e => (e.target as HTMLElement).blur()}
                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             min={1}
                             disabled={isLoading}
@@ -409,8 +426,9 @@ export default function WholesaleProductForm({
                                     </label>
                                     <input
                                         type="number"
-                                        value={form.bundleComposition[size] || 0}
-                                        onChange={e => updateSize(size, Number(e.target.value))}
+                                        value={form.bundleComposition[size] ?? ''}
+                                        onChange={e => updateSize(size, e.target.value)}
+                                        onWheel={e => (e.target as HTMLElement).blur()}
                                         className="w-full px-2 py-2 border rounded-lg text-center text-lg font-semibold"
                                         min={0}
                                         disabled={isLoading}
@@ -428,7 +446,7 @@ export default function WholesaleProductForm({
                                 : 'bg-red-100 text-red-800 border border-red-300'
                         }`}
                     >
-                        Total: {totalPcs} / {form.bundleQty}{' '}
+                        Total: {totalPcs} / {Number(form.bundleQty) || 0}{' '}
                         {isValidComposition ? '✓ Valid Configuration' : '✗ Must match bundle qty'}
                     </div>
                 </div>
@@ -437,25 +455,32 @@ export default function WholesaleProductForm({
                 <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold mb-4 text-green-900">Pricing</h3>
                     <label className="block text-sm font-medium mb-1 text-gray-700">
-                        Bundle Price (Total for {form.bundleQty} pieces){' '}
-                        <span className="text-red-500">*</span>
+                        Price per piece <span className="text-red-500">*</span>
                     </label>
                     <div className="flex items-center gap-2">
                         <span className="text-2xl font-bold text-gray-700">₹</span>
                         <input
                             type="number"
-                            value={form.bundlePrice}
-                            onChange={e => handleFieldChange({ bundlePrice: Number(e.target.value) })}
+                            value={form.bundlePrice === '' ? '' : (Number(form.bundleQty) > 0 ? Number(form.bundlePrice) / Number(form.bundleQty) : '')}
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === '') {
+                                    handleFieldChange({ bundlePrice: '' as any });
+                                } else {
+                                    handleFieldChange({ bundlePrice: Number(val) * (Number(form.bundleQty) || 0) });
+                                }
+                            }}
+                            onWheel={e => (e.target as HTMLElement).blur()}
                             className="flex-1 px-4 py-3 border-2 rounded-lg text-2xl font-semibold focus:ring-2 focus:ring-green-500"
                             placeholder="0"
                             step="0.01"
-                            disabled={isLoading}
+                            disabled={isLoading || !form.bundleQty}
                             required
                         />
                     </div>
-                    {form.bundlePrice > 0 && form.bundleQty > 0 && (
+                    {Number(form.bundlePrice) > 0 && Number(form.bundleQty) > 0 && (
                         <p className="text-sm text-gray-600 mt-2 font-medium">
-                            Price per piece: ₹{(form.bundlePrice / form.bundleQty).toFixed(2)}
+                            Total Bundle Price ({form.bundleQty} pieces): <span className="font-bold text-green-800">₹{Number(form.bundlePrice).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
                         </p>
                     )}
                 </div>
@@ -468,14 +493,15 @@ export default function WholesaleProductForm({
                     <input
                         type="number"
                         value={form.availableBundles}
-                        onChange={e => handleFieldChange({ availableBundles: Number(e.target.value) })}
+                        onChange={e => handleFieldChange({ availableBundles: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                        onWheel={e => (e.target as HTMLElement).blur()}
                         className="w-full px-4 py-2 border rounded-lg"
                         min={0}
                         disabled={isLoading}
                     />
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 mt-2 gap-2">
-                        {form.availableBundles > 0 ? (
-                            <p>Total pieces in stock: {form.availableBundles * form.bundleQty}</p>
+                        {Number(form.availableBundles) > 0 ? (
+                            <p>Total pieces in stock: {Number(form.availableBundles) * (Number(form.bundleQty) || 0)}</p>
                         ) : (
                             <p>Out of stock</p>
                         )}

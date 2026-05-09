@@ -117,13 +117,6 @@ export const WholesaleProductCard: React.FC<WholesaleProductCardProps> = ({
                             Low Stock
                         </span>
                     )}
-                    {/* Assorted Mix badge — shown when bundle has multiple designs/colors */}
-                    {isAssortedMix && (
-                        <span className="bg-violet-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider flex items-center gap-1">
-                            <Layers className="w-3 h-3" />
-                            Mix Design
-                        </span>
-                    )}
                 </div>
 
                 {/* ── Image dot indicators (shown on hover when multiple images exist) ── */}
@@ -145,14 +138,22 @@ export const WholesaleProductCard: React.FC<WholesaleProductCardProps> = ({
 
             {/* ── Content ────────────────────────────────────────── */}
             <div className="flex flex-col flex-1">
-                {/* Category & bundle size */}
+                {/* Category & badges */}
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary truncate mr-2">
                         {product.category || 'Wholesale'}
                     </span>
-                    <div className="flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
-                        <Package className="w-3 h-3" />
-                        <span>{product.bundleQty} Pcs/Bundle</span>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {isAssortedMix && (
+                            <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded border border-violet-100">
+                                <Layers className="w-3 h-3" />
+                                <span>Mix Design</span>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
+                            <Package className="w-3 h-3" />
+                            <span>{product.bundleQty} Pcs</span>
+                        </div>
                     </div>
                 </div>
 

@@ -254,3 +254,47 @@ export const deleteWholesaleProduct = async (id: string): Promise<void> => {
 
     await collections.wholesaleProducts.doc(id).delete();
 };
+
+/**
+ * Get Active Navigation Data
+ *
+ * Queries Firestore and derives the distinct categories + subcategory tags
+ * that actually have at least one product in the database.
+ *
+ * This powers the Header navigation menu so it ONLY shows categories and
+ * subcategories for which the client has uploaded products — automatically,
+ * with zero manual configuration required.
+ *
+ * Returns: A map of { [categoryId]: Set<tagValue> }
+ * Example: { girls: Set(['frocks', 't-shirts']), newborn: Set(['frocks']) }
+ */
+export const getActiveNavigationData = async (): Promise<Record<string, string[]>> => {
+    // Fetch only the fields we need — avoids transferring full product documents
+    const snapshot = await collections.wholesaleProducts
+        .select('category', 'tags')
+        .get();
+
+    const categoryTagMap: Record<string, Set<string>> = {};
+
+    snapshot.forEach(doc => {
+        const data = doc.data() as Pick<WholesaleProduct, 'category' | 'tags'>;
+        const { category, tags } = data;
+
+        if (!category) return; // Skip malformed docs
+
+        // Ensure the category key exists
+        if (!categoryTagMap[category]) {
+            categoryTagMap[category] = new Set<string>();
+        }
+
+        // Add each tag from this product
+        if (Array.isArray(tags)) {
+            tags.forEach(tag => categoryTagMap[category].add(tag));
+        }
+    });
+
+    // Convert Sets to plain arrays for JSON serialization
+    return Object.fromEntries(
+        Object.entries(categoryTagMap).map(([cat, tagSet]) => [cat, Array.from(tagSet)])
+    );
+};

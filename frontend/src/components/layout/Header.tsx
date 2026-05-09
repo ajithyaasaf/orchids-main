@@ -8,64 +8,95 @@ import { useCartStore } from '@/store/wholesaleCartStore';
 import { useAuthStore } from '@/store/authStore';
 import { ShoppingCart, User, Search, Menu, LogOut, ChevronDown } from 'lucide-react';
 import { PRODUCT_CATEGORIES } from '@orchids/shared';
+import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 
 /**
  * Main Header Component - Wholesale Platform
- * 
- * Clean Architecture Principles:
- * - Separation of Concerns: Navigation data separated from presentation
- * - Single Responsibility: Each section handles one aspect (logo, nav, user, cart)
- * - Maintainability: Navigation items defined as constants for easy updates
- * - Scalability: Modular structure allows easy addition of new categories
+ *
+ * Dynamic Navigation Architecture:
+ * - The PRODUCT_CATEGORIES shared config acts as a "master definition" for
+ *   labels, subcategory metadata, and ordering. It is the single source of truth
+ *   for what categories and tags *can* exist.
+ * - The Header fetches /api/wholesale/products/active-nav on mount to learn
+ *   which categories and subcategory tags *actually have products* right now.
+ * - Only the intersection of (master definition ∩ active DB data) is rendered.
+ *
+ * Client Workflow:
+ * - Admin uploads a "Girls → Frocks" product → "Girls" and "Frocks & Dresses"
+ *   automatically appear in the nav. Zero code changes needed.
+ * - Admin deletes all "Boys" products → "Boys" disappears from the nav.
  */
 
 // ============================================================================
-// CONSTANTS - Wholesale Navigation Structure
+// TYPES
+// ============================================================================
+
+interface NavSection {
+    title: string;
+    items: { label: string; href: string }[];
+}
+
+interface NavCategory {
+    id: string;
+    name: string;
+    href: string;
+    sections: NavSection[];
+}
+
+// ============================================================================
+// HELPER — Build navigation from DB data + shared config labels
 // ============================================================================
 
 /**
- * Wholesale category navigation items dynamically generated from shared config
- * This ensures the frontend navigation is always perfectly in sync with the actual product data structure
+ * Merges the live database navigation data with the shared category config
+ * to produce a fully-resolved navigation structure.
+ *
+ * @param activeData - Map of { categoryId → string[] of active tag values }
+ * @returns Ordered list of NavCategory objects, ready to render
  */
-const WHOLESALE_NAVIGATION = PRODUCT_CATEGORIES.map(category => {
-    // Generate a simple short name for the navigation tab
-    let navName = category.label;
-    if (category.id === 'newborn') navName = 'Newborn';
-    else if (category.id === 'girls') navName = 'Girls';
-    else if (category.id === 'boys') navName = 'Boys';
-    else if (category.id === 'women') navName = 'Women';
-    else if (category.id === 'mens') navName = 'Mens';
-    else navName = navName.replace(' Collection', '').replace(' Apparel', '').replace(' Wear', '');
+function buildNavigation(activeData: Record<string, string[]>): NavCategory[] {
+    const nav: NavCategory[] = [];
 
-    // Divvy the subcategories into columns of max 7 items for the mega menu styling
-    const maxItemsPerColumn = 7;
-    const columns = [];
-    for (let i = 0; i < category.subcategories.length; i += maxItemsPerColumn) {
-        columns.push(category.subcategories.slice(i, i + maxItemsPerColumn));
+    for (const categoryDef of PRODUCT_CATEGORIES) {
+        // Skip categories that have no products in the DB
+        if (!activeData[categoryDef.id]) continue;
+
+        const activeTags = activeData[categoryDef.id];
+
+        // Generate short display name
+        let navName = categoryDef.label
+            .replace(' Collection', '')
+            .replace(' Apparel', '')
+            .replace(' Wear', '');
+
+        // Resolve only the subcategories that have at least one product tagged
+        const activeSubcategories = categoryDef.subcategories.filter(sub =>
+            activeTags.includes(sub.value)
+        );
+
+        // Split into columns of max 7 for the mega-menu layout
+        const maxPerColumn = 7;
+        const columns: typeof activeSubcategories[number][][] = [];
+        for (let i = 0; i < activeSubcategories.length; i += maxPerColumn) {
+            columns.push(activeSubcategories.slice(i, i + maxPerColumn));
+        }
+
+        nav.push({
+            id: categoryDef.id,
+            name: navName,
+            href: `/products?category=${categoryDef.id}`,
+            sections: columns.map((col, idx) => ({
+                title: idx === 0 ? 'Categories' : `More ${navName}${idx > 1 ? ` ${idx}` : ''}`,
+                items: col.map(sub => ({
+                    label: sub.label,
+                    href: `/products?category=${categoryDef.id}&tag=${sub.value}`,
+                })),
+            })),
+        });
     }
 
-    return {
-        name: navName,
-        href: `/products?category=${category.id}`,
-        sections: columns.map((column, index) => ({
-            title: index === 0 ? 'Categories' : `More ${navName} ${index > 1 ? index : ''}`.trim(),
-            items: column.map(tag => ({
-                label: tag.label,
-                href: `/products?category=${category.id}&tag=${tag.value}`
-            }))
-        }))
-    };
-});
-
-/**
- * Mobile menu navigation items
- * Includes all wholesale categories plus utility links
- */
-const MOBILE_NAV_ITEMS = [
-    { name: 'Home', href: '/' },
-    ...WHOLESALE_NAVIGATION.map(cat => ({ name: cat.name, href: cat.href })),
-    { name: 'All Products', href: '/products' },
-] as const;
+    return nav;
+}
 
 // ============================================================================
 // MAIN COMPONENT
@@ -79,26 +110,38 @@ export const Header: React.FC = () => {
     // State Management
     // ========================================
 
-    // Hydration safety: Prevent SSR/client mismatch for cart count
     const [isMounted, setIsMounted] = React.useState(false);
     const [activeMegaMenu, setActiveMegaMenu] = React.useState<string | null>(null);
-    const pathname = usePathname();
-
-    React.useEffect(() => setIsMounted(true), []);
-
-    // UI state
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
     const [scrolled, setScrolled] = React.useState(false);
+
+    // Dynamic navigation built from live DB data
+    const [navigation, setNavigation] = React.useState<NavCategory[]>([]);
+
+    const pathname = usePathname();
 
     // ========================================
     // Effects
     // ========================================
+
+    React.useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Scroll detection for sticky header styling
     React.useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Fetch active navigation data from DB on mount
+    // This runs once per page load. The backend caches the result for 5 minutes,
+    // so this is not an expensive operation.
+    React.useEffect(() => {
+        wholesaleProductsApi.getActiveNavigation().then(activeData => {
+            setNavigation(buildNavigation(activeData));
+        });
     }, []);
 
     // ========================================
@@ -121,6 +164,13 @@ export const Header: React.FC = () => {
 
     const cartItemsCount = getTotalBundles();
 
+    // Mobile nav: flat list of active categories
+    const mobileNavItems = [
+        { name: 'Home', href: '/' },
+        ...navigation.map(cat => ({ name: cat.name, href: cat.href })),
+        { name: 'All Products', href: '/products' },
+    ];
+
     // ========================================
     // Render
     // ========================================
@@ -134,7 +184,7 @@ export const Header: React.FC = () => {
         >
             <div className="container-custom">
                 <div className="flex items-center justify-between h-20">
-                    {/* ... LOGO ... */}
+                    {/* LOGO */}
                     <Link href="/" className="flex items-center gap-2 relative z-10">
                         <div className="relative w-40 h-10 md:w-56 md:h-16 transition-all duration-300">
                             <Image
@@ -148,74 +198,78 @@ export const Header: React.FC = () => {
                         </div>
                     </Link>
 
-                    {/* ... DESKTOP NAV ... */}
+                    {/* DESKTOP NAV */}
                     <nav className="hidden md:flex items-center space-x-8" aria-label="Main navigation">
                         <Link href="/" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">
                             Home
                         </Link>
 
-                        {WHOLESALE_NAVIGATION.map((category) => (
+                        {navigation.map((category) => (
                             <div
-                                key={category.name}
+                                key={category.id}
                                 className="group"
-                                onMouseEnter={() => setActiveMegaMenu(category.name)}
+                                onMouseEnter={() => setActiveMegaMenu(category.id)}
                                 onMouseLeave={() => setActiveMegaMenu(null)}
                             >
                                 <Link
                                     href={category.href}
-                                    className={`flex items-center gap-1 text-sm font-medium transition-colors py-8 ${pathname?.startsWith(category.href) || activeMegaMenu === category.name
-                                        ? 'text-primary'
-                                        : 'text-slate-600 hover:text-primary'
-                                        }`}
+                                    className={`flex items-center gap-1 text-sm font-medium transition-colors py-8 ${
+                                        pathname?.startsWith(category.href) || activeMegaMenu === category.id
+                                            ? 'text-primary'
+                                            : 'text-slate-600 hover:text-primary'
+                                    }`}
                                 >
                                     {category.name}
-                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeMegaMenu === category.name ? 'rotate-180' : ''}`} />
+                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeMegaMenu === category.id ? 'rotate-180' : ''}`} />
                                 </Link>
 
-                                {/* MEGA MENU DROPDOWN */}
-                                <div
-                                    style={{ backgroundColor: '#ffffff', zIndex: 1000 }}
-                                    className={`absolute left-0 w-full bg-white shadow-xl border-t border-gray-100 transition-all duration-300 ease-in-out origin-top ${activeMegaMenu === category.name
-                                        ? 'opacity-100 visible translate-y-0'
-                                        : 'opacity-0 invisible -translate-y-2'
+                                {/* MEGA MENU DROPDOWN — only rendered when subcategories exist */}
+                                {category.sections.length > 0 && (
+                                    <div
+                                        style={{ backgroundColor: '#ffffff', zIndex: 1000 }}
+                                        className={`absolute left-0 w-full bg-white shadow-xl border-t border-gray-100 transition-all duration-300 ease-in-out origin-top ${
+                                            activeMegaMenu === category.id
+                                                ? 'opacity-100 visible translate-y-0'
+                                                : 'opacity-0 invisible -translate-y-2'
                                         }`}
-                                >
-                                    <div className="container-custom py-8">
-                                        <div className="grid grid-cols-4 gap-8">
-                                            {/* Featured Image - Placeholder logic */}
-                                            <div className="col-span-1 relative h-64 rounded-xl overflow-hidden group/image hidden lg:block">
-                                                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-400">
-                                                    <span>{category.name} Collection</span>
+                                    >
+                                        <div className="container-custom py-8">
+                                            <div className="grid grid-cols-4 gap-8">
+                                                {/* Featured placeholder */}
+                                                <div className="col-span-1 relative h-64 rounded-xl overflow-hidden hidden lg:block">
+                                                    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-400">
+                                                        <span>{category.name} Collection</span>
+                                                    </div>
+                                                    <div className="absolute bottom-4 left-4 text-gray-900 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold">
+                                                        New Arrivals
+                                                    </div>
                                                 </div>
-                                                <div className="absolute bottom-4 left-4 text-gray-900 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold">
-                                                    New Arrivals
-                                                </div>
-                                            </div>
 
-                                            {/* Subcategories */}
-                                            {category.sections.map((section) => (
-                                                <div key={section.title} className="col-span-1">
-                                                    <h3 className="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">
-                                                        {section.title}
-                                                    </h3>
-                                                    <ul className="space-y-3">
-                                                        {section.items.map((item) => (
-                                                            <li key={item.label}>
-                                                                <Link
-                                                                    href={item.href}
-                                                                    className="text-slate-600 hover:text-primary hover:pl-1 transition-all text-sm block"
-                                                                    onClick={() => setActiveMegaMenu(null)}
-                                                                >
-                                                                    {item.label}
-                                                                </Link>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            ))}
+                                                {/* Active subcategories */}
+                                                {category.sections.map((section) => (
+                                                    <div key={section.title} className="col-span-1">
+                                                        <h3 className="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">
+                                                            {section.title}
+                                                        </h3>
+                                                        <ul className="space-y-3">
+                                                            {section.items.map((item) => (
+                                                                <li key={item.label}>
+                                                                    <Link
+                                                                        href={item.href}
+                                                                        className="text-slate-600 hover:text-primary hover:pl-1 transition-all text-sm block"
+                                                                        onClick={() => setActiveMegaMenu(null)}
+                                                                    >
+                                                                        {item.label}
+                                                                    </Link>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         ))}
 
@@ -227,11 +281,9 @@ export const Header: React.FC = () => {
                         </Link>
                     </nav>
 
-                    {/* =================================== */}
                     {/* RIGHT SIDE ACTIONS */}
-                    {/* =================================== */}
                     <div className="flex items-center space-x-3 md:space-x-6">
-                        {/* Search Icon */}
+                        {/* Search */}
                         <Link
                             href="/search"
                             className="text-slate-600 hover:text-primary transition-colors"
@@ -282,13 +334,12 @@ export const Header: React.FC = () => {
                 </div>
             </div>
 
-            {/* =================================== */}
             {/* MOBILE MENU */}
-            {/* =================================== */}
             {mobileMenuOpen && (
                 <MobileMenu
                     user={user}
                     isMounted={isMounted}
+                    navItems={mobileNavItems}
                     onClose={closeMobileMenu}
                 />
             )}
@@ -300,10 +351,6 @@ export const Header: React.FC = () => {
 // SUB-COMPONENTS
 // ============================================================================
 
-/**
- * User Dropdown Menu Component
- * Shows user profile, admin access (if applicable), and logout
- */
 interface UserDropdownProps {
     user: { email: string | null; role: string };
     onLogout: () => void;
@@ -324,12 +371,10 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => (
                 origin-top-right border border-gray-100 p-2"
             role="menu"
         >
-            {/* User Email */}
             <div className="px-4 py-2 border-b border-gray-50 mb-2">
                 <p className="text-sm font-medium text-slate-900 truncate">{user.email}</p>
             </div>
 
-            {/* Admin Links */}
             {user.role === 'superadmin' && (
                 <Link
                     href="/admin"
@@ -350,7 +395,6 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => (
                 </Link>
             )}
 
-            {/* Customer Options */}
             <Link
                 href="/profile"
                 className="block px-4 py-2 text-sm text-slate-600 hover:bg-gray-50 rounded-lg"
@@ -367,7 +411,6 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => (
                 My Orders
             </Link>
 
-            {/* Logout */}
             <button
                 onClick={onLogout}
                 className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg flex items-center space-x-2 mt-1"
@@ -380,20 +423,17 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => (
     </div>
 );
 
-/**
- * Mobile Menu Component
- * Full-screen mobile navigation with wholesale categories
- */
 interface MobileMenuProps {
     user: { email: string | null; role: string } | null;
     isMounted: boolean;
+    navItems: { name: string; href: string }[];
     onClose: () => void;
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ user, isMounted, onClose }) => (
+const MobileMenu: React.FC<MobileMenuProps> = ({ user, isMounted, navItems, onClose }) => (
     <div className="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-xl z-50">
         <nav className="container-custom py-6 flex flex-col space-y-2" aria-label="Mobile navigation">
-            {MOBILE_NAV_ITEMS.map((link) => (
+            {navItems.map((link) => (
                 <Link
                     key={link.name}
                     href={link.href}
@@ -404,7 +444,6 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ user, isMounted, onClose }) => 
                 </Link>
             ))}
 
-            {/* Mobile Admin Links */}
             {isMounted && user?.role === 'superadmin' && (
                 <Link
                     href="/admin"

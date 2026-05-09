@@ -10,6 +10,7 @@ import {
     getWholesaleProductsByStyleCode,
     getAllWholesaleProducts,
     deleteWholesaleProduct,
+    getActiveNavigationData,
 } from '../services/wholesaleProductService';
 import { WholesaleProduct } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
@@ -55,6 +56,24 @@ function sanitizeProduct(product: WholesaleProduct): WholesaleProduct {
  * Wholesale Product Management Routes
  * Admin-only routes for managing bundle-based products
  */
+
+/**
+ * GET /api/wholesale/products/active-nav
+ * PUBLIC endpoint — no auth required.
+ * Returns which categories and subcategory tags actually have products in the DB.
+ * The Header uses this to build its navigation dynamically.
+ * Cache-Control: 5 minutes — safe for navigation data that changes rarely.
+ */
+router.get('/active-nav', async (req, res, next) => {
+    try {
+        const navData = await getActiveNavigationData();
+        // Cache for 5 minutes at browser/CDN level
+        res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+        res.json({ success: true, data: navData });
+    } catch (error) {
+        next(error);
+    }
+});
 
 /**
  * GET /api/wholesale/products

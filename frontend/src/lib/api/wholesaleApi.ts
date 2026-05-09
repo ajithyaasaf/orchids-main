@@ -60,6 +60,27 @@ const apiFetch = async (url: string, options: RequestInit = {}) => {
 
 export const wholesaleProductsApi = {
     /**
+     * Get active navigation data — PUBLIC, no auth required.
+     * Returns which categories and subcategory tags actually have products in the DB.
+     * Used by the Header to build navigation menus automatically.
+     */
+    getActiveNavigation: async (): Promise<Record<string, string[]>> => {
+        const response = await fetch(`${API_BASE}/wholesale/products/active-nav`, {
+            next: { revalidate: 300 }, // Next.js: cache for 5 min on the server side too
+        });
+
+        if (!response.ok) {
+            // Fail silently — return empty object so the menu just shows nothing
+            // rather than crashing the whole page
+            console.warn('[Nav] Failed to fetch active navigation data');
+            return {};
+        }
+
+        const data = await response.json();
+        return data.success ? data.data : {};
+    },
+
+    /**
      * Get all wholesale products
      */
     getAll: async (): Promise<WholesaleProduct[]> => {

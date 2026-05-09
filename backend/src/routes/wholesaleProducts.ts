@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken } from '../middleware/auth';
-import { requireSuperAdmin } from '../middleware/roleCheck';
+import { requireSuperAdmin, requireAdmin } from '../middleware/roleCheck';
 import {
     createWholesaleProduct,
     updateWholesaleProduct,
@@ -153,9 +153,9 @@ router.get('/:id', async (req, res, next) => {
 /**
  * POST /api/wholesale/products
  * Create new wholesale product
- * Superadmin only
+ * Admin accessible
  */
-router.post('/', verifyToken, requireSuperAdmin, async (req, res, next) => {
+router.post('/', verifyToken, requireAdmin, async (req, res, next) => {
     try {
         const productData = req.body;
 
@@ -191,7 +191,7 @@ router.post('/', verifyToken, requireSuperAdmin, async (req, res, next) => {
  * Update wholesale product
  * Admin can update, but price changes blocked if locked
  */
-router.patch('/:id', verifyToken, requireSuperAdmin, async (req, res, next) => {
+router.patch('/:id', verifyToken, requireAdmin, async (req, res, next) => {
     try {
         const updates = req.body;
         await updateWholesaleProduct(req.params.id, updates);
@@ -211,9 +211,9 @@ router.patch('/:id', verifyToken, requireSuperAdmin, async (req, res, next) => {
 /**
  * DELETE /api/wholesale/products/:id
  * Delete wholesale product
- * Only allowed if product is not locked
+ * Only allowed if product is not locked (Admin accessible)
  */
-router.delete('/:id', verifyToken, requireSuperAdmin, async (req, res, next) => {
+router.delete('/:id', verifyToken, requireAdmin, async (req, res, next) => {
     try {
         await deleteWholesaleProduct(req.params.id);
 

@@ -71,16 +71,19 @@ export default function WholesaleProductForm({
     initialData,
     onSubmit,
     isEditing = false,
-    isLoading = false
+    isLoading: externalLoading = false
 }: WholesaleProductFormProps) {
     const router = useRouter();
     const { showToast } = useToast();
 
     // Form State
     const [form, setForm] = useState<WholesaleJobFormData>(INITIAL_FORM);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
     const [error, setError] = useState<string>('');
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    
+    const isLoading = externalLoading || isSubmitting;
 
     // Initialize with data (edit mode)
     useEffect(() => {
@@ -207,11 +210,14 @@ export default function WholesaleProductForm({
             return;
         }
 
+        setIsSubmitting(true);
         try {
             await onSubmit(form);
             setIsDirty(false);
         } catch (err: any) {
             setError(err.message || 'Failed to save product');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

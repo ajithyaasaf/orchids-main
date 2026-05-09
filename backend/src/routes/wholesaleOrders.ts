@@ -127,9 +127,9 @@ router.patch('/:id/status', verifyToken, requireAdmin, async (req, res, next) =>
 /**
  * PATCH /api/wholesale/orders/:id/discount
  * Apply manual discount with audit trail
- * Superadmin only
+ * Admin accessible
  */
-router.patch('/:id/discount', verifyToken, requireSuperAdmin, async (req, res, next) => {
+router.patch('/:id/discount', verifyToken, requireAdmin, async (req, res, next) => {
     try {
         const { discount, reason } = req.body;
         const orderId = req.params.id;

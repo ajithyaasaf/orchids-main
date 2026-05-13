@@ -94,10 +94,10 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
                 { name: 'category', weight: 1.5 },      // Category matches
                 { name: 'description', weight: 1 },     // Description matches
                 // Search within sizes (bundle composition keys like 'S', 'M', 'L')
-                { 
-                    name: 'sizes', 
-                    weight: 1, 
-                    getFn: (product: any) => Object.keys(product.bundleComposition) 
+                {
+                    name: 'sizes',
+                    weight: 1,
+                    getFn: (product: any) => Object.keys(product.bundleComposition)
                 }
             ],
             threshold: 0.3,         // How fuzzy the match can be (0.0 = perfect, 1.0 = anything)
@@ -112,7 +112,7 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
     useEffect(() => {
         // Only update the URL after the user finishes typing (using the debounced value)
         const params = new URLSearchParams(searchParams.toString());
-        
+
         if (debouncedSearchTerm) {
             params.set('q', debouncedSearchTerm);
         } else {
@@ -198,9 +198,9 @@ export function SearchPageClient({ initialQuery = '', initialProducts = [] }: Se
                         />
                         {/* Loading Spinner for Debounce Feedback */}
                         {isSearching && (
-                             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-primary"></div>
-                             </div>
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-primary"></div>
+                            </div>
                         )}
                     </div>
 
@@ -263,59 +263,59 @@ const SearchResults: React.FC<SearchResultsProps> = ({ searchTerm, products, vis
 
     return (
         <>
-        {/* Results Count */}
-        <div className="mb-6 flex items-center justify-between">
-            <p className="text-gray-600">
-                Found <span className="font-bold text-gray-900">{products.length}</span> {products.length === 1 ? 'product' : 'products'} for "{searchTerm}"
-            </p>
-        </div>
-
-        {/* Products Grid or Empty State */}
-        {products.length > 0 ? (
-            <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {paginatedProducts.map((product) => (
-                        <WholesaleProductCard key={product.id} product={product} />
-                    ))}
-                </div>
-
-                {/* Load More Button */}
-                {hasMore && (
-                    <div className="mt-12 text-center">
-                        <button
-                            onClick={onLoadMore}
-                            className="inline-flex items-center justify-center px-8 py-3 border border-primary text-primary font-bold rounded-full hover:bg-primary hover:text-white transition-all duration-300"
-                        >
-                            Load More Results
-                        </button>
-                        <p className="text-sm text-gray-400 mt-4">
-                            Showing {paginatedProducts.length} of {products.length} bundles
-                        </p>
-                    </div>
-                )}
-            </>
-        ) : (
-            <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
-                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    No products found
-                </h3>
-                <p className="text-gray-500 mb-4">
-                    Try different keywords, check your spelling, or browse our categories.
+            {/* Results Count */}
+            <div className="mb-6 flex items-center justify-between">
+                <p className="text-gray-600">
+                    Found <span className="font-bold text-gray-900">{products.length}</span> {products.length === 1 ? 'product' : 'products'} for "{searchTerm}"
                 </p>
-                <div className="flex flex-wrap justify-center gap-2 mt-6">
-                    {PRODUCT_CATEGORIES.map(category => (
-                        <a
-                            key={category.id}
-                            href={`/products?category=${category.id}`}
-                            className="px-4 py-2 bg-primary-light text-primary rounded-lg hover:bg-pink-100 transition-colors text-sm font-medium"
-                        >
-                            Browse {category.label}
-                        </a>
-                    ))}
-                </div>
             </div>
-        )}
+
+            {/* Products Grid or Empty State */}
+            {products.length > 0 ? (
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {paginatedProducts.map((product) => (
+                            <WholesaleProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+
+                    {/* Load More Button */}
+                    {hasMore && (
+                        <div className="mt-12 text-center">
+                            <button
+                                onClick={onLoadMore}
+                                className="inline-flex items-center justify-center px-8 py-3 border border-primary text-primary font-bold rounded-full hover:bg-primary hover:text-white transition-all duration-300"
+                            >
+                                Load More Results
+                            </button>
+                            <p className="text-sm text-gray-400 mt-4">
+                                Showing {paginatedProducts.length} of {products.length} bundles
+                            </p>
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        No products found
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                        Try different keywords, check your spelling, or browse our categories.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2 mt-6">
+                        {PRODUCT_CATEGORIES.map(category => (
+                            <a
+                                key={category.id}
+                                href={`/products?category=${category.id}`}
+                                className="px-4 py-2 bg-primary-light text-primary rounded-lg hover:bg-pink-100 transition-colors text-sm font-medium"
+                            >
+                                Browse {category.label}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
         </>
     );
 };

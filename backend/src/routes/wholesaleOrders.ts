@@ -127,6 +127,20 @@ router.patch('/:id/status', verifyToken, requireAdmin, async (req, res, next) =>
                 throw stockError;
             }
 
+            if (order.appliedCoupon?.couponId) {
+                try {
+                    const couponRef = collections.coupons.doc(order.appliedCoupon.couponId);
+                    await couponRef.update({
+                        usedCount: admin.firestore.FieldValue.increment(-1),
+                        usedBy: admin.firestore.FieldValue.arrayRemove(order.userId),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    logger.info(`Coupon reverted on cancellation for order ${orderId}`);
+                } catch (couponError) {
+                    logger.error(`Failed to revert coupon on cancellation for order ${orderId}:`, couponError);
+                }
+            }
+
             try {
                 await updateCustomerCacheOnCancellation({ ...order, id: orderId });
             } catch (cacheError) {

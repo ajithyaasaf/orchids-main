@@ -510,6 +510,15 @@ export async function updateWholesalePaymentStatus(
                 }
             }
 
+            if (status === 'failed' && order.appliedCoupon?.couponId) {
+                const couponRef = collections.coupons.doc(order.appliedCoupon.couponId);
+                transaction.update(couponRef, {
+                    usedCount: admin.firestore.FieldValue.increment(-1),
+                    usedBy: admin.firestore.FieldValue.arrayRemove(order.userId),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
             transaction.update(orderRef, updateData);
 
             if (status === 'paid') {

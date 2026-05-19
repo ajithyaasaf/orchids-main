@@ -127,7 +127,7 @@ export const validateCoupon = async (
         }
 
         // Check per-user limit
-        const userUsageCount = coupon.usedBy.filter(id => id === userId).length;
+        const userUsageCount = (coupon.usedBy || []).filter(id => id === userId).length;
         if (userUsageCount >= coupon.perUserLimit) {
             return {
                 valid: false,

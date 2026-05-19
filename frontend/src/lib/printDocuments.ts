@@ -295,27 +295,37 @@ export function printTaxInvoice(order: any): void {
                         '6109': "HSN 6109 — T-Shirts, singlets and other vests, knitted or crocheted.",
                     };
 
-                    const groups: Record<string, { taxable: number; gst: number; rate: number }> = {};
+                    const groups: Record<string, { hsn: string; taxable: number; gst: number; rate: number }> = {};
+                    const hasGst = (order.gst ?? 0) > 0;
                     (order.items ?? []).forEach((item: any) => {
                         const hsn: string = item.hsnCode || '6204';
-                        const pricePerPiece = (item.pricePerBundle ?? 0) / (item.bundleQty ?? 1);
-                        const rate = pricePerPiece > 2500 ? 0.18 : 0.05;
-                        if (!groups[hsn]) groups[hsn] = { taxable: 0, gst: 0, rate };
-                        groups[hsn].taxable += item.lineTotal ?? 0;
-                        groups[hsn].gst     += (item.lineTotal ?? 0) * rate;
+                        let itemGstRate = 0;
+                        if (hasGst) {
+                            const pricePerPiece = (item.pricePerBundle ?? 0) / (item.bundleQty ?? 1);
+                            itemGstRate = pricePerPiece > 2500 ? 0.18 : 0.05;
+                        }
+                        const itemGstAmount = (item.lineTotal ?? 0) * itemGstRate;
+                        
+                        const key = `${hsn}_${itemGstRate}`;
+                        if (!groups[key]) {
+                            groups[key] = { hsn, taxable: 0, gst: 0, rate: itemGstRate };
+                        }
+                        groups[key].taxable += item.lineTotal ?? 0;
+                        groups[key].gst     += itemGstAmount;
                     });
 
-                    const rows = Object.entries(groups).map(([hsn, g]) => `
+                    const rows = Object.values(groups).map((g) => `
                         <tr>
-                            <td><strong>${hsn}</strong></td>
-                            <td>${HSN_LABELS[hsn] ?? 'Apparel / Garments'}</td>
+                            <td><strong>${g.hsn}</strong></td>
+                            <td>${HSN_LABELS[g.hsn] ?? 'Apparel / Garments'}</td>
                             <td class="text-right">₹${fmt(g.taxable)}</td>
                             <td class="text-center">${(g.rate * 100).toFixed(0)}%</td>
                             <td class="text-right">₹${fmt(g.gst)}</td>
                         </tr>
                     `).join('');
 
-                    const descriptions = Object.keys(groups).map(hsn =>
+                    const uniqueHsns = Array.from(new Set(Object.values(groups).map(g => g.hsn)));
+                    const descriptions = uniqueHsns.map(hsn =>
                         `<div>${HSN_DESCRIPTIONS[hsn] ?? `HSN ${hsn} — Apparel and clothing accessories.`}</div>`
                     ).join('');
 

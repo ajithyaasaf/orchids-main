@@ -64,10 +64,10 @@ const INITIAL_FORM: WholesaleJobFormData = {
 
 /** Badge color/text by sizing dimension type */
 const SIZING_TYPE_BADGE: Record<string, { label: string; className: string }> = {
-    kids_age:    { label: 'Age Range (Kids)',     className: 'bg-purple-100 text-purple-700' },
-    newborn_age: { label: 'Age Range (Newborn)',  className: 'bg-pink-100 text-pink-700' },
-    standard:    { label: 'Standard Sizes',       className: 'bg-blue-100 text-blue-700' },
-    unisex:      { label: 'Unisex Sizes',         className: 'bg-green-100 text-green-700' },
+    kids_age: { label: 'Age Range (Kids)', className: 'bg-purple-100 text-purple-700' },
+    newborn_age: { label: 'Age Range (Newborn)', className: 'bg-pink-100 text-pink-700' },
+    standard: { label: 'Standard Sizes', className: 'bg-blue-100 text-blue-700' },
+    unisex: { label: 'Unisex Sizes', className: 'bg-green-100 text-green-700' },
 };
 
 export default function WholesaleProductForm({
@@ -85,7 +85,7 @@ export default function WholesaleProductForm({
     const [isDirty, setIsDirty] = useState(false);
     const [error, setError] = useState<string>('');
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    
+
     const isLoading = externalLoading || isSubmitting;
 
     // Initialize with data (edit mode)
@@ -428,15 +428,15 @@ export default function WholesaleProductForm({
                                 const val = e.target.value;
                                 const newQty = val === '' ? ('' as any) : Number(val);
                                 const oldQty = Number(form.bundleQty) || 0;
-                                
+
                                 let updates: Partial<WholesaleJobFormData> = { bundleQty: newQty };
-                                
+
                                 // Preserve the per-piece price if quantity changes
                                 if (oldQty > 0 && (form.bundlePrice as any) !== '' && Number(form.bundlePrice) > 0) {
                                     const piecePrice = Number(form.bundlePrice) / oldQty;
                                     updates.bundlePrice = piecePrice * (Number(newQty) || 0);
                                 }
-                                
+
                                 handleFieldChange(updates);
                             }}
                             onWheel={e => (e.target as HTMLElement).blur()}
@@ -476,11 +476,10 @@ export default function WholesaleProductForm({
 
                     {/* Composition Validation */}
                     <div
-                        className={`text-base font-semibold px-4 py-3 rounded-lg ${
-                            isValidComposition
+                        className={`text-base font-semibold px-4 py-3 rounded-lg ${isValidComposition
                                 ? 'bg-green-100 text-green-800 border border-green-300'
                                 : 'bg-red-100 text-red-800 border border-red-300'
-                        }`}
+                            }`}
                     >
                         Total: {totalPcs} / {Number(form.bundleQty) || 0}{' '}
                         {isValidComposition ? '✓ Valid Configuration' : '✗ Must match bundle qty'}

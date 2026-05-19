@@ -332,7 +332,7 @@ export const deleteCoupon = async (id: string): Promise<void> => {
  */
 export const getUserOrderCount = async (userId: string): Promise<number> => {
     try {
-        const ordersSnapshot = await collections.orders
+        const ordersSnapshot = await collections.wholesaleOrders
             .where('userId', '==', userId)
             .where('paymentStatus', '==', 'paid')
             .get();

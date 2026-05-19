@@ -174,6 +174,12 @@ export async function createWholesaleOrder(
                 throw new AppError('You have already used this coupon', 400);
             }
             
+            const userData = userDoc.exists ? (userDoc.data() as any) : null;
+            const userOrderCount = userData?.totalOrders || 0;
+            if (coupon.appliesTo === 'firstOrder' && userOrderCount > 0) {
+                throw new AppError('This coupon is only valid for first-time customers', 400);
+            }
+            
             appliedCouponData = {
                 couponId: couponDoc.id,
                 code: coupon.code,

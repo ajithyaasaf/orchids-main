@@ -4,7 +4,7 @@ import { getWholesaleProductById } from '../services/wholesaleProductService';
 import { calculateOrderTotal } from '../services/wholesalePricingService';
 import { validateBundleStock } from '../services/wholesalePricingService';
 import { logisticsService } from '../services/logisticsService';
-import { validateCoupon } from '../services/couponService';
+import { validateCoupon, getUserOrderCount } from '../services/couponService';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
 
@@ -116,7 +116,8 @@ router.post('/calculate', verifyToken, async (req, res, next) => {
         
         if (couponCode) {
             const subtotal = calculatedItems.reduce((sum, item) => sum + item.lineTotal, 0);
-            const couponResult = await validateCoupon(couponCode, (req as any).user.uid, subtotal);
+            const userOrderCount = await getUserOrderCount((req as any).user.uid);
+            const couponResult = await validateCoupon(couponCode, (req as any).user.uid, subtotal, userOrderCount);
             
             if (couponResult.valid && couponResult.coupon) {
                 couponDiscount = couponResult.discount;

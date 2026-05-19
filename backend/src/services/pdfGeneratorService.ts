@@ -35,16 +35,7 @@ const BUSINESS_CONFIG = {
  * @param options - Generation options
  * @param res - Express response object
  */
-export const generateInvoicePDF = (
-    invoice: InvoiceData,
-    options: { language?: string } = {},
-    res: Response
-): void => {
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
-
-    // Stream to HTTP response (no storage needed)
-    doc.pipe(res);
-
+const buildInvoiceDocument = (doc: any, invoice: InvoiceData): void => {
     // === HEADER ===
     doc.fontSize(20).text('TAX INVOICE', { align: 'center' });
     doc.moveDown();
@@ -110,7 +101,7 @@ export const generateInvoicePDF = (
     let position = tableTop + 20;
     doc.font('Helvetica');
 
-    invoice.order.items.forEach((item: any, index: number) => {
+    invoice.order.items.forEach((item: any) => {
         const itemTotal = item.bundlesOrdered * item.pricePerBundle;
         const pricePerPiece = Math.round(item.pricePerBundle / item.bundleQty);
 
@@ -143,44 +134,183 @@ export const generateInvoicePDF = (
 
     // === TOTALS ===
     doc.moveDown(2);
-    const totalsY = position + 20;
+    let totalsY = position + 20;
+
+    if (totalsY > 600) {
+        doc.addPage();
+        totalsY = 50;
+    }
 
     doc.moveTo(50, totalsY).lineTo(550, totalsY).stroke();
 
     doc.fontSize(10);
-    doc.text(`Subtotal:`, 430, totalsY + 10);
-    doc.text(`Rs.${invoice.order.totalAmount}`, 510, totalsY + 10);
+    let currentY = totalsY + 10;
 
+    // 1. Subtotal (Before Tax)
+    doc.text(`Subtotal (Before Tax):`, 380, currentY);
+    doc.text(`Rs.${invoice.order.subtotal ?? 0}`, 510, currentY);
+    currentY += 15;
+
+    // 2. GST Tax
+    const gstRatePct = ((invoice.order.gstRate ?? 0.05) * 100).toFixed(0);
+    doc.text(`GST @ ${gstRatePct}% (IGST):`, 380, currentY);
+    doc.text(`Rs.${invoice.order.gst ?? 0}`, 510, currentY);
+    currentY += 15;
+
+    // 3. Shipping / Delivery Charges
+    const shippingAmt = (invoice.order as any).shipping ?? 0;
+    if (shippingAmt > 0) {
+        doc.text(`Delivery Charges:`, 380, currentY);
+        doc.text(`Rs.${shippingAmt}`, 510, currentY);
+        currentY += 15;
+    }
+
+    // 4. Admin Discount
+    const adminDisc = invoice.order.adminDiscount ?? 0;
+    if (adminDisc > 0) {
+        doc.fillColor('#16a34a');
+        doc.text(`Admin Discount:`, 380, currentY);
+        doc.text(`- Rs.${adminDisc}`, 510, currentY);
+        doc.fillColor('#111111'); // Reset to default color
+        currentY += 15;
+    }
+
+    // 5. Coupon Discount
+    const couponDisc = invoice.order.appliedCoupon?.discount ?? 0;
+    if (couponDisc > 0) {
+        doc.fillColor('#16a34a');
+        const codeLabel = invoice.order.appliedCoupon?.code ? ` (${invoice.order.appliedCoupon.code})` : '';
+        doc.text(`Coupon Discount${codeLabel}:`, 380, currentY);
+        doc.text(`- Rs.${couponDisc}`, 510, currentY);
+        doc.fillColor('#111111'); // Reset
+        currentY += 15;
+    }
+
+    // Divider before Grand Total
+    doc.moveTo(380, currentY).lineTo(550, currentY).stroke();
+    currentY += 10;
+
+    // 6. Grand Total
     doc.fontSize(12).font('Helvetica-Bold');
-    doc.text(`Grand Total:`, 430, totalsY + 30);
-    doc.text(`Rs.${invoice.order.totalAmount}`, 510, totalsY + 30);
+    doc.text(`Grand Total:`, 380, currentY);
+    doc.text(`Rs.${invoice.order.totalAmount}`, 510, currentY);
+    currentY += 18;
 
     doc.fontSize(8).font('Helvetica-Oblique');
-    doc.text(`(Inclusive of all taxes & GST)`, 430, totalsY + 45);
+    doc.text(`(Inclusive of all taxes & GST)`, 380, currentY);
     doc.font('Helvetica');
 
+    // === HSN TAX SUMMARY ===
+    const HSN_LABELS: Record<string, string> = {
+        '6111': "Babies' / Newborn Garments",
+        '6103': "Boys' Garments",
+        '6104': "Girls' Garments",
+        '6203': "Men's Garments",
+        '6204': "Women's Garments",
+        '6109': 'T-Shirts & Vests (Knitted)',
+    };
+    const HSN_DESCRIPTIONS: Record<string, string> = {
+        '6111': "HSN 6111 — Babies' garments and clothing accessories, knitted or crocheted.",
+        '6103': "HSN 6103 — Men's or boys' suits, ensembles, jackets, blazers, trousers and shorts, knitted or crocheted.",
+        '6104': "HSN 6104 — Women's or girls' suits, ensembles, jackets, blazers, dresses, skirts, trousers and shorts, knitted or crocheted.",
+        '6203': "HSN 6203 — Men's or boys' suits, ensembles, jackets, blazers, trousers and shorts (woven).",
+        '6204': "HSN 6204 — Women's or girls' suits, ensembles, jackets, blazers, dresses, skirts and similar articles (woven).",
+        '6109': "HSN 6109 — T-Shirts, singlets and other vests, knitted or crocheted.",
+    };
+
+    const groups: Record<string, { taxable: number; gst: number; rate: number }> = {};
+    const orderGstRate = invoice.order.gstRate ?? 0.05; // Use actual rate from the order
+    (invoice.order.items ?? []).forEach((item: any) => {
+        const hsn: string = item.hsnCode || '6204';
+        if (!groups[hsn]) groups[hsn] = { taxable: 0, gst: 0, rate: orderGstRate };
+        groups[hsn].taxable += item.lineTotal ?? 0;
+        groups[hsn].gst     += (item.lineTotal ?? 0) * orderGstRate;
+    });
+
+    currentY += 25;
+
+    // Check pagination for the tax summary header
+    if (currentY > 600) {
+        doc.addPage();
+        currentY = 50;
+    }
+
+    doc.fontSize(10).font('Helvetica-Bold').text('GST Tax Summary', 50, currentY);
+    currentY += 15;
+
+    // Draw header row for HSN summary table
+    doc.fontSize(8);
+    doc.text('HSN/SAC', 50, currentY);
+    doc.text('Product Category', 120, currentY);
+    doc.text('Taxable Value', 280, currentY, { width: 80, align: 'right' });
+    doc.text('GST Rate', 380, currentY, { width: 60, align: 'center' });
+    doc.text('IGST Amount', 470, currentY, { width: 80, align: 'right' });
+    
+    currentY += 10;
+    doc.moveTo(50, currentY).lineTo(550, currentY).stroke();
+    currentY += 5;
+
     doc.font('Helvetica');
+    Object.entries(groups).forEach(([hsn, g]) => {
+        if (currentY > 680) {
+            doc.addPage();
+            currentY = 50;
+        }
+        doc.text(hsn, 50, currentY);
+        doc.text(HSN_LABELS[hsn] ?? 'Apparel / Garments', 120, currentY);
+        doc.text(`Rs.${g.taxable.toFixed(2)}`, 280, currentY, { width: 80, align: 'right' });
+        doc.text(`${(g.rate * 100).toFixed(0)}%`, 380, currentY, { width: 60, align: 'center' });
+        doc.text(`Rs.${g.gst.toFixed(2)}`, 470, currentY, { width: 80, align: 'right' });
+        currentY += 15;
+    });
+
+    // Draw HSN descriptions
+    currentY += 5;
+    doc.fontSize(7).fillColor('#666666');
+    Object.keys(groups).forEach(hsn => {
+        if (currentY > 700) {
+            doc.addPage();
+            currentY = 50;
+        }
+        doc.text(HSN_DESCRIPTIONS[hsn] ?? `HSN ${hsn} — Apparel and clothing accessories.`, 50, currentY);
+        currentY += 10;
+    });
+    doc.fillColor('#111111'); // Reset
 
     // === PAYMENT INFO ===
-    doc.moveDown();
+    currentY += 10;
+    if (currentY > 700) {
+        doc.addPage();
+        currentY = 50;
+    }
     doc.fontSize(10);
     doc.text(
         `Payment Method: ${invoice.order.paymentStatus.toUpperCase()}`,
         50,
-        totalsY + 60
+        currentY
     );
+    currentY += 15;
 
     if (invoice.order.gatewayPaymentId) {
+        if (currentY > 700) {
+            doc.addPage();
+            currentY = 50;
+        }
         doc.text(
             `Payment ID: ${invoice.order.gatewayPaymentId}`,
             50,
-            totalsY + 75
+            currentY
         );
+        currentY += 15;
     }
 
     // === LEGAL FOOTER ===
+    if (currentY > 680) {
+        doc.addPage();
+    }
+
     doc.fontSize(8);
-    let footerY = 750;
+    let footerY = 730;
 
     // Business legal details
     doc.text(invoice.businessDetails.name, 50, footerY);
@@ -213,6 +343,19 @@ export const generateInvoicePDF = (
         footerY,
         { align: 'center' }
     );
+};
+
+export const generateInvoicePDF = (
+    invoice: InvoiceData,
+    options: { language?: string } = {},
+    res: Response
+): void => {
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+
+    // Stream to HTTP response (no storage needed)
+    doc.pipe(res);
+
+    buildInvoiceDocument(doc, invoice);
 
     doc.end();
 };
@@ -415,15 +558,7 @@ export const generateInvoicePDFBuffer = async (invoice: InvoiceData): Promise<Bu
         doc.on('end', () => resolve(Buffer.concat(chunks)));
         doc.on('error', reject);
 
-        // Same content as generateInvoicePDF but to buffer
-        // (Reuse the same logic - this is a simplified version)
-        doc.fontSize(20).text('TAX INVOICE', { align: 'center' });
-        doc.fontSize(10);
-        doc.text(`Invoice No: ${invoice.invoiceNumber}`, 50, 100);
-        doc.text(`Date: ${new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}`, 400, 100);
-
-        // Add full invoice content here (same as generateInvoicePDF)
-        // For brevity, using simplified version
+        buildInvoiceDocument(doc, invoice);
 
         doc.end();
     });

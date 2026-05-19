@@ -222,7 +222,6 @@ export function printTaxInvoice(order: any): void {
         </tbody>
     </table>
 
-    <!-- Totals -->
     <div style="display:flex;justify-content:flex-end;margin-top:16px">
         <div style="width:300px">
             <div class="totals-row">
@@ -233,6 +232,11 @@ export function printTaxInvoice(order: any): void {
                 <span class="small">GST @ ${gstPct}% (IGST)</span>
                 <span>₹${fmt(order.gst ?? 0)}</span>
             </div>
+            ${(order.shipping ?? 0) > 0 ? `
+            <div class="totals-row">
+                <span class="small">Delivery Charges</span>
+                <span>₹${fmt(order.shipping)}</span>
+            </div>` : ''}
             ${(order.adminDiscount ?? 0) > 0 ? `
             <div class="totals-row" style="color:#16a34a">
                 <span>Admin Discount</span>

@@ -143,7 +143,8 @@ export interface WholesaleOrder {
     gstRate: number;                             // GST rate from settings (e.g., 0.18)
     gst: number;                                 // Calculated GST amount
     adminDiscount: number;                       // Manual discount by admin
-    totalAmount: number;                         // subtotal + gst - adminDiscount
+    shipping?: number;                           // Dynamic shipping surcharge / charge
+    totalAmount: number;                         // subtotal + gst - adminDiscount + shipping
 
     // Audit trail for discounts
     adminDiscountHistory: {

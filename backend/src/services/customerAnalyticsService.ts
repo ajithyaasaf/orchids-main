@@ -327,7 +327,7 @@ export const recalculateAllCustomerMetrics = async (): Promise<{ processed: numb
                     ...d.data(),
                     id: d.id,
                     createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
-                }))
+                }) as any)
                 .filter(o => o.orderStatus !== 'cancelled') as WholesaleOrder[];
 
             const totalOrders = orders.length;

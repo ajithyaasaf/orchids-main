@@ -74,6 +74,14 @@ router.post('/calculate', verifyToken, async (req, res, next) => {
             // Calculate line total
             const lineTotal = product.bundlePrice * item.bundlesOrdered;
 
+            // Snapshot HSN code — same fallback logic as wholesaleOrderService
+            const hsnFallback: Record<string, string> = {
+                newborn: '6111', girls: '6104', boys: '6103',
+                women: '6204',  mens:  '6203',
+            };
+            const hsnCode: string =
+                product.hsnCode || hsnFallback[product.category as string] || '6204';
+
             calculatedItems.push({
                 productId: product.id,
                 productTitle: product.title,
@@ -83,6 +91,7 @@ router.post('/calculate', verifyToken, async (req, res, next) => {
                 bundlesOrdered: item.bundlesOrdered,
                 pricePerBundle: product.bundlePrice,
                 lineTotal,
+                hsnCode,
             });
         }
 

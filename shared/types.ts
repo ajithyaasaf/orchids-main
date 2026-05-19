@@ -100,6 +100,14 @@ export interface WholesaleProduct {
     inStock: boolean;                            // availableBundles > 0
     createdAt: Date;
     updatedAt: Date;
+
+    /**
+     * HSN (Harmonised System of Nomenclature) code for Indian GST compliance.
+     * Set by admin during product creation; auto-filled from category default.
+     * Used to print the correct GST Tax Summary row on the invoice.
+     * Example: '6111' for newborn, '6204' for women's apparel.
+     */
+    hsnCode: string;
 }
 
 /**
@@ -115,6 +123,13 @@ export interface WholesaleBundleItem {
     bundlesOrdered: number;                      // How many bundles ordered
     pricePerBundle: number;                      // Price at time of order
     lineTotal: number;                           // bundlesOrdered × pricePerBundle
+    /**
+     * HSN code snapshotted from the product at the moment of checkout.
+     * Frozen here so that future changes to the product do not affect
+     * historical invoices. Falls back to '6204' for legacy orders that
+     * were created before this field was introduced.
+     */
+    hsnCode: string;
 }
 
 export interface WholesaleOrder {

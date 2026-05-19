@@ -213,6 +213,24 @@ export async function createWholesaleOrder(
             // ── Server-side price calculation (Zero Trust) ──
             const lineTotal = product.bundlePrice * cartItem.bundlesOrdered;
 
+            // ── HSN Code Snapshot ──────────────────────────────────────────
+            // Snapshot the HSN code from the product at the time of checkout.
+            // This freezes tax classification on the order so future product
+            // edits do not affect historical invoices.
+            // Category-based fallback handles legacy products created before
+            // the hsnCode field was introduced.
+            const hsnFallbackByCategory: Record<string, string> = {
+                newborn: '6111',
+                girls:   '6104',
+                boys:    '6103',
+                women:   '6204',
+                mens:    '6203',
+            };
+            const hsnCode: string =
+                product.hsnCode ||
+                hsnFallbackByCategory[product.category as string] ||
+                '6204'; // Final fallback — Women's apparel (most common)
+
             serverCalculatedItems.push({
                 productId: product.id || snap.id,
                 productTitle: product.title,
@@ -222,6 +240,7 @@ export async function createWholesaleOrder(
                 bundlesOrdered: cartItem.bundlesOrdered,
                 pricePerBundle: product.bundlePrice, // Price locked at time of order
                 lineTotal,
+                hsnCode,
             });
 
             // Prepare stock decrement

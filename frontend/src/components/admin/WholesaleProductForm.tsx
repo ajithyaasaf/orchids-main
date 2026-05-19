@@ -25,6 +25,8 @@ export interface WholesaleJobFormData {
     tags: string[];
     styleCode: string;
     colorName: string;
+    /** HSN code for Indian GST compliance — auto-filled from category, editable by admin */
+    hsnCode: string;
     bundleQty: number;
     bundleComposition: Record<string, number>;
     bundlePrice: number;
@@ -49,6 +51,7 @@ const INITIAL_FORM: WholesaleJobFormData = {
     tags: [],
     styleCode: '',
     colorName: '',
+    hsnCode: PRODUCT_CATEGORIES[0]?.defaultHsn || '6204',
     bundleQty: 20,
     bundleComposition: {},
     bundlePrice: 0,
@@ -95,6 +98,10 @@ export default function WholesaleProductForm({
                 tags: initialData.tags || [],
                 styleCode: initialData.styleCode || '',
                 colorName: initialData.colorName || '',
+                // Use saved HSN if present, otherwise fall back to the category default
+                hsnCode: initialData.hsnCode ||
+                    PRODUCT_CATEGORIES.find(c => c.id === (initialData.category || INITIAL_FORM.category))?.defaultHsn ||
+                    '6204',
                 bundleQty: initialData.bundleQty || 20,
                 bundleComposition: initialData.bundleComposition || {},
                 bundlePrice: initialData.bundlePrice || 0,
@@ -161,12 +168,14 @@ export default function WholesaleProductForm({
     // Treat empty string bundleQty as 0 for validation purposes
     const isValidComposition = totalPcs === (Number(form.bundleQty) || 0);
 
-    /** When category changes, clear the composition to avoid stale size keys */
+    /** When category changes, clear the composition and auto-fill the default HSN */
     const handleCategoryChange = (newCategoryId: string) => {
+        const catConfig = PRODUCT_CATEGORIES.find(c => c.id === newCategoryId);
         handleFieldChange({
             category: newCategoryId,
             tags: [],
             bundleComposition: {},
+            hsnCode: catConfig?.defaultHsn || '6204',
         });
     };
 
@@ -298,24 +307,45 @@ export default function WholesaleProductForm({
                     />
                 </div>
 
-                {/* ── Category ────────────────────────────────────────── */}
-                <div>
-                    <label className="block text-sm font-medium mb-1">
-                        Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={form.category}
-                        onChange={e => handleCategoryChange(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        disabled={isLoading}
-                        required
-                    >
-                        {PRODUCT_CATEGORIES.map(cat => (
-                            <option key={cat.id} value={cat.id}>
-                                {cat.label}
-                            </option>
-                        ))}
-                    </select>
+                {/* ── Category & HSN Code ──────────────────────────────── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Category <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            value={form.category}
+                            onChange={e => handleCategoryChange(e.target.value)}
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            disabled={isLoading}
+                            required
+                        >
+                            {PRODUCT_CATEGORIES.map(cat => (
+                                <option key={cat.id} value={cat.id}>
+                                    {cat.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            HSN Code <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={form.hsnCode}
+                            onChange={e => handleFieldChange({ hsnCode: e.target.value.trim() })}
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                            placeholder="e.g. 6204"
+                            maxLength={8}
+                            disabled={isLoading}
+                            required
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                            Auto-filled from category. Edit only if this product uses a different HSN.
+                        </p>
+                    </div>
                 </div>
 
                 {/* ── Tags ────────────────────────────────────────────── */}
@@ -402,7 +432,7 @@ export default function WholesaleProductForm({
                                 let updates: Partial<WholesaleJobFormData> = { bundleQty: newQty };
                                 
                                 // Preserve the per-piece price if quantity changes
-                                if (oldQty > 0 && form.bundlePrice !== '' && Number(form.bundlePrice) > 0) {
+                                if (oldQty > 0 && (form.bundlePrice as any) !== '' && Number(form.bundlePrice) > 0) {
                                     const piecePrice = Number(form.bundlePrice) / oldQty;
                                     updates.bundlePrice = piecePrice * (Number(newQty) || 0);
                                 }
@@ -467,7 +497,7 @@ export default function WholesaleProductForm({
                         <span className="text-2xl font-bold text-gray-700">₹</span>
                         <input
                             type="number"
-                            value={form.bundlePrice === '' ? '' : (Number(form.bundleQty) > 0 ? Number(form.bundlePrice) / Number(form.bundleQty) : '')}
+                            value={(form.bundlePrice as any) === '' ? '' : (Number(form.bundleQty) > 0 ? Number(form.bundlePrice) / Number(form.bundleQty) : '')}
                             onChange={e => {
                                 const val = e.target.value;
                                 if (val === '') {

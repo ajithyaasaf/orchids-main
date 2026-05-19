@@ -105,11 +105,39 @@ export function getSizeGroupForCategory(categoryId: string): SizeGroup {
 // CATEGORY DEFINITIONS
 // ============================================================================
 
+/**
+ * CategoryDefinition — the single source of truth for all product categories.
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  IMPORTANT — HSN CODE REQUIREMENT                                       │
+ * │                                                                         │
+ * │  Every category MUST include a `defaultHsn` field.                     │
+ * │  This HSN code is used in two critical places:                         │
+ * │    1. Auto-fill the HSN field when admin selects this category          │
+ * │       in the product creation / edit form.                              │
+ * │    2. Render the correct GST Tax Summary row in the printed invoice.    │
+ * │                                                                         │
+ * │  When adding a NEW category, always set `defaultHsn` from this list:   │
+ * │    6111 — Babies' / Newborn garments (knitted or crocheted)             │
+ * │    6103 — Boys' garments (knitted or crocheted)                         │
+ * │    6104 — Girls' garments (knitted or crocheted)                        │
+ * │    6203 — Men's garments (woven / other)                                │
+ * │    6204 — Women's garments (woven / other)                              │
+ * │    6109 — T-Shirts / Vests (knitted) — unisex fallback                  │
+ * │                                                                         │
+ * │  Reference: CBIC HSN Chapter 61 & 62 — Apparel & Clothing Accessories  │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
 export interface CategoryDefinition {
     id: string;
     label: string;
     sizingType: SizingType;   // Determines which SIZE_GROUP is used in the form
     subcategories: CategoryTag[];
+    /**
+     * Default HSN code for products in this category.
+     * MANDATORY — see comment block above for valid codes.
+     */
+    defaultHsn: string;
 }
 
 export const PRODUCT_CATEGORIES: CategoryDefinition[] = [
@@ -117,6 +145,7 @@ export const PRODUCT_CATEGORIES: CategoryDefinition[] = [
         id: 'newborn',
         label: 'Newborn Collection',
         sizingType: 'newborn_age',
+        defaultHsn: '6111', // HSN 6111 — Babies' garments and clothing accessories, knitted or crocheted
         subcategories: [
             { label: 'Jubba Sets', value: 'jubba' },
             { label: 'Rompers', value: 'rompers' },
@@ -143,12 +172,13 @@ export const PRODUCT_CATEGORIES: CategoryDefinition[] = [
             { label: 'Muslin Swaddle', value: 'muslin-swaddle' },
             { label: 'Padded Undies', value: 'padded-undies' },
             { label: 'Hooded Towel', value: 'hooded-towel' },
-        ]
+        ],
     },
     {
         id: 'girls',
         label: 'Girls Wear',
         sizingType: 'kids_age',
+        defaultHsn: '6104', // HSN 6104 — Girls' garments, knitted or crocheted
         subcategories: [
             { label: 'Frocks & Dresses', value: 'frocks' },
             { label: 'T-Shirts & Tops', value: 't-shirts' },
@@ -163,12 +193,13 @@ export const PRODUCT_CATEGORIES: CategoryDefinition[] = [
             { label: 'Slips', value: 'slips' },
             { label: 'Shorts', value: 'shorts' },
             { label: '3/4 Pants', value: '3-4-pants' },
-        ]
+        ],
     },
     {
         id: 'boys',
         label: 'Boys Wear',
         sizingType: 'kids_age',
+        defaultHsn: '6103', // HSN 6103 — Boys' garments, knitted or crocheted
         subcategories: [
             { label: 'T-Shirts', value: 't-shirts' },
             { label: 'Shirts', value: 'shirts' },
@@ -186,12 +217,13 @@ export const PRODUCT_CATEGORIES: CategoryDefinition[] = [
             { label: 'Collared Cordset', value: 'collared-cordset' },
             { label: 'Full Sleeve Co-ords', value: 'full-sleeve-co-ords' },
             { label: 'Sleeveless Co-ords', value: 'sleeveless-co-ords' },
-        ]
+        ],
     },
     {
         id: 'women',
         label: "Women's Apparel",
         sizingType: 'standard',
+        defaultHsn: '6204', // HSN 6204 — Women's garments, woven (suits, dresses, skirts, etc.)
         subcategories: [
             { label: 'Maternity Wear', value: 'maternity' },
             { label: 'Feeding Tops', value: 'feeding' },
@@ -206,12 +238,13 @@ export const PRODUCT_CATEGORIES: CategoryDefinition[] = [
             { label: 'Dresses', value: 'dresses' },
             { label: 'Underwear', value: 'underwear' },
             { label: 'Tights', value: 'tights' },
-        ]
+        ],
     },
     {
         id: 'mens',
         label: "Men's Apparel",
         sizingType: 'standard',
+        defaultHsn: '6203', // HSN 6203 — Men's garments, woven (trousers, shirts, etc.)
         subcategories: [
             { label: 'T-Shirts', value: 't-shirts' },
             { label: 'Shorts', value: 'shorts' },
@@ -219,8 +252,8 @@ export const PRODUCT_CATEGORIES: CategoryDefinition[] = [
             { label: 'Joggers', value: 'joggers' },
             { label: 'Underwear', value: 'underwear' },
             { label: 'Trunks', value: 'trunks' },
-        ]
-    }
+        ],
+    },
 ];
 
 /**

@@ -269,18 +269,59 @@ export function printTaxInvoice(order: any): void {
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>6204</td>
-                    <td>Women's Garments / Apparel</td>
-                    <td class="text-right">₹${fmt(order.subtotal ?? 0)}</td>
-                    <td class="text-center">${gstPct}%</td>
-                    <td class="text-right">₹${fmt(order.gst ?? 0)}</td>
-                </tr>
+                ${(() => {
+                    // ── HSN grouping engine ────────────────────────────────
+                    // Groups order items by HSN code and calculates per-group
+                    // taxable value and GST. Falls back to '6204' for legacy
+                    // orders that predate the hsnCode field.
+                    const HSN_LABELS: Record<string, string> = {
+                        '6111': "Babies' / Newborn Garments",
+                        '6103': "Boys' Garments",
+                        '6104': "Girls' Garments",
+                        '6203': "Men's Garments",
+                        '6204': "Women's Garments",
+                        '6109': 'T-Shirts & Vests (Knitted)',
+                    };
+                    const HSN_DESCRIPTIONS: Record<string, string> = {
+                        '6111': "HSN 6111 — Babies' garments and clothing accessories, knitted or crocheted.",
+                        '6103': "HSN 6103 — Men's or boys' suits, ensembles, jackets, blazers, trousers and shorts, knitted or crocheted.",
+                        '6104': "HSN 6104 — Women's or girls' suits, ensembles, jackets, blazers, dresses, skirts, trousers and shorts, knitted or crocheted.",
+                        '6203': "HSN 6203 — Men's or boys' suits, ensembles, jackets, blazers, trousers and shorts (woven).",
+                        '6204': "HSN 6204 — Women's or girls' suits, ensembles, jackets, blazers, dresses, skirts and similar articles (woven).",
+                        '6109': "HSN 6109 — T-Shirts, singlets and other vests, knitted or crocheted.",
+                    };
+
+                    const groups: Record<string, { taxable: number; gst: number; rate: number }> = {};
+                    (order.items ?? []).forEach((item: any) => {
+                        const hsn: string = item.hsnCode || '6204';
+                        const pricePerPiece = (item.pricePerBundle ?? 0) / (item.bundleQty ?? 1);
+                        const rate = pricePerPiece > 2500 ? 0.18 : 0.05;
+                        if (!groups[hsn]) groups[hsn] = { taxable: 0, gst: 0, rate };
+                        groups[hsn].taxable += item.lineTotal ?? 0;
+                        groups[hsn].gst     += (item.lineTotal ?? 0) * rate;
+                    });
+
+                    const rows = Object.entries(groups).map(([hsn, g]) => `
+                        <tr>
+                            <td><strong>${hsn}</strong></td>
+                            <td>${HSN_LABELS[hsn] ?? 'Apparel / Garments'}</td>
+                            <td class="text-right">₹${fmt(g.taxable)}</td>
+                            <td class="text-center">${(g.rate * 100).toFixed(0)}%</td>
+                            <td class="text-right">₹${fmt(g.gst)}</td>
+                        </tr>
+                    `).join('');
+
+                    const descriptions = Object.keys(groups).map(hsn =>
+                        `<div>${HSN_DESCRIPTIONS[hsn] ?? `HSN ${hsn} — Apparel and clothing accessories.`}</div>`
+                    ).join('');
+
+                    return rows + `</tbody></table>
+                        <div style="margin-top:6px;font-size:10px;color:#888;line-height:1.8">${descriptions}</div>
+                        <div style="display:none"><!-- end hsn-summary -->`;
+                })()}
             </tbody>
         </table>
-        <div style="margin-top:6px;font-size:10px;color:#888">
-            HSN 6204 — Women's suits, ensembles, jackets, blazers, dresses, skirts, and similar articles.
-        </div>
+        <!-- dummy close kept for template balance; real close is above -->
     </div>
 
     <!-- Footer -->

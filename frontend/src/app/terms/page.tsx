@@ -84,12 +84,12 @@ export default function TermsPage() {
                         <section className="mb-8">
                             <h2 className="text-2xl font-bold text-text-primary mb-4">5. Shipping & Delivery</h2>
                             <ul className="list-disc pl-6 space-y-2 text-text-secondary">
-                                <li><strong>FREE Delivery:</strong> Available for orders delivered to South India (Tamil Nadu, Karnataka, Kerala, Andhra Pradesh, Telangana)</li>
-                                <li><strong>Other Regions:</strong> Additional shipping charge of ₹60 applies</li>
-                                <li>Delivery Timeline: 3-5 days for South India, 5-7 days for other regions</li>
-                                <li>Address must be complete and accurate; we are not responsible for delivery failures due to incorrect addresses</li>
-                                <li>Risk of loss and title for products pass to you upon delivery to the shipping address</li>
-                                <li>We are not liable for delays caused by courier services or force majeure events</li>
+                                <li><strong>FREE Delivery:</strong> Available for all wholesale orders delivered across India with a subtotal value of ₹4,999 or more.</li>
+                                <li><strong>Shipping Charge:</strong> A flat shipping charge of ₹199 applies to all orders below ₹4,999.</li>
+                                <li>Delivery Timeline: Average delivery timeline ranges from 3 to 7 business days depending on delivery location in India.</li>
+                                <li>Address must be complete and accurate; we are not responsible for delivery failures due to incorrect addresses.</li>
+                                <li>Risk of loss and title for products pass to you upon delivery to the shipping address.</li>
+                                <li>We are not liable for delays caused by courier services or force majeure events.</li>
                             </ul>
                         </section>
 

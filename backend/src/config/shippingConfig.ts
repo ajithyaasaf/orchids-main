@@ -11,12 +11,12 @@ export const STANDARD_SHIPPING_BUFFER = 79;
 export const SHIPPING_RATES = {
     TIER_1: {
         SURCHARGE: 0,
-        LABEL: "FREE Delivery",
+        LABEL: "Standard Delivery",
         ESTIMATED_DAYS: "3-5 days"
     },
     TIER_2: {
-        SURCHARGE: 60,
-        LABEL: "Long Distance Shipping Fee",
+        SURCHARGE: 0,
+        LABEL: "Standard Delivery",
         ESTIMATED_DAYS: "5-7 days"
     }
 } as const;

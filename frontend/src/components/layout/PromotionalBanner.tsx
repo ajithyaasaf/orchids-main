@@ -14,25 +14,18 @@ interface BannerMessage {
 
 const BANNER_MESSAGES: BannerMessage[] = [
     {
-        id: 'tamil-nadu-free',
-        message: 'Tamil Nadu Customers: Get FREE Delivery on All Orders!',
-        cta: 'Shop Now',
+        id: 'gst-input-credit',
+        message: 'Claim GST Input Tax Credit — Get 5% GST B2B Tax Invoices for Your Shop!',
+        cta: 'Shop Wholesale',
         ctaLink: '/search',
-        icon: '✨'
+        icon: '💼'
     },
     {
         id: 'free-delivery-india',
-        message: 'FREE Delivery Across India on Orders Above ₹1499',
+        message: 'FREE Delivery Across India on Orders Above ₹4,999 (Flat ₹199 Below)',
         cta: 'Shop Now',
         ctaLink: '/search',
         icon: '🚚'
-    },
-    {
-        id: 'first-order',
-        message: 'New Customer? Get FLAT ₹50 OFF on Your First Order!',
-        cta: 'Shop Now',
-        ctaLink: '/search',
-        icon: '🎁'
     }
 ];
 

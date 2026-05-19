@@ -35,69 +35,33 @@ export default function ShippingPage() {
                             <Truck className="w-12 h-12" />
                             <h2 className="text-4xl font-bold">FREE Delivery Across India!</h2>
                         </div>
-                        <p className="text-2xl font-semibold mb-4">On orders above ₹1499</p>
+                        <p className="text-2xl font-semibold mb-4">On orders above ₹4,999</p>
                         <p className="text-lg opacity-90">Shop more, save more!</p>
                     </div>
 
-                    {/* Shipping Zones Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                        {/* South India - Always FREE */}
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-8 border-2 border-green-200 shadow-lg">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="bg-green-500 p-3 rounded-lg">
-                                    <Truck className="w-6 h-6 text-white" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-green-900">South India</h3>
+                    {/* Shipping Zones Card */}
+                    <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm mb-12">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-primary p-3 rounded-lg">
+                                <Package className="w-6 h-6 text-white" />
                             </div>
-                            <div className="bg-white rounded-lg p-4 mb-4">
-                                <p className="text-3xl font-bold text-green-600 mb-2">Always FREE</p>
-                                <p className="text-green-800 text-sm">No minimum order required!</p>
+                            <h3 className="text-2xl font-bold text-text-primary">Delivery Rates & Zones</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-green-50 rounded-lg p-6 border-2 border-green-200">
+                                <p className="text-sm text-green-800 font-bold uppercase tracking-wider mb-1">Orders Above ₹4,999</p>
+                                <p className="text-3xl font-extrabold text-green-600 mb-2">FREE SHIPPING</p>
+                                <p className="text-green-800 text-sm">Delivery across all states in India with zero additional delivery fee.</p>
                             </div>
-                            <div className="space-y-2">
-                                <p className="text-green-900 font-semibold">Covered States:</p>
-                                <ul className="text-green-800 text-sm space-y-1">
-                                    <li>✓ Tamil Nadu</li>
-                                    <li>✓ Karnataka</li>
-                                    <li>✓ Kerala</li>
-                                    <li>✓ Andhra Pradesh</li>
-                                    <li>✓ Telangana</li>
-                                    <li>✓ Puducherry</li>
-                                </ul>
-                            </div>
-                            <div className="mt-4 flex items-center gap-2 text-green-800">
-                                <Clock className="w-4 h-4" />
-                                <span className="text-sm font-medium">Delivery: 3-5 business days</span>
+                            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                <p className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-1">Orders Below ₹4,999</p>
+                                <p className="text-3xl font-extrabold text-primary mb-2">₹199 FLAT FEE</p>
+                                <p className="text-text-secondary text-sm">Standard flat delivery charge covers heavy bulk wholesale parcel handling.</p>
                             </div>
                         </div>
-
-                        {/* Rest of India */}
-                        <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="bg-primary p-3 rounded-lg">
-                                    <Package className="w-6 h-6 text-white" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-text-primary">Rest of India</h3>
-                            </div>
-                            <div className="space-y-3 mb-4">
-                                <div className="bg-green-50 rounded-lg p-4 border-2 border-green-200">
-                                    <p className="text-2xl font-bold text-green-600 mb-1">FREE</p>
-                                    <p className="text-green-800 text-sm">On orders ₹1499 and above</p>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-2xl font-bold text-primary mb-1">₹60</p>
-                                    <p className="text-text-secondary text-sm">For orders below ₹1499</p>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <p className="text-text-primary font-semibold">Applicable for:</p>
-                                <p className="text-text-secondary text-sm">
-                                    All other states across India including North, East, West, Central, and Northeast regions.
-                                </p>
-                            </div>
-                            <div className="mt-4 flex items-center gap-2 text-text-secondary">
-                                <Clock className="w-4 h-4" />
-                                <span className="text-sm font-medium">Delivery: 5-7 business days</span>
-                            </div>
+                        <div className="mt-6 flex items-center gap-2 text-text-secondary border-t border-gray-100 pt-4">
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm font-medium">Average Delivery Time: 3 to 7 business days depending on location.</span>
                         </div>
                     </div>
 
@@ -108,17 +72,17 @@ export default function ShippingPage() {
                             <section className="mb-8">
                                 <h2 className="text-2xl font-bold text-text-primary mb-4">1. Shipping Charges</h2>
                                 <p className="text-text-secondary mb-4">
-                                    We offer competitive and transparent shipping across India:
+                                    We offer transparent flat-rate shipping for all wholesale orders across India:
                                 </p>
                                 <ul className="list-disc pl-6 space-y-2 text-text-secondary">
-                                    <li><strong>South India (Always FREE):</strong> Free delivery for all orders to Tamil Nadu, Karnataka, Kerala, Andhra Pradesh, Telangana, and Puducherry - no minimum order required!</li>
-                                    <li><strong>Rest of India (FREE above ₹1499):</strong> Orders of ₹1499 or more get FREE delivery. For orders below ₹1499, a flat ₹60 shipping charge applies.</li>
-                                    <li>Shipping charges are calculated automatically at checkout based on your delivery pincode</li>
-                                    <li>No hidden charges - final price at checkout includes all costs</li>
+                                    <li><strong>Orders of ₹4,999 or more:</strong> FREE delivery across India.</li>
+                                    <li><strong>Orders below ₹4,999:</strong> A flat ₹199 shipping charge is added to cover logistics and bulk cargo handling.</li>
+                                    <li>Shipping charges are automatically calculated and added to your tax invoice during checkout.</li>
+                                    <li>No hidden charges - final price at checkout includes all costs.</li>
                                 </ul>
                                 <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded mt-4">
                                     <p className="text-green-900 font-semibold">💡 Pro Tip:</p>
-                                    <p className="text-green-800">Add items worth ₹1499 or more to get FREE delivery across all  of India!</p>
+                                    <p className="text-green-800">Add products worth ₹4,999 or more to your cart to enjoy completely FREE delivery across all pin-codes in India!</p>
                                 </div>
                             </section>
 
@@ -139,8 +103,7 @@ export default function ShippingPage() {
                                 <div className="bg-primary-light p-6 rounded-lg mb-4 border border-pink-100">
                                     <p className="text-primary font-semibold mb-2">📦 Standard Delivery Times:</p>
                                     <ul className="space-y-2 text-gray-800">
-                                        <li>• <strong>South India:</strong> 3-5 business days</li>
-                                        <li>• <strong>Other Regions:</strong> 5-7 business days</li>
+                                        <li>• <strong>All of India:</strong> 3-7 business days (depending on your delivery pincode)</li>
                                     </ul>
                                 </div>
                                 <p className="text-text-secondary text-sm">
@@ -188,9 +151,44 @@ export default function ShippingPage() {
                                 </p>
                             </section>
 
+                            {/* Service Coverage */}
+                            <section className="mb-8">
+                                <h2 className="text-2xl font-bold text-text-primary mb-4">7. Serviceable States & Cities</h2>
+                                <p className="text-text-secondary mb-4">
+                                    We deliver bulk wholesale clothing bundles and combos to all major cities, commercial hubs, and states across India, including:
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-lg border border-gray-150 text-sm text-text-secondary">
+                                    <div>
+                                        <h4 className="font-bold text-text-primary mb-1.5">South India Delivery</h4>
+                                        <p className="leading-relaxed">
+                                            <strong>Tamil Nadu:</strong> Chennai, Coimbatore, Tiruppur, Madurai, Salem, Trichy.<br />
+                                            <strong>Karnataka:</strong> Bengaluru, Mysuru, Hubballi, Mangaluru, Belagavi.<br />
+                                            <strong>Kerala:</strong> Kochi, Thiruvananthapuram, Kozhikode, Thrissur.<br />
+                                            <strong>Andhra Pradesh & Telangana:</strong> Hyderabad, Vijayawada, Visakhapatnam, Guntur, Warangal.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-text-primary mb-1.5">West & Central India Delivery</h4>
+                                        <p className="leading-relaxed">
+                                            <strong>Maharashtra:</strong> Mumbai, Pune, Nagpur, Thane, Nashik, Aurangabad.<br />
+                                            <strong>Gujarat:</strong> Ahmedabad, Surat, Vadodara, Rajkot, Surat, Bhavnagar.<br />
+                                            <strong>Madhya Pradesh & Rajasthan:</strong> Indore, Bhopal, Jaipur, Jodhpur, Udaipur, Kota.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-text-primary mb-1.5">North & East India Delivery</h4>
+                                        <p className="leading-relaxed">
+                                            <strong>Delhi NCR:</strong> New Delhi, Noida, Gurugram, Ghaziabad, Faridabad.<br />
+                                            <strong>Uttar Pradesh:</strong> Lucknow, Kanpur, Agra, Varanasi, Meerut.<br />
+                                            <strong>West Bengal & Bihar:</strong> Kolkata, Howrah, Patna, Gaya, Darbhanga.
+                                        </p>
+                                    </div>
+                                </div>
+                            </section>
+
                             {/* Returns Policy */}
                             <section className="mb-8">
-                                <h2 className="text-2xl font-bold text-text-primary mb-4">7. Returns & Exchanges</h2>
+                                <h2 className="text-2xl font-bold text-text-primary mb-4">8. Returns & Exchanges</h2>
                                 <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded">
                                     <p className="text-amber-900 font-semibold mb-2">⚠️ Important Policy</p>
                                     <p className="text-amber-800">

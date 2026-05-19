@@ -21,8 +21,8 @@ export const getSettings = async (): Promise<Settings> => {
                 businessAddress: '',
                 gstin: '',
                 // Legacy fields (kept for compatibility)
-                shippingCharge: 50,
-                freeShippingAbove: 5000,
+                shippingCharge: 199,
+                freeShippingAbove: 4999,
                 codEnabled: false,
                 returnPolicyDays: 7,
             };
@@ -68,6 +68,6 @@ export const calculateShipping = async (cartTotal: number): Promise<number> => {
         return settings.shippingCharge;
     } catch (error) {
         console.error('Error calculating shipping:', error);
-        return 50; // Default shipping charge
+        return 199; // Default shipping charge
     }
 };

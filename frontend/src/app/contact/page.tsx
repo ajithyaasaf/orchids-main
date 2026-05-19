@@ -137,9 +137,8 @@ export default function ContactPage() {
                                 <div>
                                     <h4 className="font-semibold text-text-primary mb-2">🚚 What are your delivery areas?</h4>
                                     <p className="text-text-secondary text-sm">
-                                        We deliver across India! FREE delivery in South India
-                                        (Tamil Nadu, Karnataka, Kerala, Andhra Pradesh, Telangana).
-                                        ₹60 shipping charge for other states.
+                                        We deliver across India! We offer FREE delivery on all wholesale orders above ₹4,999.
+                                        For orders below ₹4,999, a flat ₹199 shipping charge applies.
                                     </p>
                                 </div>
 
@@ -162,8 +161,7 @@ export default function ContactPage() {
                                 <div>
                                     <h4 className="font-semibold text-text-primary mb-2">⏱️ How long does delivery take?</h4>
                                     <p className="text-text-secondary text-sm">
-                                        Delivery typically takes 3-5 days for South India and 5-7 days for
-                                        other regions after order confirmation.
+                                        Delivery typically takes 3 to 7 business days across India after order confirmation.
                                     </p>
                                 </div>
                             </div>

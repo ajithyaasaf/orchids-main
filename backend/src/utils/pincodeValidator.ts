@@ -121,6 +121,18 @@ export function validateIndianPincode(pincode: string | number): PincodeValidati
         }
     }
 
+    // Fallback: If it's a 6-digit number starting with 1-8, it is a valid Indian pincode
+    const firstDigit = pincodeStr.charAt(0);
+    if (firstDigit >= '1' && firstDigit <= '8') {
+        const region = getRegionFromPincode(pincodeNum);
+        return {
+            isValid: true,
+            isIndian: true,
+            message: 'Valid Indian pincode',
+            region,
+        };
+    }
+
     // Pincode format is correct but not in known ranges
     // Could be a new pincode or invalid
     return {

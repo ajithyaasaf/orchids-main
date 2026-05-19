@@ -7,6 +7,15 @@ import type {
     User
 } from '@orchids/shared';
 
+// Helper to safely convert Firestore Timestamp, string, or Date to Date
+const parseDate = (d: any): Date | undefined => {
+    if (!d) return undefined;
+    if (d instanceof Date) return d;
+    if (typeof d.toDate === 'function') return d.toDate();
+    const parsed = new Date(d);
+    return isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
 /**
  * CRITICAL: Update customer cache when order is created
  * Must be called atomically with order creation
@@ -32,8 +41,8 @@ export const updateCustomerCacheOnOrder = async (order: WholesaleOrder): Promise
         const newTotalOrders = (user.totalOrders || 0) + 1;
         const newTotalSpent = (user.totalSpent || 0) + order.totalAmount;
         const newAOV = newTotalSpent / newTotalOrders;
-        const orderDate = order.createdAt instanceof Date ? order.createdAt : new Date(order.createdAt);
-        const firstOrderDate = user.firstOrderDate || orderDate;
+        const orderDate = parseDate(order.createdAt) || new Date();
+        const firstOrderDate = parseDate(user.firstOrderDate) || orderDate;
 
         const segment = determineSegment({
             totalOrders: newTotalOrders,
@@ -138,10 +147,12 @@ export const updateCustomerCacheOnRefund = async (
 const determineSegment = (data: {
     totalOrders: number;
     totalSpent: number;
-    lastOrderDate?: Date;
-    firstOrderDate?: Date;
+    lastOrderDate?: any;
+    firstOrderDate?: any;
 }): 'new' | 'returning' | 'vip' | 'at-risk' | 'inactive' => {
-    const { totalOrders, totalSpent, lastOrderDate, firstOrderDate } = data;
+    const { totalOrders, totalSpent } = data;
+    const lastOrderDate = parseDate(data.lastOrderDate);
+    const firstOrderDate = parseDate(data.firstOrderDate);
 
     if (totalOrders === 0) return 'inactive';
 
@@ -191,9 +202,7 @@ export const getCustomerInsight = async (userId: string): Promise<CustomerInsigh
         updatedAt: doc.data().updatedAt?.toDate?.() ?? new Date(doc.data().updatedAt),
     })) as WholesaleOrder[];
 
-    const firstOrderDate = user.firstOrderDate
-        ? (user.firstOrderDate instanceof Date ? user.firstOrderDate : new Date(user.firstOrderDate as any))
-        : new Date();
+    const firstOrderDate = parseDate(user.firstOrderDate) || new Date();
 
     return {
         ...user,

@@ -24,6 +24,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 import { createWholesaleOrder } from '../services/wholesaleOrderService';
 import { getDashboardAnalytics } from '../services/dashboardService';
 import { updateCustomerCacheOnCancellation } from '../services/customerAnalyticsService';
+import { restoreBundleStock } from '../services/wholesaleStockService';
 import logger from '../utils/logger';
 
 /**
@@ -119,6 +120,14 @@ router.patch('/:id/status', verifyToken, requireAdmin, async (req, res, next) =>
         // If cancelling a paid order, reverse the customer analytics cache
         if (orderStatus === 'cancelled') {
             try {
+                await restoreBundleStock(orderId);
+                logger.info(`Stock restored on cancellation for order ${orderId}`);
+            } catch (stockError) {
+                logger.error(`Failed to restore stock on cancellation for order ${orderId}:`, stockError);
+                throw stockError;
+            }
+
+            try {
                 await updateCustomerCacheOnCancellation({ ...order, id: orderId });
             } catch (cacheError) {
                 logger.error(`Failed to update customer cache on cancellation for order ${orderId}:`, cacheError);
@@ -181,8 +190,10 @@ router.patch('/:id/discount', verifyToken, requireAdmin, async (req, res, next) 
             appliedAt: new Date(),
         };
 
-        // Recalculate total
-        const newTotal = order.subtotal + order.gst - discount;
+        // Recalculate total including shipping and coupon discount
+        const shipping = order.shipping ?? 0;
+        const couponDiscount = order.appliedCoupon?.discount ?? 0;
+        const newTotal = Math.max(0, order.subtotal + order.gst + shipping - couponDiscount - discount);
 
         await collections.wholesaleOrders.doc(orderId).update({
             adminDiscount: discount,

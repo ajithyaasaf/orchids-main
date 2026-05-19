@@ -218,13 +218,24 @@ const buildInvoiceDocument = (doc: any, invoice: InvoiceData): void => {
         '6109': "HSN 6109 — T-Shirts, singlets and other vests, knitted or crocheted.",
     };
 
-    const groups: Record<string, { taxable: number; gst: number; rate: number }> = {};
-    const orderGstRate = invoice.order.gstRate ?? 0.05; // Use actual rate from the order
+    const groups: Record<string, { hsn: string; taxable: number; gst: number; rate: number }> = {};
+    const hasGst = (invoice.order.gst ?? 0) > 0;
+    
     (invoice.order.items ?? []).forEach((item: any) => {
         const hsn: string = item.hsnCode || '6204';
-        if (!groups[hsn]) groups[hsn] = { taxable: 0, gst: 0, rate: orderGstRate };
-        groups[hsn].taxable += item.lineTotal ?? 0;
-        groups[hsn].gst     += (item.lineTotal ?? 0) * orderGstRate;
+        let itemGstRate = 0;
+        if (hasGst) {
+            const pricePerPiece = (item.pricePerBundle || 0) / (item.bundleQty || 1);
+            itemGstRate = pricePerPiece > 2500 ? 0.18 : 0.05;
+        }
+        const itemGstAmount = (item.lineTotal ?? 0) * itemGstRate;
+        
+        const key = `${hsn}_${itemGstRate}`;
+        if (!groups[key]) {
+            groups[key] = { hsn, taxable: 0, gst: 0, rate: itemGstRate };
+        }
+        groups[key].taxable += item.lineTotal ?? 0;
+        groups[key].gst     += itemGstAmount;
     });
 
     currentY += 25;
@@ -251,13 +262,13 @@ const buildInvoiceDocument = (doc: any, invoice: InvoiceData): void => {
     currentY += 5;
 
     doc.font('Helvetica');
-    Object.entries(groups).forEach(([hsn, g]) => {
+    Object.values(groups).forEach((g) => {
         if (currentY > 680) {
             doc.addPage();
             currentY = 50;
         }
-        doc.text(hsn, 50, currentY);
-        doc.text(HSN_LABELS[hsn] ?? 'Apparel / Garments', 120, currentY);
+        doc.text(g.hsn, 50, currentY);
+        doc.text(HSN_LABELS[g.hsn] ?? 'Apparel / Garments', 120, currentY);
         doc.text(`Rs.${g.taxable.toFixed(2)}`, 280, currentY, { width: 80, align: 'right' });
         doc.text(`${(g.rate * 100).toFixed(0)}%`, 380, currentY, { width: 60, align: 'center' });
         doc.text(`Rs.${g.gst.toFixed(2)}`, 470, currentY, { width: 80, align: 'right' });
@@ -267,7 +278,8 @@ const buildInvoiceDocument = (doc: any, invoice: InvoiceData): void => {
     // Draw HSN descriptions
     currentY += 5;
     doc.fontSize(7).fillColor('#666666');
-    Object.keys(groups).forEach(hsn => {
+    const uniqueHsns = Array.from(new Set(Object.values(groups).map(g => g.hsn)));
+    uniqueHsns.forEach(hsn => {
         if (currentY > 700) {
             doc.addPage();
             currentY = 50;

@@ -52,15 +52,22 @@ export const updateAnalyticsCache = async (order: WholesaleOrder): Promise<void>
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const thisYear = new Date(now.getFullYear(), 0, 1);
 
-    await db.runTransaction(async (transaction) => {
-        const doc = await transaction.get(analyticsRef);
+    // If cache doesn't exist, rebuild it outside of transaction
+    const docCheck = await analyticsRef.get();
+    if (!docCheck.exists) {
+        await rebuildAnalyticsCache();
+        return;
+    }
 
-        if (!doc.exists) {
-            await rebuildAnalyticsCache();
-            return;
-        }
+    try {
+        await db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(analyticsRef);
 
-        const cached = doc.data() as DashboardAnalytics;
+            if (!doc.exists) {
+                throw new Error('Analytics document missing');
+            }
+
+            const cached = doc.data() as DashboardAnalytics;
 
         const orderDate: any = wOrder.createdAt;
         const actualDate = typeof orderDate.toDate === 'function' ? orderDate.toDate() : new Date(orderDate);
@@ -123,6 +130,13 @@ export const updateAnalyticsCache = async (order: WholesaleOrder): Promise<void>
             lastUpdated: new Date(),
         });
     });
+    } catch (err: any) {
+        if (err.message === 'Analytics document missing') {
+            await rebuildAnalyticsCache();
+        } else {
+            throw err;
+        }
+    }
 };
 
 /**

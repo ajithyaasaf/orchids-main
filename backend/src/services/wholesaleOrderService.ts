@@ -477,6 +477,9 @@ export async function updateWholesalePaymentStatus(
     try {
         const orderRef = collections.wholesaleOrders.doc(orderId);
         
+        let shouldLockPrices = false;
+        let orderItems: WholesaleBundleItem[] = [];
+
         await db.runTransaction(async (transaction) => {
             const order = await getWholesaleOrderById(orderId, transaction);
             if (!order) throw new AppError('Order not found', 404);
@@ -509,16 +512,21 @@ export async function updateWholesalePaymentStatus(
 
             transaction.update(orderRef, updateData);
 
-            // If payment succeeded, lock the product prices (async call after transaction commits, or here)
-            // Best practice: Lock prices only after payment is confirmed.
             if (status === 'paid') {
-                const { lockProductPrices } = await import('./wholesaleStockService');
-                // We call this inside the transaction or immediately after.
-                // Since firestore doesn't support recursive transactions, we run locking as a separate process
-                // triggered by successful payment verification.
-                await lockProductPrices(orderId, order.items);
+                shouldLockPrices = true;
+                orderItems = order.items;
             }
         });
+
+        // Lock product prices after the transaction completes successfully
+        if (shouldLockPrices && orderItems.length > 0) {
+            try {
+                const { lockProductPrices } = await import('./wholesaleStockService');
+                await lockProductPrices(orderId, orderItems);
+            } catch (err) {
+                logger.error(`Failed to lock product prices for order ${orderId}:`, err);
+            }
+        }
 
         const updated = await getWholesaleOrderById(orderId);
         if (!updated) throw new AppError('Order not found after update', 404);

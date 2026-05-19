@@ -477,8 +477,8 @@ export default function WholesaleProductForm({
                     {/* Composition Validation */}
                     <div
                         className={`text-base font-semibold px-4 py-3 rounded-lg ${isValidComposition
-                                ? 'bg-green-100 text-green-800 border border-green-300'
-                                : 'bg-red-100 text-red-800 border border-red-300'
+                            ? 'bg-green-100 text-green-800 border border-green-300'
+                            : 'bg-red-100 text-red-800 border border-red-300'
                             }`}
                     >
                         Total: {totalPcs} / {Number(form.bundleQty) || 0}{' '}

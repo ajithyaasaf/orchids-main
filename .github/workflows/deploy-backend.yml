@@ -33,6 +33,7 @@ jobs:
           cp package.json dist-deploy/
           cp pnpm-workspace.yaml dist-deploy/
           cp pnpm-lock.yaml dist-deploy/
+          cp README.md dist-deploy/
           cp -r backend dist-deploy/
           cp -r shared dist-deploy/
           rm -rf dist-deploy/backend/node_modules

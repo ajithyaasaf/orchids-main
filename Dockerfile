@@ -21,7 +21,7 @@ COPY backend/ ./backend/
 RUN pnpm --filter @orchids/shared build && pnpm --filter @orchids/backend build
 
 # Deploy to standalone directory (creates flat production node_modules with only production dependencies)
-RUN pnpm --filter=@orchids/backend --prod deploy /prod/backend
+RUN pnpm --filter=@orchids/backend --prod deploy --legacy /prod/backend
 
 # Manually copy built dist folder into production directory
 RUN cp -r backend/dist /prod/backend/dist

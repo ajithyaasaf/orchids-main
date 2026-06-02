@@ -1,8 +1,6 @@
 # Stage 1: Build & Package Monorepo
-FROM node:18-alpine AS builder
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+FROM node:20-alpine AS builder
+RUN npm install -g pnpm
 
 WORKDIR /app
 
@@ -31,7 +29,7 @@ RUN pnpm --filter=@orchids/backend deploy /prod/backend
 RUN cp -r backend/dist /prod/backend/dist
 
 # Stage 2: Minimalist Runner Container
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 # Hugging Face binds strictly to port 7860

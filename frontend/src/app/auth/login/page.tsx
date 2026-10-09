@@ -120,18 +120,18 @@ function LoginForm() {
                     {redirectPath?.includes('admin') && (
                         <div className="mb-6 p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-left">
                             <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs font-bold uppercase tracking-wider text-indigo-900">Wholesale Admin Access</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-indigo-900">Wholesale Super Admin Access</span>
                                 <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">B2B Portal</span>
                             </div>
                             <p className="text-xs text-indigo-800 mb-3">
-                                Sign in with your Wholesale Admin credentials to manage bulk products, bundles, and orders.
+                                Sign in with Wholesale Super Admin credentials to access all features (Analytics, Collections, Combos, Coupons, Orders, Settings).
                             </p>
                             <button
                                 type="button"
                                 onClick={() => setFormData({ email: 'orchidadmin@gmail.com', password: 'admin123' })}
                                 className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-xs"
                             >
-                                Fill Admin Credentials (orchidadmin@gmail.com)
+                                Fill Super Admin (orchidadmin@gmail.com)
                             </button>
                         </div>
                     )}

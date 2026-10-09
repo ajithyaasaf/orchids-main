@@ -84,6 +84,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // but we don't want to show the admin UI during that brief moment.
     const isAuthorized = user && (user.role === 'admin' || user.role === 'superadmin');
 
+    // Dynamic Retail Store URL: localhost:3001 in local development, https://orchid-retail-frontend.vercel.app/admin in Vercel/production
+    const retailAdminUrl =
+        process.env.NEXT_PUBLIC_RETAIL_ADMIN_URL ||
+        (hasMounted && typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+            ? 'https://orchid-retail-frontend.vercel.app/admin'
+            : process.env.NODE_ENV === 'production'
+                ? 'https://orchid-retail-frontend.vercel.app/admin'
+                : 'http://localhost:3001/admin');
+
     return (
         <div className="min-h-screen bg-[#f9fafb] text-gray-900 font-sans pb-16 lg:pb-0 transition-all duration-300">
                         {isLoadingState || !isAuthorized ? (
@@ -137,7 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     <span>Active Store</span>
                                     <span className="font-mono text-indigo-600">orchidhub.in</span>
                                 </div>
-                                <a href={process.env.NEXT_PUBLIC_RETAIL_ADMIN_URL || 'http://localhost:3000/admin'} className="w-full py-2 px-3 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-all flex items-center justify-between shadow-xs group">
+                                <a href={retailAdminUrl} className="w-full py-2 px-3 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-all flex items-center justify-between shadow-xs group">
                                     <div className="flex items-center gap-2"><Store className="w-3.5 h-3.5" /><span>Retail Store</span></div>
                                     <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                                 </a>
@@ -224,7 +233,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="flex items-center p-1 bg-gray-100 border border-gray-200 rounded-xl shadow-xs">
-                                        <a href={process.env.NEXT_PUBLIC_RETAIL_ADMIN_URL || 'http://localhost:3000/admin'} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 text-xs font-semibold hover:bg-white transition-all group">
+                                        <a href={retailAdminUrl} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 text-xs font-semibold hover:bg-white transition-all group">
                                             <Store className="w-3.5 h-3.5 text-pink-600" />
                                             <span>Retail Store</span>
                                             <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100" />

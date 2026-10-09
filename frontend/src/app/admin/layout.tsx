@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import {
     LayoutDashboard, Package, ShoppingBag, Settings, LogOut, Menu, X,
-    Gift, Tag, Users, BarChart3, Sparkles
+    Gift, Tag, Users, BarChart3, Sparkles, Store, Building2, ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useHasMounted } from '@/hooks/useHasMounted';
@@ -61,19 +61,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         if (hasMounted && initialized && !authLoading && !user) {
-            router.push('/auth/login?redirect=' + encodeURIComponent(pathname));
+            window.location.replace('/auth/login?redirect=' + encodeURIComponent(pathname || '/admin'));
             return;
         }
 
         if (hasMounted && initialized && user && user.role !== 'admin' && user.role !== 'superadmin') {
             showToast('Access denied. Admin privileges required.', 'error');
-            router.push('/');
+            window.location.replace('/');
         }
     }, [user, initialized, authLoading, hasMounted, pathname]);
 
     const handleLogout = async () => {
         await logout();
-        router.push('/');
+        window.location.replace('/');
     };
 
     // Auth & Permission check
@@ -86,12 +86,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     return (
         <div className="min-h-screen bg-[#f9fafb] text-gray-900 font-sans pb-16 lg:pb-0 transition-all duration-300">
-            {isLoadingState ? (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50/50 backdrop-blur-sm">
-                    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        {isLoadingState || !isAuthorized ? (
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50/50 backdrop-blur-sm p-4 text-center">
+                    <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-sm font-semibold text-gray-800">Verifying Wholesale Admin Access...</p>
+                    <p className="text-xs text-gray-500 mt-1 mb-4">Redirecting to Wholesale authentication...</p>
+                    <a
+                        href={`/auth/login?redirect=${encodeURIComponent(pathname || '/admin')}`}
+                        className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors shadow-xs"
+                    >
+                        Sign in to Wholesale Admin
+                    </a>
                 </div>
-            ) : !isAuthorized ? (
-                null
             ) : (
                 <>
                     {/* Mobile Top Header */}
@@ -123,6 +129,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 rounded-full hover:bg-gray-100 text-gray-500">
                                 <X className="w-5 h-5" />
                             </button>
+                        </div>
+
+                        <div className="px-6 pb-4 flex-shrink-0">
+                            <div className="p-3 bg-indigo-50 border border-indigo-100/80 rounded-2xl space-y-2">
+                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-indigo-900">
+                                    <span>Active Store</span>
+                                    <span className="font-mono text-indigo-600">orchidhub.in</span>
+                                </div>
+                                <a href={process.env.NEXT_PUBLIC_RETAIL_ADMIN_URL || 'http://localhost:3000/admin'} className="w-full py-2 px-3 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-all flex items-center justify-between shadow-xs group">
+                                    <div className="flex items-center gap-2"><Store className="w-3.5 h-3.5" /><span>Retail Store</span></div>
+                                    <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                </a>
+                            </div>
                         </div>
 
                         <div className="px-6 pb-6 flex-shrink-0">
@@ -195,6 +214,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {/* Main Content */}
                     <main className="lg:ml-72 min-h-screen transition-all">
                         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+                            {/* Top Bar Cross-Store Switcher */}
+                            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-400 font-medium">Workspace:</span>
+                                    <span className="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        <Building2 className="w-3.5 h-3.5" /> Wholesale Hub (orchidhub.in)
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center p-1 bg-gray-100 border border-gray-200 rounded-xl shadow-xs">
+                                        <a href={process.env.NEXT_PUBLIC_RETAIL_ADMIN_URL || 'http://localhost:3000/admin'} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 text-xs font-semibold hover:bg-white transition-all group">
+                                            <Store className="w-3.5 h-3.5 text-pink-600" />
+                                            <span>Retail Store</span>
+                                            <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100" />
+                                        </a>
+                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold shadow-xs">
+                                            <Building2 className="w-3.5 h-3.5" />
+                                            <span>Wholesale</span>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                             {children}
                         </div>
                     </main>

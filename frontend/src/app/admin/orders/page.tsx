@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { orderApi, invoiceApi } from '@/lib/api';
 import { WholesaleOrder } from '@orchids/shared';
-import { Package, Clock, Truck, CheckCircle, XCircle, FileText, Package as BoxIcon, Download, Eye } from 'lucide-react';
+import { Package, Clock, Truck, CheckCircle, XCircle, FileText, Package as BoxIcon, Download, Eye, RefreshCw } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useAuthStore } from '@/store/authStore';
 import { auth } from '@/lib/firebase';
@@ -24,25 +24,35 @@ export default function AdminOrdersPage() {
     const { showToast } = useToast();
     const { user } = useAuthStore();
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [filter, setFilter] = useState<string>('all');
     const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
     const [downloadingPackingSlip, setDownloadingPackingSlip] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadOrders();
-    }, []);
-
-    const loadOrders = async () => {
+    const loadOrders = async (isManualRefresh = false) => {
         try {
-            setLoading(true);
+            if (isManualRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
             const { data } = await orderApi.getAll();
             setOrders(data);
         } catch (error) {
             logger.error('Failed to load orders:', error);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
+
+    useEffect(() => {
+        loadOrders();
+
+        const handleFocus = () => loadOrders(true);
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, []);
 
     const handleStatusUpdate = async (orderId: string, newStatus: WholesaleOrder['orderStatus']) => {
         try {
@@ -147,19 +157,30 @@ export default function AdminOrdersPage() {
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Wholesale Orders</h1>
                     <p className="text-gray-600 mt-1">Manage and track all customer orders</p>
                 </div>
-                <div className="flex bg-white border border-gray-100 p-1 rounded-full shadow-sm overflow-x-auto scrollbar-hide max-w-full">
-                    {['all', 'placed', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => setFilter(status)}
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all whitespace-nowrap ${filter === status
-                                ? 'bg-primary text-white shadow-sm shadow-primary/20'
-                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                                }`}
-                        >
-                            {status === 'all' ? 'All Orders' : status}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => loadOrders(true)}
+                        disabled={refreshing || loading}
+                        className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2 text-sm font-medium"
+                        title="Refresh orders"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-primary' : ''}`} />
+                        <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                    </button>
+                    <div className="flex bg-white border border-gray-100 p-1 rounded-full shadow-sm overflow-x-auto scrollbar-hide max-w-full">
+                        {['all', 'placed', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
+                            <button
+                                key={status}
+                                onClick={() => setFilter(status)}
+                                className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all whitespace-nowrap ${filter === status
+                                    ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                            >
+                                {status === 'all' ? 'All Orders' : status}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

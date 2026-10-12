@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { couponApi } from '@/lib/api';
 import { Coupon } from '@orchids/shared';
-import { Plus, Edit2, Trash2, Tag, Calendar, Users, TrendingUp, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Tag, Calendar, Users, TrendingUp, X, RefreshCw } from 'lucide-react';
 
 import { TableRowSkeleton } from '@/components/ui/Skeleton';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -14,6 +14,7 @@ import { useToast } from '@/context/ToastContext';
 export default function AdminCouponsPage() {
     const [coupons, setCoupons] = useState<Coupon[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
     const [error, setError] = useState('');
@@ -50,22 +51,33 @@ export default function AdminCouponsPage() {
         active: true,
     });
 
-    // Load coupons on mount
+    // Load coupons on mount and tab focus
     useEffect(() => {
         fetchCoupons();
+
+        const handleFocus = () => fetchCoupons(true);
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
     }, []);
 
-    const fetchCoupons = async () => {
+    const fetchCoupons = async (isManualRefresh = false) => {
         try {
+            if (isManualRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
             const response = await couponApi.getAll();
             if (response.success) {
                 setCoupons(response.data);
             }
+            setError('');
         } catch (error) {
             console.error('Failed to load coupons:', error);
             setError('Failed to load coupons');
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
@@ -196,22 +208,34 @@ export default function AdminCouponsPage() {
     return (
         <div className="container-custom py-8 space-y-8">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Coupon Management</h1>
                     <p className="text-gray-600 mt-1">Create and manage discount codes</p>
                 </div>
-                {!loading && (
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={() => {
-                            resetForm();
-                            setShowForm(true);
-                        }}
-                        className="bg-primary text-white px-6 py-2.5 rounded-full font-bold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
+                        onClick={() => fetchCoupons(true)}
+                        disabled={refreshing || loading}
+                        className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2 text-sm font-medium"
+                        title="Refresh coupons"
                     >
-                        + Create Coupon
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-primary' : ''}`} />
+                        <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
                     </button>
-                )}
+                    {!loading && (
+                        <button
+                            onClick={() => {
+                                resetForm();
+                                setShowForm(true);
+                            }}
+                            className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 flex items-center gap-2 text-sm"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Create Coupon
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Error Message */}

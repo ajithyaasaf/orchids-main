@@ -42,7 +42,21 @@ const getAuthToken = async (): Promise<string | null> => {
  * A hard redirect (window.location.href) is preferred here anyway to ensure the React tree dumps any stale memory state.
  */
 const apiFetch = async (url: string, options: RequestInit = {}) => {
-    const response = await fetch(url, options);
+    const isGet = !options.method || options.method.toUpperCase() === 'GET';
+    const separator = url.includes('?') ? '&' : '?';
+    const finalUrl = isGet ? `${url}${separator}_t=${Date.now()}` : url;
+
+    const finalOptions: RequestInit = {
+        cache: 'no-store',
+        ...options,
+        headers: {
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache',
+            ...(options.headers as Record<string, string> || {}),
+        },
+    };
+
+    const response = await fetch(finalUrl, finalOptions);
 
     if (response.status === 401) {
         if (typeof window !== 'undefined') {

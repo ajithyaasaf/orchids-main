@@ -10,7 +10,11 @@ export default function NewComboPage() {
 
     const handleSubmit = async (data: Partial<ComboOffer>) => {
         await comboApi.admin.create(data);
-        router.push('/admin/combos');
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('admin:refresh-combos'));
+        }
+        router.refresh();
+        router.push(`/admin/combos?refresh=${Date.now()}`);
     };
 
     return (

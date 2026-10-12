@@ -42,7 +42,15 @@ export default function EditWholesaleProductPage({ params }: { params: { id: str
                 mixedColors: true
             });
             showToast('Product updated successfully', 'success');
-            router.push('/admin/wholesale/products');
+
+            // Broadcast event for active listeners
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('admin:refresh-products'));
+            }
+
+            // Revalidate Next.js client router cache and navigate
+            router.refresh();
+            router.push(`/admin/wholesale/products?refresh=${Date.now()}`);
         } catch (error: any) {
             showToast(error.message || 'Failed to update product', 'error');
             throw error;

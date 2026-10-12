@@ -31,7 +31,11 @@ export default function EditComboPage({ params }: { params: { id: string } }) {
 
     const handleSubmit = async (data: Partial<ComboOffer>) => {
         await comboApi.admin.update(params.id, data);
-        router.push('/admin/combos');
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('admin:refresh-combos'));
+        }
+        router.refresh();
+        router.push(`/admin/combos?refresh=${Date.now()}`);
     };
 
     if (loading) {

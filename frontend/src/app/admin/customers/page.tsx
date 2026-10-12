@@ -5,10 +5,12 @@ import { customerApi } from '@/lib/api';
 import type { CustomerInsight } from '@orchids/shared';
 import { TableRowSkeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/context/ToastContext';
+import { RefreshCw } from 'lucide-react';
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<CustomerInsight[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSegment, setFilterSegment] = useState('');
     const [lastDocId, setLastDocId] = useState<string | undefined>();
@@ -17,11 +19,21 @@ export default function CustomersPage() {
     const [isExporting, setIsExporting] = useState(false);
     const { showToast } = useToast();
 
-    useEffect(() => { fetchCustomers(); }, [filterSegment]);
+    useEffect(() => {
+        fetchCustomers();
 
-    const fetchCustomers = async (loadMore = false) => {
+        const handleFocus = () => fetchCustomers(false, true);
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [filterSegment]);
+
+    const fetchCustomers = async (loadMore = false, isManualRefresh = false) => {
         try {
-            setLoading(true);
+            if (isManualRefresh) {
+                setRefreshing(true);
+            } else if (!loadMore) {
+                setLoading(true);
+            }
             const params: any = { limit: 20 };
             if (filterSegment) params.segment = filterSegment;
             if (searchTerm) params.search = searchTerm;
@@ -39,6 +51,7 @@ export default function CustomersPage() {
             showToast(err.message || 'Failed to load customers', 'error');
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
@@ -102,6 +115,17 @@ export default function CustomersPage() {
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
                     <p className="text-gray-500 mt-1">Wholesale buyer analytics and order history</p>
+                </div>
+                <div>
+                    <button
+                        onClick={() => fetchCustomers(false, true)}
+                        disabled={refreshing || loading}
+                        className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2 text-sm font-medium"
+                        title="Refresh customers"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-primary' : ''}`} />
+                        <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                    </button>
                 </div>
             </div>
 

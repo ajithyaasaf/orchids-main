@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as Accordion from '@radix-ui/react-accordion';
-import { PRODUCT_CATEGORIES, getSizeGroupForCategory } from '@orchids/shared';
+import { PRODUCT_CATEGORIES, getSizeGroupForCategory, slugToTag } from '@orchids/shared';
 
 // ============================================================================
 // Types & Constants
@@ -228,37 +228,50 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             {category.subcategories.length > 0 && (
                                                 <div className="space-y-1">
                                                     <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">Categories</h4>
-                                                    {category.subcategories.map((sub) => {
-                                                        const isTagSelected = activeTags.includes(sub.value);
-                                                        const isChecked = isCategoryActive && isTagSelected;
+                                                    {(() => {
+                                                        const categoryTags = [...category.subcategories];
+                                                        if (isCategoryActive) {
+                                                            activeTags.forEach(at => {
+                                                                if (!categoryTags.some(t => t.value === at)) {
+                                                                    categoryTags.push({
+                                                                        label: slugToTag(at),
+                                                                        value: at,
+                                                                    });
+                                                                }
+                                                            });
+                                                        }
+                                                        return categoryTags.map((sub) => {
+                                                            const isTagSelected = activeTags.includes(sub.value);
+                                                            const isChecked = isCategoryActive && isTagSelected;
 
-                                                        return (
-                                                            <div
-                                                                key={sub.value}
-                                                                onClick={() => handleTagToggle(category.id, sub.value)}
-                                                                className={cn(
-                                                                    "flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-colors group/item",
-                                                                    "hover:bg-gray-50"
-                                                                )}
-                                                            >
-                                                                <div className={cn(
-                                                                    "w-4 h-4 rounded border flex items-center justify-center transition-all bg-white shadow-soft",
-                                                                    isChecked
-                                                                        ? "border-primary bg-primary text-white"
-                                                                        : "border-gray-300 text-transparent group-hover/item:border-gray-400"
-                                                                )}>
-                                                                    <Check className="w-3 h-3 stroke-[3]" />
+                                                            return (
+                                                                <div
+                                                                    key={sub.value}
+                                                                    onClick={() => handleTagToggle(category.id, sub.value)}
+                                                                    className={cn(
+                                                                        "flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-colors group/item",
+                                                                        "hover:bg-gray-50"
+                                                                    )}
+                                                                >
+                                                                    <div className={cn(
+                                                                        "w-4 h-4 rounded border flex items-center justify-center transition-all bg-white shadow-soft",
+                                                                        isChecked
+                                                                            ? "border-primary bg-primary text-white"
+                                                                            : "border-gray-300 text-transparent group-hover/item:border-gray-400"
+                                                                    )}>
+                                                                        <Check className="w-3 h-3 stroke-[3]" />
+                                                                    </div>
+
+                                                                    <span className={cn(
+                                                                        "text-sm",
+                                                                        isChecked ? "text-gray-900 font-medium" : "text-gray-600"
+                                                                    )}>
+                                                                        {sub.label}
+                                                                    </span>
                                                                 </div>
-
-                                                                <span className={cn(
-                                                                    "text-sm",
-                                                                    isChecked ? "text-gray-900 font-medium" : "text-gray-600"
-                                                                )}>
-                                                                    {sub.label}
-                                                                </span>
-                                                            </div>
-                                                        );
-                                                    })}
+                                                            );
+                                                        });
+                                                    })()}
                                                 </div>
                                             )}
 

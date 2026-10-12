@@ -1,24 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { WholesaleProduct } from '@orchids/shared';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { useToast } from '@/context/ToastContext';
-
-/**
- * Admin Product List Page
- * Displays all wholesale products with lock status and quick actions
- */
-
+import { RefreshCw, Plus } from 'lucide-react';
 import { TableRowSkeleton } from '@/components/ui/Skeleton';
 
-export default function AdminProductListPage() {
+/**
+ * Admin Product List Page Content
+ * Displays all wholesale products with lock status, quick actions, and real-time freshness
+ */
+function AdminProductListContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const refreshKey = searchParams.get('refresh');
     const { showToast } = useToast();
     const [products, setProducts] = useState<WholesaleProduct[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
     
     // Pagination State
@@ -40,27 +42,48 @@ export default function AdminProductListPage() {
         onConfirm: () => { }
     });
 
-    useEffect(() => {
-        // Wait a bit for Firebase auth to initialize
-        const timer = setTimeout(() => {
-            loadProducts();
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    const loadProducts = async () => {
+    const loadProducts = useCallback(async (isManualRefresh = false) => {
         try {
-            setLoading(true);
-            setError(''); // Clear previous errors
+            if (isManualRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
+            setError('');
             const data = await wholesaleProductsApi.getAll();
             setProducts(data);
         } catch (err: any) {
             setError(err.message);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
-    };
+    }, []);
+
+    // 1. Initial mount & whenever navigation includes ?refresh=...
+    useEffect(() => {
+        loadProducts();
+    }, [loadProducts, refreshKey]);
+
+    // 2. Real-time event & focus listeners for automatic synchronization
+    useEffect(() => {
+        const handleCustomRefresh = () => {
+            loadProducts(true);
+        };
+
+        const handleFocus = () => {
+            // Revalidate on tab focus
+            loadProducts(true);
+        };
+
+        window.addEventListener('admin:refresh-products', handleCustomRefresh);
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('admin:refresh-products', handleCustomRefresh);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [loadProducts]);
 
     const handleDelete = async (id: string, title: string) => {
         setConfirmModal({
@@ -84,16 +107,31 @@ export default function AdminProductListPage() {
 
     return (
         <div className="container-custom p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Wholesale Products</h1>
-                {(!loading && products.length > 0) && (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold">Wholesale Products</h1>
+                    <p className="text-sm text-gray-500 mt-1">Manage wholesale inventory, bundle tiers, and stock status</p>
+                </div>
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={() => router.push('/admin/wholesale/products/new')}
-                        className="px-6 py-3 bg-primary text-white rounded-full font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 hover:shadow-md"
+                        onClick={() => loadProducts(true)}
+                        disabled={refreshing || loading}
+                        className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2 text-sm font-medium"
+                        title="Refresh product list"
                     >
-                        + Add New Product
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-primary' : ''}`} />
+                        <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
                     </button>
-                )}
+                    {(!loading && products.length > 0) && (
+                        <button
+                            onClick={() => router.push('/admin/wholesale/products/new')}
+                            className="px-6 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 hover:shadow-md flex items-center gap-2 text-sm"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add New Product
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error && (
@@ -277,3 +315,21 @@ export default function AdminProductListPage() {
         </div>
     );
 }
+
+export default function AdminProductListPage() {
+    return (
+        <Suspense fallback={
+            <div className="container-custom p-6">
+                <div className="h-10 w-48 bg-gray-200 rounded animate-pulse mb-6" />
+                <div className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <TableRowSkeleton key={i} columns={6} />
+                    ))}
+                </div>
+            </div>
+        }>
+            <AdminProductListContent />
+        </Suspense>
+    );
+}
+

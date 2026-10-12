@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/store/wholesaleCartStore';
 import { useAuthStore } from '@/store/authStore';
 import { ShoppingCart, User, Search, Menu, LogOut, ChevronDown } from 'lucide-react';
-import { PRODUCT_CATEGORIES } from '@orchids/shared';
+import { PRODUCT_CATEGORIES, slugToTag } from '@orchids/shared';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 
 /**
@@ -69,10 +69,28 @@ function buildNavigation(activeData: Record<string, string[]>): NavCategory[] {
             .replace(' Apparel', '')
             .replace(' Wear', '');
 
-        // Resolve only the subcategories that have at least one product tagged
-        const activeSubcategories = categoryDef.subcategories.filter(sub =>
-            activeTags.includes(sub.value)
-        );
+        // Resolve subcategories: standard category tags first, then custom active tags from DB
+        const activeSubcategories: { label: string; value: string }[] = [];
+        const seenTags = new Set<string>();
+
+        // 1. Add standard subcategories that are active in DB
+        for (const sub of categoryDef.subcategories) {
+            if (activeTags.includes(sub.value)) {
+                activeSubcategories.push(sub);
+                seenTags.add(sub.value);
+            }
+        }
+
+        // 2. Add custom tags that exist in DB for this category but weren't in hardcoded list
+        for (const tagValue of activeTags) {
+            if (!seenTags.has(tagValue)) {
+                activeSubcategories.push({
+                    label: slugToTag(tagValue),
+                    value: tagValue,
+                });
+                seenTags.add(tagValue);
+            }
+        }
 
         // Split into columns of max 7 for the mega-menu layout
         const maxPerColumn = 7;

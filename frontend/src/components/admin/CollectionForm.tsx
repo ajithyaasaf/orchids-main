@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { collectionApi, uploadApi } from '@/lib/api';
 import { Collection, CollectionTheme, CollectionStatus } from '@orchids/shared';
-import { Button } from '@/components/ui/Button';
 import { Upload, X, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { WholesaleProductPicker } from '@/components/admin/WholesaleProductPicker';
+import { useToast } from '@/context/ToastContext';
 
 interface CollectionFormProps {
     /**
@@ -32,6 +32,7 @@ interface CollectionFormProps {
  */
 export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollection, mode }) => {
     const router = useRouter();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [uploadingBanner, setUploadingBanner] = useState(false);
     const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
@@ -114,12 +115,12 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
 
         // Validation
         if (!formData.name || !formData.slug) {
-            alert('Name and slug are required');
+            showToast('Name and slug are required', 'error');
             return;
         }
 
         if (!formData.productIds || formData.productIds.length === 0) {
-            alert('Please select at least one wholesale product');
+            showToast('Please select at least one wholesale product', 'error');
             return;
         }
 
@@ -128,15 +129,23 @@ export const CollectionForm: React.FC<CollectionFormProps> = ({ existingCollecti
 
             if (mode === 'create') {
                 const { data } = await collectionApi.create(formData);
-                alert('Collection created successfully!');
-                router.push(`/admin/collections/${data.id}`);
+                showToast('Collection created successfully!', 'success');
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('admin:refresh-collections'));
+                }
+                router.refresh();
+                router.push(`/admin/collections?refresh=${Date.now()}`);
             } else {
                 await collectionApi.update(existingCollection!.id, formData);
-                alert('Collection updated successfully!');
-                router.push('/admin/collections');
+                showToast('Collection updated successfully!', 'success');
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('admin:refresh-collections'));
+                }
+                router.refresh();
+                router.push(`/admin/collections?refresh=${Date.now()}`);
             }
         } catch (error: any) {
-            alert(`Failed to ${mode} collection: ` + error.message);
+            showToast(`Failed to ${mode} collection: ` + error.message, 'error');
         } finally {
             setLoading(false);
         }

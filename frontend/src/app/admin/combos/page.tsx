@@ -1,19 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { comboApi } from '@/lib/api';
 import { ComboOffer } from '@orchids/shared';
 import { useToast } from '@/context/ToastContext';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-
+import { RefreshCw, Plus } from 'lucide-react';
 import { TableRowSkeleton } from '@/components/ui/Skeleton';
 
-export default function CombosPage() {
+function CombosPageContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const refreshKey = searchParams.get('refresh');
     const { showToast } = useToast();
     const [combos, setCombos] = useState<ComboOffer[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
 
     // Confirmation Modal State
@@ -31,26 +34,45 @@ export default function CombosPage() {
         onConfirm: () => { }
     });
 
-    useEffect(() => {
-        fetchCombos();
-    }, []);
-
-    const fetchCombos = async () => {
+    const fetchCombos = useCallback(async (isManualRefresh = false) => {
         try {
-            setLoading(true);
+            if (isManualRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
             const response = await comboApi.admin.getAll();
             setCombos(response.data || []);
+            setError('');
         } catch (err: any) {
             setError(err.message);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchCombos();
+    }, [fetchCombos, refreshKey]);
+
+    useEffect(() => {
+        const handleCustomRefresh = () => fetchCombos(true);
+        const handleFocus = () => fetchCombos(true);
+
+        window.addEventListener('admin:refresh-combos', handleCustomRefresh);
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('admin:refresh-combos', handleCustomRefresh);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [fetchCombos]);
 
     const handleToggleActive = async (comboId: string, currentStatus: boolean) => {
         try {
             await comboApi.admin.update(comboId, { active: !currentStatus });
-            await fetchCombos();
+            await fetchCombos(true);
             showToast(`Combo ${!currentStatus ? 'activated' : 'deactivated'} successfully`, 'success');
         } catch (err: any) {
             showToast(`Failed to update combo: ${err.message}`, 'error');
@@ -68,7 +90,7 @@ export default function CombosPage() {
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
                 try {
                     await comboApi.admin.delete(comboId);
-                    await fetchCombos();
+                    await fetchCombos(true);
                     showToast('Combo deleted successfully', 'success');
                 } catch (err: any) {
                     showToast(`Failed to delete combo: ${err.message}`, 'error');
@@ -92,19 +114,31 @@ export default function CombosPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Combo Offers</h1>
                     <p className="text-gray-600 mt-1">Manage quantity-based combo pricing</p>
                 </div>
-                {!loading && (
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={() => router.push('/admin/combos/new')}
-                        className="bg-primary text-white px-6 py-2.5 rounded-full font-bold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
+                        onClick={() => fetchCombos(true)}
+                        disabled={refreshing || loading}
+                        className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2 text-sm font-medium"
+                        title="Refresh combos"
                     >
-                        + Create New Combo
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-primary' : ''}`} />
+                        <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
                     </button>
-                )}
+                    {!loading && (
+                        <button
+                            onClick={() => router.push('/admin/combos/new')}
+                            className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary-dark transition-all shadow-sm shadow-primary/20 flex items-center gap-2 text-sm"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Create New Combo
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error ? (
@@ -230,3 +264,21 @@ export default function CombosPage() {
 </div>
 );
 }
+
+export default function CombosPage() {
+    return (
+        <Suspense fallback={
+            <div className="space-y-6">
+                <div className="h-10 w-48 bg-gray-200 rounded animate-pulse" />
+                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                    {[1, 2, 3, 4].map((i) => (
+                        <TableRowSkeleton key={i} columns={6} />
+                    ))}
+                </div>
+            </div>
+        }>
+            <CombosPageContent />
+        </Suspense>
+    );
+}
+

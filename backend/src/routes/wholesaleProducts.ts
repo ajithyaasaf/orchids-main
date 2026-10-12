@@ -81,6 +81,9 @@ router.get('/active-nav', async (req, res, next) => {
  */
 router.get('/', async (req, res, next) => {
     try {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         const products = await getAllWholesaleProducts();
         res.json({ success: true, data: products.map(sanitizeProduct) });
     } catch (error) {

@@ -30,6 +30,8 @@ async function apiFetch<T = any>(
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
         ...(options.headers as Record<string, string>),
     };
 
@@ -37,7 +39,12 @@ async function apiFetch<T = any>(
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const isGet = !options.method || options.method.toUpperCase() === 'GET';
+    const separator = endpoint.includes('?') ? '&' : '?';
+    const finalEndpoint = isGet ? `${endpoint}${separator}_t=${Date.now()}` : endpoint;
+
+    const response = await fetch(`${API_URL}${finalEndpoint}`, {
+        cache: 'no-store',
         ...options,
         headers,
     });

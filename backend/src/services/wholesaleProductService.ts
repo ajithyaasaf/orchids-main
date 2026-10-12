@@ -227,15 +227,29 @@ export const getWholesaleProductsByStyleCode = async (
  * Returns only products with wholesale schema structure
  */
 export const getAllWholesaleProducts = async (): Promise<WholesaleProduct[]> => {
-    // Simple query - no composite index needed
-    const snapshot = await collections.wholesaleProducts
-        .orderBy('createdAt', 'desc')
-        .get();
+    try {
+        const snapshot = await collections.wholesaleProducts
+            .orderBy('createdAt', 'desc')
+            .get();
 
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as WholesaleProduct[];
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as WholesaleProduct[];
+    } catch {
+        // Fallback for resilient fetching if index or field discrepancy occurs
+        const snapshot = await collections.wholesaleProducts.get();
+        const products = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as WholesaleProduct[];
+
+        return products.sort((a, b) => {
+            const timeA = a.createdAt ? new Date((a.createdAt as any).toDate ? (a.createdAt as any).toDate() : a.createdAt).getTime() : 0;
+            const timeB = b.createdAt ? new Date((b.createdAt as any).toDate ? (b.createdAt as any).toDate() : b.createdAt).getTime() : 0;
+            return timeB - timeA;
+        });
+    }
 };
 
 /**

@@ -102,6 +102,17 @@ app.use(
 // because signature verification requires the raw unparsed request body.
 app.use('/api/payment', webhookRoutes);
 
+// SECURITY & FRESHNESS: Prevent proxy and browser caching for dynamic API endpoints
+app.use('/api', (req, res, next) => {
+    if (!req.path.includes('/active-nav')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.setHeader('Surrogate-Control', 'no-store');
+    }
+    next();
+});
+
 // Body parser middleware with size limits (SECURITY: Prevent DoS via large payloads)
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));

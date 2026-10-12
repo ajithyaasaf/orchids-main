@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { WholesaleProduct, PRODUCT_CATEGORIES, getSizeGroupForCategory } from '@orchids/shared';
+import {
+    WholesaleProduct,
+    PRODUCT_CATEGORIES,
+    getSizeGroupForCategory,
+    tagToSlug,
+    slugToTag,
+    MAX_TAGS_PER_PRODUCT,
+} from '@orchids/shared';
+import { Plus, X, Tag, Search, Check } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import ImageUpload from './ImageUpload';
 
@@ -150,15 +158,92 @@ export default function WholesaleProductForm({
     const availableTags = activeCategoryConfig?.subcategories ?? [];
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Tag helpers
+    // Tag helpers (Standard presets + Custom tag management)
     // ─────────────────────────────────────────────────────────────────────────
 
+    const [customTagInput, setCustomTagInput] = useState('');
+    const [tagSearchQuery, setTagSearchQuery] = useState('');
+    const [tagError, setTagError] = useState('');
+
     const handleTagToggle = (tagValue: string) => {
+        setTagError('');
         const newTags = form.tags.includes(tagValue)
             ? form.tags.filter(t => t !== tagValue)
             : [...form.tags, tagValue];
         handleFieldChange({ tags: newTags });
     };
+
+    const handleRemoveTag = (tagValue: string) => {
+        setTagError('');
+        handleFieldChange({ tags: form.tags.filter(t => t !== tagValue) });
+    };
+
+    const getTagDisplayLabel = (tagValue: string) => {
+        const found = availableTags.find(t => t.value === tagValue);
+        if (found) return found.label;
+
+        for (const cat of PRODUCT_CATEGORIES) {
+            const sub = cat.subcategories.find(s => s.value === tagValue);
+            if (sub) return sub.label;
+        }
+
+        return slugToTag(tagValue);
+    };
+
+    const handleAddCustomTag = () => {
+        setTagError('');
+        const trimmed = customTagInput.trim().replace(/\s+/g, ' ');
+        if (!trimmed) return;
+
+        if (trimmed.length < 2) {
+            setTagError('Tag must be at least 2 characters.');
+            return;
+        }
+
+        if (trimmed.length > 50) {
+            setTagError('Tag cannot exceed 50 characters.');
+            return;
+        }
+
+        if (form.tags.length >= MAX_TAGS_PER_PRODUCT) {
+            setTagError(`Maximum of ${MAX_TAGS_PER_PRODUCT} tags allowed per product.`);
+            return;
+        }
+
+        const generatedSlug = tagToSlug(trimmed);
+
+        // Check if already selected
+        if (form.tags.includes(generatedSlug)) {
+            setTagError(`Tag "${trimmed}" is already selected.`);
+            return;
+        }
+
+        // Check if it matches an existing standard category tag (by slug or label)
+        const matchedStandardTag = availableTags.find(
+            t => t.value.toLowerCase() === generatedSlug || t.label.toLowerCase() === trimmed.toLowerCase()
+        );
+
+        if (matchedStandardTag) {
+            if (form.tags.includes(matchedStandardTag.value)) {
+                setTagError(`Tag "${matchedStandardTag.label}" is already selected.`);
+            } else {
+                handleFieldChange({ tags: [...form.tags, matchedStandardTag.value] });
+                setCustomTagInput('');
+            }
+            return;
+        }
+
+        handleFieldChange({ tags: [...form.tags, generatedSlug] });
+        setCustomTagInput('');
+    };
+
+    const filteredAvailableTags = useMemo(() => {
+        if (!tagSearchQuery.trim()) return availableTags;
+        const q = tagSearchQuery.toLowerCase().trim();
+        return availableTags.filter(
+            t => t.label.toLowerCase().includes(q) || t.value.toLowerCase().includes(q)
+        );
+    }, [availableTags, tagSearchQuery]);
 
     // ─────────────────────────────────────────────────────────────────────────
     // Bundle composition helpers
@@ -168,9 +253,12 @@ export default function WholesaleProductForm({
     // Treat empty string bundleQty as 0 for validation purposes
     const isValidComposition = totalPcs === (Number(form.bundleQty) || 0);
 
-    /** When category changes, clear the composition and auto-fill the default HSN */
+    /** When category changes, clear the composition, reset tags, and auto-fill the default HSN */
     const handleCategoryChange = (newCategoryId: string) => {
         const catConfig = PRODUCT_CATEGORIES.find(c => c.id === newCategoryId);
+        setCustomTagInput('');
+        setTagSearchQuery('');
+        setTagError('');
         handleFieldChange({
             category: newCategoryId,
             tags: [],
@@ -348,31 +436,156 @@ export default function WholesaleProductForm({
                     </div>
                 </div>
 
-                {/* ── Tags ────────────────────────────────────────────── */}
-                {availableTags.length > 0 && (
-                    <div className="bg-gray-50 p-4 border rounded-lg">
-                        <label className="block text-sm font-medium mb-2">
-                            Product Tags (Select all that apply)
-                        </label>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            {availableTags.map(tag => (
-                                <label
-                                    key={tag.value}
-                                    className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-all"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={form.tags.includes(tag.value)}
-                                        onChange={() => handleTagToggle(tag.value)}
-                                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                                        disabled={isLoading}
-                                    />
-                                    <span className="text-sm text-gray-700">{tag.label}</span>
-                                </label>
-                            ))}
+                {/* ── Product Tags (Hybrid Quick-Select + Custom) ─────────── */}
+                <div className="bg-gray-50/70 p-5 border border-gray-200/80 rounded-xl space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-900">
+                                Product Tags
+                            </label>
+                            <p className="text-xs text-gray-500">
+                                Tags power customer search, filters, and mega-menu navigation.
+                            </p>
                         </div>
+                        <span className="text-xs font-medium text-gray-500 self-start sm:self-auto bg-white px-2.5 py-1 rounded-full border border-gray-200 shadow-2xs">
+                            {form.tags.length} / {MAX_TAGS_PER_PRODUCT} selected
+                        </span>
                     </div>
-                )}
+
+                    {/* Selected Tags Chips (Removable) */}
+                    {form.tags.length > 0 && (
+                        <div className="p-3 bg-white border border-gray-200 rounded-lg space-y-2">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                                Selected Tags
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                                {form.tags.map(tagValue => {
+                                    const isCustom = !availableTags.some(t => t.value === tagValue);
+                                    return (
+                                        <span
+                                            key={tagValue}
+                                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                                                isCustom
+                                                    ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                            }`}
+                                        >
+                                            <span>{getTagDisplayLabel(tagValue)}</span>
+                                            {isCustom && (
+                                                <span className="text-[10px] bg-purple-200/60 text-purple-800 px-1.5 py-0.2 rounded font-medium">
+                                                    custom
+                                                </span>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveTag(tagValue)}
+                                                className="text-gray-400 hover:text-red-600 transition-colors ml-0.5 rounded-full p-0.5"
+                                                title="Remove tag"
+                                                disabled={isLoading}
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Quick-Select Category Presets */}
+                    {availableTags.length > 0 && (
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                                    Quick-Select Category Styles
+                                </span>
+                                {availableTags.length > 8 && (
+                                    <div className="relative w-48">
+                                        <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            type="text"
+                                            value={tagSearchQuery}
+                                            onChange={e => setTagSearchQuery(e.target.value)}
+                                            placeholder="Find standard tag..."
+                                            className="w-full pl-8 pr-2 py-1 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-1 bg-white/60 border border-gray-100 rounded-lg">
+                                {filteredAvailableTags.map(tag => {
+                                    const isSelected = form.tags.includes(tag.value);
+                                    return (
+                                        <button
+                                            key={tag.value}
+                                            type="button"
+                                            onClick={() => handleTagToggle(tag.value)}
+                                            disabled={isLoading}
+                                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 border ${
+                                                isSelected
+                                                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                                                    : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-600'
+                                            }`}
+                                        >
+                                            {isSelected ? (
+                                                <Check className="w-3 h-3 text-white" />
+                                            ) : (
+                                                <Plus className="w-3 h-3 text-gray-400" />
+                                            )}
+                                            <span>{tag.label}</span>
+                                        </button>
+                                    );
+                                })}
+                                {filteredAvailableTags.length === 0 && (
+                                    <p className="text-xs text-gray-400 py-1 px-2">No matching standard tags found.</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* + Add Custom Tag Section */}
+                    <div className="pt-2 border-t border-gray-200/80 space-y-2">
+                        <label className="block text-xs font-semibold text-gray-700">
+                            Can't find a tag? Add a custom one:
+                        </label>
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Tag className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <input
+                                    type="text"
+                                    value={customTagInput}
+                                    onChange={e => {
+                                        setCustomTagInput(e.target.value);
+                                        setTagError('');
+                                    }}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddCustomTag();
+                                        }
+                                    }}
+                                    placeholder="e.g. Muslin Dhoti, Silk Frock, Summer Special..."
+                                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    disabled={isLoading || form.tags.length >= MAX_TAGS_PER_PRODUCT}
+                                    maxLength={50}
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddCustomTag}
+                                disabled={isLoading || !customTagInput.trim() || form.tags.length >= MAX_TAGS_PER_PRODUCT}
+                                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>Add Tag</span>
+                            </button>
+                        </div>
+                        {tagError && (
+                            <p className="text-xs text-red-600 font-medium">{tagError}</p>
+                        )}
+                    </div>
+                </div>
 
                 {/* ── Images ──────────────────────────────────────────── */}
                 <div>

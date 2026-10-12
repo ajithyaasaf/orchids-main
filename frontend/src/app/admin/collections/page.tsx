@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { collectionApi } from '@/lib/api';
 import { Collection } from '@orchids/shared';
 import { Button } from '@/components/ui/Button';
-import { Plus, Eye, Edit, Trash2, Globe, Calendar, Sparkles } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Globe, Calendar, Sparkles, RefreshCw } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -16,10 +16,13 @@ import { useToast } from '@/context/ToastContext';
  * Admin Collections Management Page
  * Displays all collections with filtering and CRUD operations
  */
-export default function AdminCollectionsPage() {
+function AdminCollectionsContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const refreshKey = searchParams.get('refresh');
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [filter, setFilter] = useState<'all' | 'active' | 'draft' | 'archived'>('all');
     const { showToast } = useToast();
 
@@ -38,13 +41,13 @@ export default function AdminCollectionsPage() {
         onConfirm: () => { }
     });
 
-    useEffect(() => {
-        loadCollections();
-    }, []);
-
-    const loadCollections = async () => {
+    const loadCollections = useCallback(async (isManualRefresh = false) => {
         try {
-            setLoading(true);
+            if (isManualRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
             const { data } = await collectionApi.getAllAdmin();
             setCollections(data);
         } catch (error: any) {
@@ -52,8 +55,26 @@ export default function AdminCollectionsPage() {
             showToast('Failed to load collections: ' + error.message, 'error');
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
-    };
+    }, [showToast]);
+
+    useEffect(() => {
+        loadCollections();
+    }, [loadCollections, refreshKey]);
+
+    useEffect(() => {
+        const handleCustomRefresh = () => loadCollections(true);
+        const handleFocus = () => loadCollections(true);
+
+        window.addEventListener('admin:refresh-collections', handleCustomRefresh);
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('admin:refresh-collections', handleCustomRefresh);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [loadCollections]);
 
     const handleDelete = async (id: string, name: string) => {
         setConfirmModal({
@@ -99,19 +120,30 @@ export default function AdminCollectionsPage() {
     return (
         <div className="p-8">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Collections</h1>
                     <p className="text-gray-600 mt-1">
                         Manage product collections and campaigns
                     </p>
                 </div>
-                <Link href="/admin/collections/new">
-                    <Button className="rounded-full shadow-sm shadow-primary/20 hover:shadow-md">
-                        <Plus className="w-4 h-4 mr-2" />
-                        New Collection
-                    </Button>
-                </Link>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => loadCollections(true)}
+                        disabled={refreshing || loading}
+                        className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2 text-sm font-medium"
+                        title="Refresh collections"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-primary' : ''}`} />
+                        <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                    </button>
+                    <Link href="/admin/collections/new">
+                        <Button className="rounded-xl shadow-sm shadow-primary/20 hover:shadow-md flex items-center gap-2">
+                            <Plus className="w-4 h-4" />
+                            New Collection
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             {/* Filters */}
@@ -258,3 +290,21 @@ export default function AdminCollectionsPage() {
         </div>
     );
 }
+
+export default function AdminCollectionsPage() {
+    return (
+        <Suspense fallback={
+            <div className="p-8 space-y-6">
+                <div className="h-10 w-48 bg-gray-200 rounded animate-pulse" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-64 bg-gray-100 rounded-2xl animate-pulse" />
+                    ))}
+                </div>
+            </div>
+        }>
+            <AdminCollectionsContent />
+        </Suspense>
+    );
+}
+

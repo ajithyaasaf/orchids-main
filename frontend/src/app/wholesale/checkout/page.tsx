@@ -276,7 +276,35 @@ export default function WholesaleCheckoutPage() {
         }
     };
 
+    const loadRazorpaySDK = (): Promise<boolean> => {
+        return new Promise((resolve) => {
+            if (typeof window !== 'undefined' && (window as any).Razorpay) {
+                return resolve(true);
+            }
+
+            const existingScript = document.querySelector('script[src*="checkout.razorpay.com"]');
+            if (existingScript) {
+                existingScript.addEventListener('load', () => resolve(true));
+                existingScript.addEventListener('error', () => resolve(false));
+                if ((window as any).Razorpay) return resolve(true);
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.async = true;
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
     const initiatePayment = async (orderId: string) => {
+        // Step 0: Ensure Razorpay SDK is loaded
+        const isLoaded = await loadRazorpaySDK();
+        if (!isLoaded || typeof (window as any).Razorpay === 'undefined') {
+            throw new Error('Razorpay SDK failed to load. If you are using an Ad Blocker or Brave browser, please disable Shields/ad blocking for this page and try again.');
+        }
+
         // Step 1: Create Razorpay order on our backend
         const response = await authenticatedFetch('/api/payment/create-order', {
             method: 'POST',
@@ -363,7 +391,7 @@ export default function WholesaleCheckoutPage() {
 
                 rzp.open();
             } catch (sdkError) {
-                reject(new Error('Razorpay SDK failed to load. Please refresh and try again.'));
+                reject(new Error('Razorpay SDK failed to open. Please disable any ad blockers and try again.'));
             }
         });
     };

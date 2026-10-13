@@ -88,7 +88,7 @@ export default function RootLayout({
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable} overflow-x-hidden`}>
             <body className="font-body antialiased bg-white text-text-primary overflow-x-hidden w-full relative">
-                <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
+                <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
                 <GoogleTagManager />
                 <ToastProvider>
                     <AuthProvider>

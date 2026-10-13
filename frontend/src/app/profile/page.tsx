@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { orderApi, invoiceApi } from '@/lib/api';
 import { WholesaleOrder } from '@orchids/shared';
-import { Package, User, LogOut, MapPin, FileText, Eye, RefreshCw, AlertCircle, Calendar } from 'lucide-react';
+import { Package, User, LogOut, MapPin, FileText, Eye, RefreshCw, AlertCircle, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AddressManager } from '@/components/ui/AddressManager';
 import { auth } from '@/lib/firebase';
@@ -22,6 +22,14 @@ export default function ProfilePage() {
     const [ordersError, setOrdersError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<ProfileTab>('orders');
     const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const ORDERS_PER_PAGE = 5;
+
+    const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
+    const paginatedOrders = orders.slice(
+        (currentPage - 1) * ORDERS_PER_PAGE,
+        currentPage * ORDERS_PER_PAGE
+    );
 
     useEffect(() => {
         if (!initialized) return;
@@ -41,6 +49,7 @@ export default function ProfilePage() {
             setOrdersError(null);
             const response = await orderApi.getByUserId(user.uid);
             setOrders(response?.data ?? []);
+            setCurrentPage(1);
         } catch (error: any) {
             console.error('Failed to load orders:', error);
             setOrdersError(error.message || 'Failed to load orders.');
@@ -179,7 +188,14 @@ export default function ProfilePage() {
                     {activeTab === 'orders' && (
                         <div>
                             <div className="flex items-center justify-between mb-8">
-                                <h1 className="text-3xl font-bold text-text-primary">Order History</h1>
+                                <div className="flex items-center gap-3">
+                                    <h1 className="text-3xl font-bold text-text-primary">Order History</h1>
+                                    {orders.length > 0 && (
+                                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                                            {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+                                        </span>
+                                    )}
+                                </div>
                                 <button
                                     onClick={loadOrders}
                                     disabled={loading}
@@ -207,8 +223,9 @@ export default function ProfilePage() {
                                     ))}
                                 </div>
                             ) : orders.length > 0 ? (
-                                <div className="space-y-4">
-                                    {orders.map((order) => (
+                                <>
+                                    <div className="space-y-4">
+                                    {paginatedOrders.map((order) => (
                                         <div key={order.id} className="bg-white rounded-xl shadow-soft p-6">
                                             <div className="flex flex-col md:flex-row md:items-start justify-between mb-6 gap-4">
                                                 <div className="flex-1">
@@ -336,7 +353,83 @@ export default function ProfilePage() {
                                         </div>
                                     ))}
                                 </div>
-                            ) : (
+
+                                {totalPages > 1 && (
+                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-gray-100">
+                                        <p className="text-xs text-text-secondary font-medium">
+                                            Showing <span className="font-bold text-text-primary">{(currentPage - 1) * ORDERS_PER_PAGE + 1}</span> to{' '}
+                                            <span className="font-bold text-text-primary">
+                                                {Math.min(currentPage * ORDERS_PER_PAGE, orders.length)}
+                                            </span>{' '}
+                                            of <span className="font-bold text-text-primary">{orders.length}</span> orders
+                                        </p>
+
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                onClick={() => {
+                                                    setCurrentPage((prev) => Math.max(prev - 1, 1));
+                                                    window.scrollTo({ top: 120, behavior: 'smooth' });
+                                                }}
+                                                disabled={currentPage === 1}
+                                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                            >
+                                                <ChevronLeft className="w-3.5 h-3.5" />
+                                                Previous
+                                            </button>
+
+                                            <div className="flex items-center gap-1 px-1">
+                                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                                                    if (
+                                                        pageNum === 1 ||
+                                                        pageNum === totalPages ||
+                                                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                                    ) {
+                                                        return (
+                                                            <button
+                                                                key={pageNum}
+                                                                onClick={() => {
+                                                                    setCurrentPage(pageNum);
+                                                                    window.scrollTo({ top: 120, behavior: 'smooth' });
+                                                                }}
+                                                                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
+                                                                    currentPage === pageNum
+                                                                        ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                                                                        : 'text-gray-700 hover:bg-gray-100 border border-transparent'
+                                                                }`}
+                                                            >
+                                                                {pageNum}
+                                                            </button>
+                                                        );
+                                                    }
+
+                                                    if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                                                        return (
+                                                            <span key={pageNum} className="px-1 text-gray-400 text-xs">
+                                                                ...
+                                                            </span>
+                                                        );
+                                                    }
+
+                                                    return null;
+                                                })}
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+                                                    window.scrollTo({ top: 120, behavior: 'smooth' });
+                                                }}
+                                                disabled={currentPage === totalPages}
+                                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                            >
+                                                Next
+                                                <ChevronRight className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
                                 <div className="bg-white rounded-xl shadow-soft p-12 text-center">
                                     <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                     <h3 className="text-xl font-semibold text-text-primary mb-2">No orders yet</h3>

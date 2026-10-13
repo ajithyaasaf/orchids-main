@@ -1,17 +1,20 @@
 # Stage 1: Build & Package Monorepo
 FROM node:20-alpine AS builder
 ENV CI=true
-RUN npm install -g pnpm
+
+# Pin pnpm to v9 to match lockfileVersion: '9.0'
+RUN npm install -g pnpm@9
 
 WORKDIR /app
 
-# Copy lockfiles and workspace configs
+# Copy lockfiles and all workspace package definitions
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY shared/package.json ./shared/
 COPY backend/package.json ./backend/
+COPY frontend/package.json ./frontend/
 
-# Install all workspace dependencies (including devDependencies for compilation)
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# Install all workspace dependencies
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY shared/ ./shared/
@@ -21,7 +24,7 @@ COPY backend/ ./backend/
 RUN pnpm --filter @orchids/shared build && pnpm --filter @orchids/backend build
 
 # Deploy to standalone directory (creates flat production node_modules with only production dependencies)
-RUN pnpm --filter=@orchids/backend --prod deploy --legacy /prod/backend
+RUN pnpm --filter=@orchids/backend --prod deploy /prod/backend
 
 # Manually copy built dist folder into production directory
 RUN cp -r backend/dist /prod/backend/dist

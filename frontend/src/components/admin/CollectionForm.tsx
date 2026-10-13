@@ -7,6 +7,7 @@ import { Collection, CollectionTheme, CollectionStatus } from '@orchids/shared';
 import { Upload, X, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { WholesaleProductPicker } from '@/components/admin/WholesaleProductPicker';
 import { useToast } from '@/context/ToastContext';
+import { Button } from '@/components/ui/Button';
 
 interface CollectionFormProps {
     /**

@@ -1,33 +1,26 @@
-# Stage 1: Build & Package Monorepo
+# Stage 1: Build Monorepo (Shared + Backend)
 FROM node:20-alpine AS builder
 ENV CI=true
 
-# Pin pnpm to v9 to match lockfileVersion: '9.0'
+# Install pnpm v9 matching lockfileVersion 9.0
 RUN npm install -g pnpm@9
 
 WORKDIR /app
 
-# Copy lockfiles and all workspace package definitions
+# Copy lockfiles and workspace configs available in HF Spaces
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY shared/package.json ./shared/
 COPY backend/package.json ./backend/
-COPY frontend/package.json ./frontend/
 
-# Install all workspace dependencies
+# Install workspace dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# Copy shared and backend source code
 COPY shared/ ./shared/
 COPY backend/ ./backend/
 
-# Compile TypeScript
+# Build TypeScript for shared and backend
 RUN pnpm --filter @orchids/shared build && pnpm --filter @orchids/backend build
-
-# Deploy to standalone directory (creates flat production node_modules with only production dependencies)
-RUN pnpm --filter=@orchids/backend --prod deploy /prod/backend
-
-# Manually copy built dist folder into production directory
-RUN cp -r backend/dist /prod/backend/dist
 
 # Stage 2: Minimalist Runner Container
 FROM node:20-alpine AS runner
@@ -37,9 +30,14 @@ ENV NODE_ENV=production
 ENV PORT=7860
 EXPOSE 7860
 
-# Copy self-contained deployed production bundle
-COPY --from=builder /prod/backend/package.json ./
-COPY --from=builder /prod/backend/node_modules ./node_modules
-COPY --from=builder /prod/backend/dist ./dist
+# Copy runtime files from builder stage preserving workspace structure
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/shared ./shared
+COPY --from=builder /app/backend/package.json ./backend/package.json
+COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder /app/backend/node_modules ./backend/node_modules
 
+WORKDIR /app/backend
 CMD ["node", "dist/index.js"]

@@ -109,6 +109,7 @@ export default function AdminOrdersPage() {
     const [trackingModal, setTrackingModal] = useState(false);
     const [trackingNumber, setTrackingNumber] = useState('');
     const [courierName, setCourierName] = useState('');
+    const [trackingError, setTrackingError] = useState<string | null>(null);
     const [noteText, setNoteText] = useState('');
     const [discountModal, setDiscountModal] = useState(false);
     const [discountAmount, setDiscountAmount] = useState(0);
@@ -210,11 +211,23 @@ export default function AdminOrdersPage() {
 
     // ─── Actions ──────────────────────────────────────────────────────────────
 
+    const openTrackingModal = () => {
+        if (selectedOrder) {
+            setCourierName(selectedOrder.courierName || '');
+            setTrackingNumber(selectedOrder.trackingNumber || '');
+        } else {
+            setCourierName('');
+            setTrackingNumber('');
+        }
+        setTrackingError(null);
+        setTrackingModal(true);
+    };
+
     const handleStatusUpdate = async (orderId: string, newStatus: string) => {
         if (!newStatus) return;
         // If shipping, prompt for tracking
         if (newStatus === 'shipped') {
-            setTrackingModal(true);
+            openTrackingModal();
             return;
         }
         setConfirmModal({
@@ -244,32 +257,66 @@ export default function AdminOrdersPage() {
 
     const handleAddTracking = async () => {
         if (!selectedOrder) return;
-        if (!trackingNumber.trim() || !courierName.trim()) {
-            showToast('Please enter both courier name and tracking number.', 'error');
+        const cName = courierName.trim();
+        const tNum = trackingNumber.trim();
+        if (!cName || !tNum) {
+            setTrackingError('Please provide both Courier Name and Tracking Number, or click "Ship Without Tracking" below.');
             return;
         }
         try {
             setUpdatingId(selectedOrder.id);
+            setTrackingError(null);
             const apiBase = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api`;
 
             // Save tracking info
             await authenticatedFetch(`${apiBase}/wholesale/orders/${selectedOrder.id}/tracking`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ trackingNumber: trackingNumber.trim(), courierName: courierName.trim() }),
+                body: JSON.stringify({ trackingNumber: tNum, courierName: cName }),
             });
 
-            // Update status to shipped
-            await wholesaleOrdersApi.updateStatus(selectedOrder.id, 'shipped', `Shipped via ${courierName} — Tracking: ${trackingNumber}`);
+            // If not already shipped, transition status to shipped
+            if (selectedOrder.orderStatus !== 'shipped') {
+                await wholesaleOrdersApi.updateStatus(selectedOrder.id, 'shipped', `Shipped via ${cName} — Tracking: ${tNum}`);
+            }
 
-            setOrders((prev) => prev.map((o) => o.id === selectedOrder.id ? { ...o, orderStatus: 'shipped', trackingNumber: trackingNumber.trim(), courierName: courierName.trim() } : o));
+            setOrders((prev) => prev.map((o) => o.id === selectedOrder.id ? {
+                ...o,
+                orderStatus: 'shipped',
+                trackingNumber: tNum,
+                courierName: cName
+            } : o));
             await refreshSelectedOrder(selectedOrder.id);
             setTrackingModal(false);
             setTrackingNumber('');
             setCourierName('');
+            setTrackingError(null);
             loadStats();
-            showToast('Order marked as shipped', 'success');
+            showToast(selectedOrder.orderStatus === 'shipped' ? 'Tracking details updated' : 'Order marked as shipped', 'success');
         } catch (err: any) {
+            setTrackingError(err.message || 'Failed to save tracking details');
+            showToast(`Failed: ${err.message}`, 'error');
+        } finally {
+            setUpdatingId(null);
+        }
+    };
+
+    const handleShipWithoutTracking = async () => {
+        if (!selectedOrder) return;
+        try {
+            setUpdatingId(selectedOrder.id);
+            setTrackingError(null);
+            await wholesaleOrdersApi.updateStatus(selectedOrder.id, 'shipped', 'Marked as shipped without tracking details');
+            setOrders((prev) => prev.map((o) => o.id === selectedOrder.id ? { ...o, orderStatus: 'shipped' } : o));
+            await refreshSelectedOrder(selectedOrder.id);
+            setTrackingModal(false);
+            setTrackingNumber('');
+            setCourierName('');
+            setTrackingError(null);
+            loadStats();
+            showToast('Order marked as shipped (tracking can be added anytime)', 'success');
+        } catch (err: any) {
+            setTrackingError(err.message || 'Failed to update order status');
             showToast(`Failed: ${err.message}`, 'error');
         } finally {
             setUpdatingId(null);
@@ -672,18 +719,26 @@ export default function AdminOrdersPage() {
                             {/* Tracking */}
                             {selectedOrder.trackingNumber ? (
                                 <section>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                                        <Truck className="w-3.5 h-3.5 inline mr-1" />Shipment Tracking
-                                    </h3>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                            <Truck className="w-3.5 h-3.5 inline mr-1" />Shipment Tracking
+                                        </h3>
+                                        <button
+                                            onClick={openTrackingModal}
+                                            className="text-xs text-primary hover:underline font-medium"
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
                                     <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-sm">
                                         <p className="font-semibold text-purple-800">{selectedOrder.courierName}</p>
                                         <p className="text-purple-600 font-mono">{selectedOrder.trackingNumber}</p>
                                     </div>
                                 </section>
-                            ) : selectedOrder.orderStatus === 'processing' ? (
+                            ) : (selectedOrder.orderStatus === 'processing' || selectedOrder.orderStatus === 'shipped') ? (
                                 <section>
                                     <button
-                                        onClick={() => setTrackingModal(true)}
+                                        onClick={openTrackingModal}
                                         className="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 text-gray-500 rounded-xl text-sm hover:border-gray-400 hover:text-gray-700 transition"
                                     >
                                         <Truck className="w-4 h-4 inline mr-1" />Add Tracking Number
@@ -760,23 +815,112 @@ export default function AdminOrdersPage() {
 
             {/* ─── Tracking Modal ──────────────────────────────────────────── */}
             {trackingModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-                    <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-                        <h2 className="text-lg font-bold mb-4">Add Shipping Tracking</h2>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-auto shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-bold text-gray-900">
+                                {selectedOrder?.orderStatus === 'shipped' ? 'Update Tracking Details' : 'Add Shipping Tracking'}
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    setTrackingModal(false);
+                                    setTrackingError(null);
+                                }}
+                                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <p className="text-xs text-gray-500 mb-4">
+                            {selectedOrder?.orderStatus === 'shipped'
+                                ? 'Update courier partner and tracking AWB number.'
+                                : 'Enter courier details, or mark as shipped without tracking for direct/local delivery.'}
+                        </p>
+
+                        {/* Inline Error Alert */}
+                        {trackingError && (
+                            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
+                                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <span>{trackingError}</span>
+                            </div>
+                        )}
+
                         <div className="space-y-3">
                             <div>
-                                <label className="text-sm font-medium">Courier / Carrier Name</label>
-                                <input value={courierName} onChange={(e) => setCourierName(e.target.value)} placeholder="e.g. DTDC, Delhivery, Bluedart" className="w-full mt-1 px-3 py-2 border rounded-lg text-sm" />
+                                <label className="text-xs font-semibold text-gray-700 block mb-1">
+                                    Courier / Carrier Name <span className="text-gray-400 font-normal">(e.g. DTDC, Delhivery)</span>
+                                </label>
+                                <input
+                                    value={courierName}
+                                    onChange={(e) => {
+                                        setCourierName(e.target.value);
+                                        if (trackingError) setTrackingError(null);
+                                    }}
+                                    placeholder="e.g. DTDC, Delhivery, Bluedart"
+                                    className={`w-full px-3 py-2 border rounded-lg text-sm transition-colors ${
+                                        trackingError && !courierName.trim()
+                                            ? 'border-red-400 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                                            : 'border-gray-200 focus:border-gray-900'
+                                    }`}
+                                />
                             </div>
+
                             <div>
-                                <label className="text-sm font-medium">Tracking Number</label>
-                                <input value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} placeholder="e.g. 1234567890" className="w-full mt-1 px-3 py-2 border rounded-lg text-sm font-mono" />
+                                <label className="text-xs font-semibold text-gray-700 block mb-1">
+                                    Tracking / AWB Number <span className="text-gray-400 font-normal">(Docket / Waybill)</span>
+                                </label>
+                                <input
+                                    value={trackingNumber}
+                                    onChange={(e) => {
+                                        setTrackingNumber(e.target.value);
+                                        if (trackingError) setTrackingError(null);
+                                    }}
+                                    placeholder="e.g. 1234567890"
+                                    className={`w-full px-3 py-2 border rounded-lg text-sm font-mono transition-colors ${
+                                        trackingError && !trackingNumber.trim()
+                                            ? 'border-red-400 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                                            : 'border-gray-200 focus:border-gray-900'
+                                    }`}
+                                />
                             </div>
-                            <div className="flex gap-2 pt-2">
-                                <button onClick={handleAddTracking} className="flex-1 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800">
-                                    Save & Mark Shipped
+
+                            <div className="pt-2 space-y-2">
+                                <button
+                                    onClick={handleAddTracking}
+                                    disabled={!!updatingId}
+                                    className="w-full py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center gap-2 transition"
+                                >
+                                    {updatingId === selectedOrder?.id ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        selectedOrder?.orderStatus === 'shipped' ? 'Save Tracking Info' : 'Save & Mark Shipped'
+                                    )}
                                 </button>
-                                <button onClick={() => setTrackingModal(false)} className="flex-1 py-2 border rounded-lg text-sm">
+
+                                {selectedOrder?.orderStatus !== 'shipped' && (
+                                    <button
+                                        type="button"
+                                        onClick={handleShipWithoutTracking}
+                                        disabled={!!updatingId}
+                                        className="w-full py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg text-xs font-medium transition disabled:opacity-50"
+                                    >
+                                        Skip & Mark Shipped Without Tracking
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setTrackingModal(false);
+                                        setTrackingError(null);
+                                    }}
+                                    disabled={!!updatingId}
+                                    className="w-full py-1.5 text-gray-500 hover:text-gray-700 text-xs font-medium transition"
+                                >
                                     Cancel
                                 </button>
                             </div>

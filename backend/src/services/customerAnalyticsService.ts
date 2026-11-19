@@ -32,12 +32,15 @@ export const updateCustomerCacheOnOrder = async (order: WholesaleOrder): Promise
 
     await db.runTransaction(async (transaction) => {
         const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists) {
-            // User doc may not exist for some wholesale users — skip gracefully
-            return;
-        }
+        const user = (userDoc.exists ? userDoc.data() : {
+            uid: order.userId,
+            email: (order.address as any)?.email || '',
+            name: order.address?.name || 'Customer',
+            role: 'customer' as const,
+            addresses: [],
+            createdAt: new Date(),
+        }) as User;
 
-        const user = userDoc.data() as User;
         const newTotalOrders = (user.totalOrders || 0) + 1;
         const newTotalSpent = (user.totalSpent || 0) + order.totalAmount;
         const newAOV = newTotalSpent / newTotalOrders;
@@ -51,7 +54,8 @@ export const updateCustomerCacheOnOrder = async (order: WholesaleOrder): Promise
             firstOrderDate,
         });
 
-        transaction.update(userRef, {
+        transaction.set(userRef, {
+            ...user,
             totalOrders: newTotalOrders,
             totalSpent: newTotalSpent,
             averageOrderValue: newAOV,
@@ -59,7 +63,8 @@ export const updateCustomerCacheOnOrder = async (order: WholesaleOrder): Promise
             firstOrderDate,
             segment,
             segmentUpdatedAt: new Date(),
-        });
+            updatedAt: new Date(),
+        }, { merge: true });
     });
 };
 
@@ -317,30 +322,45 @@ export const getAllCustomersWithInsights = async (
  * WARNING: Expensive operation - use only for data recovery after manual fixes
  */
 export const recalculateAllCustomerMetrics = async (): Promise<{ processed: number; errors: number }> => {
-    const usersSnapshot = await collections.users.where('role', '==', 'customer').get();
+    const [usersSnapshot, ordersSnapshot] = await Promise.all([
+        collections.users.get(),
+        collections.wholesaleOrders.get(),
+    ]);
+
+    // Gather candidate customer IDs: non-admin users + any user who placed wholesale orders
+    const candidateCustomerIds = new Set<string>();
+    usersSnapshot.docs.forEach(doc => {
+        const role = doc.data().role;
+        if (role !== 'admin' && role !== 'superadmin') {
+            candidateCustomerIds.add(doc.id);
+        }
+    });
+    ordersSnapshot.docs.forEach(doc => {
+        const uid = doc.data().userId;
+        if (uid) candidateCustomerIds.add(uid);
+    });
+
     let processed = 0;
     let errors = 0;
 
-    for (const userDoc of usersSnapshot.docs) {
+    for (const userId of candidateCustomerIds) {
         try {
-            const userId = userDoc.id;
+            const userDoc = usersSnapshot.docs.find(d => d.id === userId);
 
             // Source of truth: wholesaleOrders collection (paid + not cancelled)
-            const ordersSnapshot = await collections.wholesaleOrders
-                .where('userId', '==', userId)
-                .where('paymentStatus', '==', 'paid')
-                .get();
-
             const orders = ordersSnapshot.docs
+                .filter(d => {
+                    const data = d.data();
+                    return data.userId === userId && data.paymentStatus === 'paid' && data.orderStatus !== 'cancelled';
+                })
                 .map(d => ({
                     ...d.data(),
                     id: d.id,
                     createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
-                }) as any)
-                .filter(o => o.orderStatus !== 'cancelled') as WholesaleOrder[];
+                }) as any) as WholesaleOrder[];
 
             const totalOrders = orders.length;
-            const totalSpent = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+            const totalSpent = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
             const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
             const sorted = [...orders].sort(
@@ -356,19 +376,20 @@ export const recalculateAllCustomerMetrics = async (): Promise<{ processed: numb
                 firstOrderDate: firstOrderDate instanceof Date ? firstOrderDate : undefined,
             });
 
-            await collections.users.doc(userId).update({
+            await collections.users.doc(userId).set({
                 totalOrders,
                 totalSpent,
                 averageOrderValue,
-                firstOrderDate,
-                lastOrderDate,
+                firstOrderDate: firstOrderDate || null,
+                lastOrderDate: lastOrderDate || null,
                 segment,
                 segmentUpdatedAt: new Date(),
-            });
+                role: userDoc?.data()?.role || 'customer',
+            }, { merge: true });
 
             processed++;
         } catch (error) {
-            console.error(`Failed to recalculate metrics for user ${userDoc.id}:`, error);
+            console.error(`Failed to recalculate metrics for user ${userId}:`, error);
             errors++;
         }
     }

@@ -56,8 +56,10 @@ router.get('/:orderId', verifyToken, async (req: AuthRequest, res: Response) => 
             return;
         }
 
-        // Authorization: customers can only access their own orders
-        if (req.user!.role === 'customer' && order.userId !== req.user!.uid) {
+        // Authorization: only the order owner or admin/superadmin can access
+        const isOwner = order.userId === req.user?.uid;
+        const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
+        if (!isOwner && !isAdmin) {
             res.status(403).json({ success: false, error: 'Access denied' });
             return;
         }
@@ -207,8 +209,10 @@ router.get(
                 return;
             }
 
-            // Authorization
-            if (req.user!.role === 'customer' && order.userId !== req.user!.uid) {
+            // Authorization: only the order owner or admin/superadmin can access
+            const isOwner = order.userId === req.user?.uid;
+            const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
+            if (!isOwner && !isAdmin) {
                 res.status(403).json({ success: false, error: 'Access denied' });
                 return;
             }
@@ -348,8 +352,10 @@ router.get(
                 return;
             }
 
-            // Authorization
-            if (req.user!.role === 'customer' && order.userId !== req.user!.uid) {
+            // Authorization: only the order owner or admin/superadmin can access
+            const isOwner = order.userId === req.user?.uid;
+            const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
+            if (!isOwner && !isAdmin) {
                 res.status(403).json({ success: false, error: 'Access denied' });
                 return;
             }

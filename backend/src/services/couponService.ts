@@ -126,8 +126,8 @@ export const validateCoupon = async (
             return { valid: false, discount: 0, reason: 'Coupon usage limit reached' };
         }
 
-        // Check per-user limit
-        const userUsageCount = (coupon.usedBy || []).filter(id => id === userId).length;
+        // Check per-user limit with userUsage map support (avoids arrayUnion set collapse)
+        const userUsageCount = (coupon as any).userUsage?.[userId] ?? (coupon.usedBy || []).filter(id => id === userId).length;
         if (userUsageCount >= coupon.perUserLimit) {
             return {
                 valid: false,
@@ -341,5 +341,35 @@ export const getUserOrderCount = async (userId: string): Promise<number> => {
     } catch (error) {
         console.error('Error getting user order count:', error);
         return 0; // Fail safe - if we can't determine, assume they have orders
+    }
+};
+
+/**
+ * Revert coupon usage when an order fails or is cancelled.
+ * Atomic and thread-safe.
+ */
+export const revertCouponUsage = async (couponId: string, userId: string): Promise<void> => {
+    try {
+        const couponRef = collections.coupons.doc(couponId);
+        const doc = await couponRef.get();
+        if (!doc.exists) return;
+
+        const coupon = doc.data() as any;
+        const currentCount = (coupon.userUsage?.[userId]) ?? (coupon.usedBy || []).filter((id: string) => id === userId).length;
+        const newCount = Math.max(0, currentCount - 1);
+
+        const updates: any = {
+            usedCount: admin.firestore.FieldValue.increment(-1),
+            [`userUsage.${userId}`]: newCount,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        if (newCount === 0) {
+            updates.usedBy = admin.firestore.FieldValue.arrayRemove(userId);
+        }
+
+        await couponRef.update(updates);
+    } catch (error) {
+        console.error(`Failed to revert coupon ${couponId} for user ${userId}:`, error);
     }
 };

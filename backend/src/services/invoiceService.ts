@@ -7,9 +7,9 @@
 
 import { WholesaleOrder, OrderRefund } from '@orchids/shared';
 import { AppError } from '../middleware/errorHandler';
-import { collections } from '../config/firebase';
+import { collections, db } from '../config/firebase';
 import { getWholesaleOrderById } from './wholesaleOrderService';
-import { generateInvoiceNumber, generateCreditNoteNumber, hasInvoice } from './invoiceNumberService';
+import { hasInvoice } from './invoiceNumberService';
 
 /**
  * CRITICAL: Invoice eligibility check
@@ -50,40 +50,66 @@ export const needsInvoiceGeneration = (order: WholesaleOrder): boolean => {
 /**
  * Generate and store invoice number for an order
  * 
+ * ATOMIC TRANSACTION GUARANTEE:
+ * - Locks order and counter simultaneously
+ * - Thread-safe against concurrent webhook + /verify triggers
+ * - Zero gap in GST sequential numbering
+ * - 100% idempotent
+ * 
  * @param orderId - ID of the order
  * @returns Promise<string> - Generated invoice number
  * @throws AppError if order not found or not eligible
  */
 export const generateInvoice = async (orderId: string): Promise<string> => {
-    const order = await getWholesaleOrderById(orderId);
+    const orderRef = collections.wholesaleOrders.doc(orderId);
+    const counterRef = db.collection('counters').doc('invoice');
+    const currentYear = new Date().getFullYear();
 
-    if (!order) {
-        throw new AppError('Order not found', 404);
-    }
+    return await db.runTransaction(async (transaction) => {
+        const orderDoc = await transaction.get(orderRef);
 
-    // Check if already has invoice
-    if (hasInvoice(order)) {
-        return order.invoiceNumber!;
-    }
+        if (!orderDoc.exists) {
+            throw new AppError('Order not found', 404);
+        }
 
-    // Check eligibility
-    if (!canGenerateInvoice(order)) {
-        throw new AppError(
-            'Order not eligible for invoice generation (payment not confirmed or order cancelled)',
-            400
-        );
-    }
+        const order = orderDoc.data() as WholesaleOrder;
 
-    // Generate invoice number
-    const invoiceNumber = await generateInvoiceNumber();
+        // Idempotency: if already has an invoice, return it immediately without incrementing counter
+        if (order.invoiceNumber && order.invoiceGeneratedAt) {
+            return order.invoiceNumber;
+        }
 
-    // Update order with invoice metadata
-    await collections.wholesaleOrders.doc(orderId).update({
-        invoiceNumber,
-        invoiceGeneratedAt: new Date(),
+        // Check eligibility
+        if (!canGenerateInvoice(order)) {
+            throw new AppError(
+                'Order not eligible for invoice generation (payment not confirmed or order cancelled)',
+                400
+            );
+        }
+
+        // Fetch counter within the same atomic transaction
+        const counter = await transaction.get(counterRef);
+        const count = counter.data()?.count || 0;
+        const newCount = count + 1;
+
+        // Update counter atomically
+        transaction.set(counterRef, {
+            year: currentYear,
+            count: newCount,
+            lastUpdated: new Date(),
+        }, { merge: true });
+
+        const invoiceNumber = `INV-${currentYear}-${String(newCount).padStart(6, '0')}`;
+
+        // Update order with invoice metadata atomically
+        transaction.update(orderRef, {
+            invoiceNumber,
+            invoiceGeneratedAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        return invoiceNumber;
     });
-
-    return invoiceNumber;
 };
 
 /**
@@ -126,44 +152,62 @@ export const generateCreditNote = async (
     refundReason: string,
     refundMethod: 'razorpay' | 'bank_transfer' | 'store_credit' = 'razorpay'
 ): Promise<string> => {
-    const order = await getWholesaleOrderById(orderId);
+    const orderRef = collections.wholesaleOrders.doc(orderId);
+    const counterRef = db.collection('counters').doc('creditNote');
+    const currentYear = new Date().getFullYear();
 
-    if (!order) {
-        throw new AppError('Order not found', 404);
-    }
+    return await db.runTransaction(async (transaction) => {
+        const orderDoc = await transaction.get(orderRef);
 
-    if (!order.invoiceNumber) {
-        throw new AppError('Cannot create credit note without invoice', 400);
-    }
+        if (!orderDoc.exists) {
+            throw new AppError('Order not found', 404);
+        }
 
-    // Validate refund amount
-    const existingRefunds = order.refunds || [];
-    const totalRefunded = existingRefunds.reduce((sum: number, r: OrderRefund) => sum + r.refundAmount, 0);
+        const order = orderDoc.data() as WholesaleOrder;
 
-    if (totalRefunded + refundAmount > order.totalAmount) {
-        throw new AppError('Refund amount exceeds order total', 400);
-    }
+        if (!order.invoiceNumber) {
+            throw new AppError('Cannot create credit note without invoice', 400);
+        }
 
-    // Generate credit note number
-    const creditNoteNumber = await generateCreditNoteNumber();
+        // Validate refund amount
+        const existingRefunds = order.refunds || [];
+        const totalRefunded = existingRefunds.reduce((sum: number, r: OrderRefund) => sum + r.refundAmount, 0);
 
-    // Create refund record
-    const refund: OrderRefund = {
-        creditNoteNumber,
-        refundAmount,
-        refundReason,
-        refundDate: new Date(),
-        originalInvoiceNumber: order.invoiceNumber,
-        refundMethod,
-    };
+        if (totalRefunded + refundAmount > order.totalAmount) {
+            throw new AppError('Refund amount exceeds order total', 400);
+        }
 
-    // Update order with refund
-    await collections.wholesaleOrders.doc(orderId).update({
-        refunds: [...existingRefunds, refund],
-        updatedAt: new Date(),
+        // Generate credit note number within transaction
+        const counter = await transaction.get(counterRef);
+        const count = counter.data()?.count || 0;
+        const newCount = count + 1;
+
+        transaction.set(counterRef, {
+            year: currentYear,
+            count: newCount,
+            lastUpdated: new Date(),
+        }, { merge: true });
+
+        const creditNoteNumber = `CN-${currentYear}-${String(newCount).padStart(6, '0')}`;
+
+        // Create refund record
+        const refund: OrderRefund = {
+            creditNoteNumber,
+            refundAmount,
+            refundReason,
+            refundDate: new Date(),
+            originalInvoiceNumber: order.invoiceNumber,
+            refundMethod,
+        };
+
+        // Update order with refund atomically
+        transaction.update(orderRef, {
+            refunds: [...existingRefunds, refund],
+            updatedAt: new Date(),
+        });
+
+        return creditNoteNumber;
     });
-
-    return creditNoteNumber;
 };
 
 /**

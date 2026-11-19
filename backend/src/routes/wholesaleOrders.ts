@@ -117,6 +117,14 @@ router.patch('/:id/status', verifyToken, requireAdmin, async (req, res, next) =>
             updatedAt: new Date(),
         });
 
+        // Update fulfillment pipeline and revenue metrics in analytics cache
+        try {
+            const { updateOrderStatusInAnalytics } = await import('../services/dashboardService');
+            await updateOrderStatusInAnalytics(currentStatus, orderStatus, { ...order, id: orderId });
+        } catch (analyticsError) {
+            logger.error(`Failed to update analytics pipeline for order ${orderId}:`, analyticsError);
+        }
+
         // If cancelling a paid order, reverse the customer analytics cache
         if (orderStatus === 'cancelled') {
             try {
@@ -133,6 +141,7 @@ router.patch('/:id/status', verifyToken, requireAdmin, async (req, res, next) =>
                     await couponRef.update({
                         usedCount: admin.firestore.FieldValue.increment(-1),
                         usedBy: admin.firestore.FieldValue.arrayRemove(order.userId),
+                        [`userUsage.${order.userId}`]: admin.firestore.FieldValue.increment(-1),
                         updatedAt: admin.firestore.FieldValue.serverTimestamp()
                     });
                     logger.info(`Coupon reverted on cancellation for order ${orderId}`);
@@ -188,6 +197,14 @@ router.patch('/:id/discount', verifyToken, requireAdmin, async (req, res, next) 
 
         const order = orderDoc.data() as WholesaleOrder;
 
+        // Financial Gate: Only pending and active orders can have discounts applied before payment.
+        if (order.paymentStatus !== 'pending' || order.orderStatus === 'cancelled') {
+            return res.status(400).json({
+                success: false,
+                error: 'Discounts can only be applied to pending orders before payment. For paid orders, please issue a credit note refund.',
+            });
+        }
+
         // Validate discount amount
         if (discount < 0 || discount > order.subtotal) {
             return res.status(400).json({
@@ -204,17 +221,36 @@ router.patch('/:id/discount', verifyToken, requireAdmin, async (req, res, next) 
             appliedAt: new Date(),
         };
 
-        // Recalculate total including shipping and coupon discount
-        const shipping = order.shipping ?? 0;
+        // Recalculate total with accurate GST and shipping from wholesalePricingService
         const couponDiscount = order.appliedCoupon?.discount ?? 0;
-        const newTotal = Math.max(0, order.subtotal + order.gst + shipping - couponDiscount - discount);
+        const { calculateOrderTotal } = await import('../services/wholesalePricingService');
+        const calculatedTotals = await calculateOrderTotal(order.items, discount, couponDiscount);
+
+        const newTotal = calculatedTotals.totalAmount;
+        const previousTotal = order.totalAmount || 0;
+        const diffAmount = previousTotal - newTotal;
 
         await collections.wholesaleOrders.doc(orderId).update({
             adminDiscount: discount,
             adminDiscountHistory: admin.firestore.FieldValue.arrayUnion(discountEntry),
+            gst: calculatedTotals.gst,
+            gstRate: calculatedTotals.gstRate,
+            shipping: calculatedTotals.shipping,
             totalAmount: newTotal,
             updatedAt: new Date(),
         });
+
+        // Adjust unpaid amount in analytics cache
+        if (diffAmount !== 0) {
+            try {
+                await collections.analytics.doc('wholesale_dashboard_cache').update({
+                    unpaidAmount: admin.firestore.FieldValue.increment(-diffAmount),
+                    lastUpdated: new Date(),
+                });
+            } catch (cacheErr) {
+                logger.error('Failed to update unpaidAmount on discount change:', cacheErr);
+            }
+        }
 
         res.json({
             success: true,
@@ -322,8 +358,9 @@ router.get('/stats/summary', verifyToken, requireAdmin, async (req, res, next) =
 /**
  * GET /api/wholesale/orders/:id
  * Get order details
+ * Protected: Resource owner or admin only
  */
-router.get('/:id', verifyToken, async (req, res, next) => {
+router.get('/:id', verifyToken, async (req: AuthRequest, res, next) => {
     try {
         const orderDoc = await collections.wholesaleOrders.doc(req.params.id).get();
 
@@ -334,7 +371,20 @@ router.get('/:id', verifyToken, async (req, res, next) => {
             });
         }
 
-        const order = { id: orderDoc.id, ...orderDoc.data() };
+        const orderData = orderDoc.data() as WholesaleOrder;
+
+        // Authorization check: User must be order owner or have admin role
+        const isOwner = orderData.userId === req.user?.uid;
+        const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Forbidden: You do not have permission to access this order',
+            });
+        }
+
+        const order = { ...orderData, id: orderDoc.id };
         res.json({ success: true, data: order });
     } catch (error) {
         next(error);

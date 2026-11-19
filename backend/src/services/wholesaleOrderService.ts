@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { collections, db } from '../config/firebase';
 import { calculateOrderTotal } from './wholesalePricingService';
 import { logisticsService } from './logisticsService';
+import { getUserOrderCount } from './couponService';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
 
@@ -169,13 +170,13 @@ export async function createWholesaleOrder(
                 throw new AppError('Coupon usage limit reached', 400);
             }
             
-            const userUsageCount = (coupon.usedBy || []).filter((id: string) => id === userId).length;
+            const userUsageCount = (coupon as any).userUsage?.[userId] ?? (coupon.usedBy || []).filter((id: string) => id === userId).length;
             if (userUsageCount >= (coupon.perUserLimit || 1)) {
                 throw new AppError('You have already used this coupon', 400);
             }
             
-            const userData = userDoc.exists ? (userDoc.data() as any) : null;
-            const userOrderCount = userData?.totalOrders || 0;
+            // Check completed orders for first-order discount eligibility
+            const userOrderCount = await getUserOrderCount(userId);
             if (coupon.appliesTo === 'firstOrder' && userOrderCount > 0) {
                 throw new AppError('This coupon is only valid for first-time customers', 400);
             }
@@ -428,6 +429,7 @@ export async function createWholesaleOrder(
             tx.update(couponRef, {
                 usedCount: admin.firestore.FieldValue.increment(1),
                 usedBy: admin.firestore.FieldValue.arrayUnion(userId),
+                [`userUsage.${userId}`]: admin.firestore.FieldValue.increment(1),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
         }
@@ -450,6 +452,14 @@ export async function createWholesaleOrder(
     logger.info(`[OrderService] Created order ${orderId!} for user ${userId}`);
 
     const created = await getWholesaleOrderById(orderId!);
+    if (created) {
+        try {
+            const { recordOrderCreatedInAnalytics } = await import('./dashboardService');
+            await recordOrderCreatedInAnalytics(created);
+        } catch (err) {
+            logger.error(`[OrderService] Failed to record order creation in analytics:`, err);
+        }
+    }
     return { orderId: orderId!, order: created! };
 }
 
@@ -521,6 +531,7 @@ export async function updateWholesalePaymentStatus(
                 transaction.update(couponRef, {
                     usedCount: admin.firestore.FieldValue.increment(-1),
                     usedBy: admin.firestore.FieldValue.arrayRemove(order.userId),
+                    [`userUsage.${order.userId}`]: admin.firestore.FieldValue.increment(-1),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 });
             }
@@ -545,6 +556,23 @@ export async function updateWholesalePaymentStatus(
 
         const updated = await getWholesaleOrderById(orderId);
         if (!updated) throw new AppError('Order not found after update', 404);
+
+        if (status === 'paid') {
+            try {
+                const { updateAnalyticsCache } = await import('./dashboardService');
+                await updateAnalyticsCache(updated);
+            } catch (err) {
+                logger.error(`Failed to update analytics cache on payment update for order ${orderId}:`, err);
+            }
+
+            try {
+                const { updateCustomerCacheOnOrder } = await import('./customerAnalyticsService');
+                await updateCustomerCacheOnOrder(updated);
+            } catch (err) {
+                logger.error(`Failed to update customer cache on payment update for order ${orderId}:`, err);
+            }
+        }
+
         return updated;
     } catch (error) {
         logger.error(`Failed to update payment status for order ${orderId}:`, error);

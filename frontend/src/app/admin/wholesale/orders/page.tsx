@@ -7,7 +7,7 @@ import { wholesaleOrdersApi } from '@/lib/api/wholesaleApi';
 import { formatDate, formatRelative, toDate } from '@/lib/dateUtils';
 import {
     Package, RefreshCw, Search, AlertCircle, X, Truck,
-    MessageSquare, MapPin, CreditCard, Clock, ChevronRight,
+    MessageSquare, MapPin, CreditCard, Clock, ChevronLeft, ChevronRight,
     FileText, Phone, StickyNote, TrendingUp, ShoppingBag,
     Loader2, CheckCircle2, IndianRupee, Printer
 } from 'lucide-react';
@@ -100,6 +100,8 @@ export default function AdminOrdersPage() {
     const [selectedStatus, setSelectedStatus] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [updatingId, setUpdatingId] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const ORDERS_PER_PAGE = 10;
 
     // Detail panel state
     const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -384,6 +386,11 @@ export default function AdminOrdersPage() {
 
     // ─── Filtered Orders ──────────────────────────────────────────────────────
 
+    // Reset pagination to page 1 when search or status filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedStatus, searchQuery]);
+
     const filteredOrders = orders.filter((order) => {
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
@@ -394,6 +401,12 @@ export default function AdminOrdersPage() {
             order.address?.phone?.toLowerCase().includes(q)
         );
     });
+
+    const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE) || 1;
+    const paginatedOrders = filteredOrders.slice(
+        (currentPage - 1) * ORDERS_PER_PAGE,
+        currentPage * ORDERS_PER_PAGE
+    );
 
     // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -500,7 +513,7 @@ export default function AdminOrdersPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {filteredOrders.map((order) => (
+                            {paginatedOrders.map((order) => (
                                 <tr
                                     key={order.id}
                                     onClick={() => setSelectedOrder(order)}
@@ -566,6 +579,62 @@ export default function AdminOrdersPage() {
                             ))}
                         </tbody>
                     </table>
+
+                    {totalPages > 1 && (
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 bg-gray-50/30">
+                            <div className="text-xs text-gray-500">
+                                Showing <span className="font-semibold text-gray-700">{(currentPage - 1) * ORDERS_PER_PAGE + 1}</span> to{' '}
+                                <span className="font-semibold text-gray-700">{Math.min(currentPage * ORDERS_PER_PAGE, filteredOrders.length)}</span> of{' '}
+                                <span className="font-semibold text-gray-700">{filteredOrders.length}</span> orders
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-2 border rounded-lg hover:bg-white text-gray-600 disabled:opacity-40 disabled:hover:bg-transparent transition"
+                                    aria-label="Previous page"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                    if (
+                                        page === 1 ||
+                                        page === totalPages ||
+                                        (page >= currentPage - 1 && page <= currentPage + 1)
+                                    ) {
+                                        return (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`min-w-[32px] h-8 px-2 text-xs font-semibold rounded-lg border transition ${
+                                                    currentPage === page
+                                                        ? 'bg-primary text-white border-primary'
+                                                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
+                                                }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        );
+                                    } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                        return (
+                                            <span key={page} className="px-1 text-gray-400 text-xs">
+                                                ...
+                                            </span>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 border rounded-lg hover:bg-white text-gray-600 disabled:opacity-40 disabled:hover:bg-transparent transition"
+                                    aria-label="Next page"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 

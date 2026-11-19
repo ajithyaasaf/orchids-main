@@ -45,6 +45,8 @@ export default function WholesaleCheckoutPage() {
     const [error, setError] = useState('');
     const [isAddressConfirmed, setIsAddressConfirmed] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+    const [checkoutSessionId] = useState(() => `chk_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`);
 
     const STORAGE_KEY = 'wholesale_checkout_address_v1';
 
@@ -106,6 +108,11 @@ export default function WholesaleCheckoutPage() {
             router.push('/products');
         }
     }, [items, isSuccess, isHydrated]);
+
+    // Reset pending order cache if cart contents change
+    useEffect(() => {
+        setPendingOrderId(null);
+    }, [items]);
 
     const [isValidatingPincode, setIsValidatingPincode] = useState(false);
 
@@ -226,6 +233,18 @@ export default function WholesaleCheckoutPage() {
             setLoading(true);
             setError('');
 
+            // If an order was already created in this session for this pending checkout, resume payment directly
+            if (pendingOrderId && !isTest) {
+                try {
+                    await initiatePayment(pendingOrderId);
+                    return;
+                } catch (retryErr: any) {
+                    // If the existing order was invalid or failed, allow falling through to create a fresh one
+                    console.warn('[Checkout] Retry on pending order failed, creating new order:', retryErr);
+                    setPendingOrderId(null);
+                }
+            }
+
             // ── Zero Trust: Send ONLY productId + quantity + address ──────────
             // The backend fetches prices itself. We never trust what the client says.
             const cartItems = items.map((item) => ({
@@ -233,12 +252,12 @@ export default function WholesaleCheckoutPage() {
                 bundlesOrdered: item.bundlesOrdered,
             }));
 
-            // ── Idempotency Key: Prevents double orders on retry ──────────────
-            // We hash the cart contents + user session timestamp so retries
-            // within the same checkout session return the same existing order.
-            const idempotencyKey = btoa(
-                JSON.stringify(cartItems) + address.pincode + Date.now().toString().slice(0, -4)
-            );
+            // ── Stable Session Idempotency Key ─────────────────────────────────
+            // Uses a stable checkout session ID + cart hash so re-submitting 
+            // inside the same checkout attempt doesn't create duplicate orders.
+            const idempotencyKey = `chk_${checkoutSessionId}_${btoa(
+                JSON.stringify(cartItems) + address.pincode
+            )}`;
 
             const response = await authenticatedFetch('/api/wholesale/orders', {
                 method: 'POST',
@@ -259,11 +278,13 @@ export default function WholesaleCheckoutPage() {
             }
 
             const { orderId, order } = data.data;
+            setPendingOrderId(orderId);
 
             if (isTest) {
                 // Test mode: bypass payment gateway
                 setIsSuccess(true);
                 clearCart();
+                setPendingOrderId(null);
                 router.push(`/orders/${orderId}?success=true`);
                 return;
             }
@@ -350,6 +371,7 @@ export default function WholesaleCheckoutPage() {
                         // Success — clear cart and redirect
                         setIsSuccess(true);
                         clearCart();
+                        setPendingOrderId(null);
                         router.push(`/order-success?id=${orderId}`);
                         resolve();
                     } catch (err: any) {

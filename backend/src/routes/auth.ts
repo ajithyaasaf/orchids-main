@@ -1,5 +1,6 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { auth } from '../config/firebase';
+import { verifyToken, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -43,16 +44,29 @@ router.post('/session', async (req, res) => {
 /**
  * @desc Completely revoke a user's session
  * @route POST /api/auth/revoke
- * @access Public
+ * @access Protected (Self or Admin)
  */
-router.post('/revoke', async (req, res) => {
+router.post('/revoke', verifyToken, async (req: AuthRequest, res: Response) => {
     try {
-        const { uid } = req.body;
-        if (uid) {
-            // Revoke all sessions for this specific user
-            await auth.revokeRefreshTokens(uid);
+        const targetUid = req.body.uid || req.user?.uid;
+        if (!targetUid) {
+            return res.status(400).json({ success: false, error: 'User UID is required' });
         }
-        res.json({ success: true, message: 'Sessions revoked' });
+
+        // Only the user themselves or an admin can revoke tokens
+        const isSelf = req.user?.uid === targetUid;
+        const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
+
+        if (!isSelf && !isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Forbidden: You do not have permission to revoke this session'
+            });
+        }
+
+        // Revoke all sessions for this specific user
+        await auth.revokeRefreshTokens(targetUid);
+        res.json({ success: true, message: 'Sessions revoked successfully' });
     } catch (error: any) {
         console.error('Session revocation error:', error);
         res.status(500).json({ success: false, error: 'Failed to revoke sessions' });

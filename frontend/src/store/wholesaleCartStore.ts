@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { WholesaleProduct } from '@orchids/shared';
+import { trackAddToCart, trackRemoveFromCart } from '@/lib/trackingUtils';
 
 /**
  * Wholesale Cart Store
@@ -64,8 +65,14 @@ export const useCartStore = create<CartStore>()(
                 }
             },
 
-            // Add bundle with duplicate merge fix
-            addBundle: (product, quantity) =>
+            // Add bundle with duplicate merge fix and analytics tracking
+            addBundle: (product, quantity) => {
+                try {
+                    trackAddToCart(product, '', quantity);
+                } catch (e) {
+                    console.error('[Analytics] Failed to track add to cart:', e);
+                }
+
                 set((state) => {
                     const existing = state.items.find((i) => i.product.id === product.id);
 
@@ -84,7 +91,8 @@ export const useCartStore = create<CartStore>()(
                     return {
                         items: [...state.items, { product, bundlesOrdered: quantity }],
                     };
-                }),
+                });
+            },
 
             updateBundleQty: (productId, quantity) =>
                 set((state) => ({
@@ -95,10 +103,19 @@ export const useCartStore = create<CartStore>()(
                     ),
                 })),
 
-            removeBundle: (productId) =>
+            removeBundle: (productId) => {
+                const item = get().items.find((i) => i.product.id === productId);
+                if (item) {
+                    try {
+                        trackRemoveFromCart(item.product, '', item.bundlesOrdered);
+                    } catch (e) {
+                        console.error('[Analytics] Failed to track remove from cart:', e);
+                    }
+                }
                 set((state) => ({
                     items: state.items.filter((i) => i.product.id !== productId),
-                })),
+                }));
+            },
 
             clearCart: () => set({ items: [] }),
 

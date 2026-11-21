@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { wholesaleProductsApi } from '@/lib/api/wholesaleApi';
 import { ProductSchema, Breadcrumbs } from '@/components/seo/StructuredData';
+import { ProductViewTracker } from '@/components/analytics/ProductViewTracker';
 import { AddToCartSection } from '@/components/product/AddToCartSection';
 import { ProductImageGallery } from '@/components/product/ProductImageGallery';
 import { PincodeCheck } from '@/components/product/PincodeCheck';
@@ -135,6 +136,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <>
             {/* SEO: Product Schema */}
             <ProductSchema product={product} />
+
+            {/* Analytics: ViewContent (Meta) & view_item (GA4) */}
+            <ProductViewTracker product={product} />
 
             {/* Tracking: Record this view in browser history (Currently Hidden)
             <RecentlyViewedTracker productId={product.id} />

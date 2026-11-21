@@ -6,6 +6,7 @@ import { AlertTriangle } from 'lucide-react';
 import { WholesaleProduct } from '@orchids/shared';
 import { useCartStore } from '@/store/wholesaleCartStore';
 import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
+import { trackViewItem } from '@/lib/trackingUtils';
 
 interface Props {
     product: WholesaleProduct;
@@ -52,7 +53,10 @@ export default function ProductDetailClient({ product }: Props) {
 
     useEffect(() => {
         fetchGSTRate();
-    }, [fetchGSTRate]);
+        if (product && product.id) {
+            trackViewItem(product);
+        }
+    }, [fetchGSTRate, product]);
 
     // Safe, fallback-guarded values — no crashes even if DB data is incomplete
     const safePrice = product.bundlePrice ?? 0;

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { CheckCircle, XCircle, Package, Loader2 } from 'lucide-react';
 import { WholesaleOrder } from '@orchids/shared';
 import { useAuthToken } from '@/hooks/useAuthToken';
+import { trackPurchase, isPurchaseTracked } from '@/lib/trackingUtils';
 
 function OrderSuccessContent() {
     const searchParams = useSearchParams();
@@ -36,6 +37,18 @@ function OrderSuccessContent() {
                     
                     if (orderData.data.paymentStatus === 'paid') {
                         setPaymentStatus('success');
+                        try {
+                            if (!isPurchaseTracked(orderData.data.id)) {
+                                trackPurchase(
+                                    orderData.data.id,
+                                    orderData.data.items || [],
+                                    orderData.data.totalAmount,
+                                    orderData.data.shipping || 0
+                                );
+                            }
+                        } catch (trackErr) {
+                            console.error('[Analytics] Failed to track purchase in success page:', trackErr);
+                        }
                     } else if (orderData.data.paymentStatus === 'failed') {
                         setPaymentStatus('failed');
                     } else {

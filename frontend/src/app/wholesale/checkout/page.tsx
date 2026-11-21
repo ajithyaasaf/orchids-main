@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore as useWholesaleCartStore } from '@/store/wholesaleCartStore';
 import { useAuthStore } from '@/store/authStore';
@@ -8,6 +8,7 @@ import { wholesaleCheckoutApi } from '@/lib/api/wholesaleApi';
 import { auth } from '@/lib/firebase';
 import { useAuthToken } from '@/hooks/useAuthToken';
 import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
+import { trackBeginCheckout, trackAddPaymentInfo, trackPurchase, isPurchaseTracked } from '@/lib/trackingUtils';
 
 /**
  * Wholesale Checkout Page
@@ -113,6 +114,19 @@ export default function WholesaleCheckoutPage() {
     useEffect(() => {
         setPendingOrderId(null);
     }, [items]);
+
+    // Analytics: Track InitiateCheckout when cart items are ready
+    const hasTrackedCheckoutRef = useRef(false);
+    useEffect(() => {
+        if (isHydrated && items.length > 0 && !hasTrackedCheckoutRef.current) {
+            hasTrackedCheckoutRef.current = true;
+            try {
+                trackBeginCheckout(items, getTotal());
+            } catch (e) {
+                console.error('[Analytics] Failed to track begin checkout:', e);
+            }
+        }
+    }, [isHydrated, items, getTotal]);
 
     const [isValidatingPincode, setIsValidatingPincode] = useState(false);
 
@@ -282,11 +296,31 @@ export default function WholesaleCheckoutPage() {
 
             if (isTest) {
                 // Test mode: bypass payment gateway
+                try {
+                    if (!isPurchaseTracked(orderId)) {
+                        trackPurchase(
+                            orderId,
+                            items,
+                            calculatedOrder?.totalAmount || getTotal(),
+                            calculatedOrder?.shipping || 0
+                        );
+                    }
+                } catch (trackErr) {
+                    console.error('[Analytics] Failed to track test purchase:', trackErr);
+                }
+
                 setIsSuccess(true);
                 clearCart();
                 setPendingOrderId(null);
                 router.push(`/orders/${orderId}?success=true`);
                 return;
+            }
+
+            // Track payment info step
+            try {
+                trackAddPaymentInfo(items, calculatedOrder?.totalAmount || getTotal(), 'razorpay');
+            } catch (trackErr) {
+                console.error('[Analytics] Failed to track add payment info:', trackErr);
             }
 
             // Initiate Razorpay payment popup
@@ -368,7 +402,20 @@ export default function WholesaleCheckoutPage() {
                             throw new Error(verifyData.error || 'Payment verification failed');
                         }
 
-                        // Success — clear cart and redirect
+                        // Success — track purchase, clear cart and redirect
+                        try {
+                            if (!isPurchaseTracked(orderId)) {
+                                trackPurchase(
+                                    orderId,
+                                    items,
+                                    calculatedOrder?.totalAmount || getTotal(),
+                                    calculatedOrder?.shipping || 0
+                                );
+                            }
+                        } catch (trackErr) {
+                            console.error('[Analytics] Failed to track purchase:', trackErr);
+                        }
+
                         setIsSuccess(true);
                         clearCart();
                         setPendingOrderId(null);

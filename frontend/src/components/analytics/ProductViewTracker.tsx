@@ -24,3 +24,4 @@ export function ProductViewTracker({ product }: ProductViewTrackerProps) {
 
     return null;
 }
+

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore as useWholesaleCartStore } from '@/store/wholesaleCartStore';
+import { useAuthStore } from '@/store/authStore';
 import Image from 'next/image';
 import { getCloudinaryUrl } from '@/lib/cloudinaryImage';
 
@@ -26,6 +27,15 @@ export default function WholesaleCartPage() {
         getTotalPieces,
         gstRate,
     } = useWholesaleCartStore();
+    const { user, initialized } = useAuthStore();
+
+    const handleProceedToCheckout = () => {
+        if (initialized && !user) {
+            router.push('/auth/login?redirect=/wholesale/checkout');
+        } else {
+            router.push('/wholesale/checkout');
+        }
+    };
 
     const [isHydrated, setIsHydrated] = useState(false);
 
@@ -206,7 +216,7 @@ export default function WholesaleCartPage() {
                             </div>
 
                             <button
-                                onClick={() => router.push('/wholesale/checkout')}
+                                onClick={handleProceedToCheckout}
                                 className="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all mb-4 flex items-center justify-center"
                             >
                                 Proceed to Checkout

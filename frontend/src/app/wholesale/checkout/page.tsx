@@ -27,7 +27,7 @@ interface CalculatedOrder {
 export default function WholesaleCheckoutPage() {
     const router = useRouter();
     const { items, clearCart, fetchGSTRate, getSubtotal, getGST, getTotal, gstRate: storeGstRate } = useWholesaleCartStore();
-    const { user } = useAuthStore();
+    const { user, initialized } = useAuthStore();
 
     const [address, setAddress] = useState({
         name: '',
@@ -50,6 +50,13 @@ export default function WholesaleCheckoutPage() {
     const [checkoutSessionId] = useState(() => `chk_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`);
 
     const STORAGE_KEY = 'wholesale_checkout_address_v1';
+
+    // ── Auth Guard: Redirect unauthenticated visitors to login ─────────
+    useEffect(() => {
+        if (initialized && !user) {
+            router.push('/auth/login?redirect=/wholesale/checkout');
+        }
+    }, [initialized, user, router]);
 
     // ── Load Persisted Address ───────────────────────────────────────────
     useEffect(() => {
@@ -75,14 +82,16 @@ export default function WholesaleCheckoutPage() {
             // Auto-confirm if no local draft exists (user has a default saved address)
             if (!localStorage.getItem(STORAGE_KEY)) {
                 setIsAddressConfirmed(true);
-                handleCalculate({
-                    ...pureAddress,
-                    addressLine2: pureAddress.addressLine2 || '',
-                    country: 'India'
-                });
+                if (items.length > 0) {
+                    handleCalculate({
+                        ...pureAddress,
+                        addressLine2: pureAddress.addressLine2 || '',
+                        country: 'India'
+                    });
+                }
             }
         }
-    }, [user]);
+    }, [user, items.length]);
 
     // ── Save Address on Change ───────────────────────────────────────────
     useEffect(() => {
@@ -219,6 +228,10 @@ export default function WholesaleCheckoutPage() {
     };
 
     const handleCalculate = async (overrideAddress?: any) => {
+        if (!items || items.length === 0) return;
+        const targetAddress = overrideAddress || address;
+        if (!targetAddress.pincode || targetAddress.pincode.length < 6) return;
+
         try {
             setLoading(true);
             setError('');
@@ -228,9 +241,13 @@ export default function WholesaleCheckoutPage() {
                 bundlesOrdered: item.bundlesOrdered,
             }));
 
-            const result = await wholesaleCheckoutApi.calculate(checkoutItems, overrideAddress || address);
+            const result = await wholesaleCheckoutApi.calculate(checkoutItems, targetAddress);
             setCalculatedOrder(result);
         } catch (err: any) {
+            if (err.message?.toLowerCase().includes('unauthorized') || err.message?.toLowerCase().includes('not authenticated')) {
+                router.push('/auth/login?redirect=/wholesale/checkout');
+                return;
+            }
             setError(err.message);
         } finally {
             setLoading(false);
@@ -238,6 +255,11 @@ export default function WholesaleCheckoutPage() {
     };
 
     const handlePlaceOrder = async (isTest: boolean = false) => {
+        if (!user) {
+            router.push('/auth/login?redirect=/wholesale/checkout');
+            return;
+        }
+
         if (!calculatedOrder) {
             alert('Please calculate shipping first');
             return;
@@ -326,6 +348,10 @@ export default function WholesaleCheckoutPage() {
             // Initiate Razorpay payment popup
             await initiatePayment(orderId);
         } catch (err: any) {
+            if (err.message?.toLowerCase().includes('not authenticated') || err.message?.toLowerCase().includes('unauthorized')) {
+                router.push('/auth/login?redirect=/wholesale/checkout');
+                return;
+            }
             setError(err.message);
             setLoading(false);
         }
@@ -471,6 +497,21 @@ export default function WholesaleCheckoutPage() {
 
     if (items.length === 0) {
         return null;
+    }
+
+    if (initialized && !user) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-gray-600 font-medium">Please sign in to complete your checkout...</p>
+                <button
+                    onClick={() => router.push('/auth/login?redirect=/wholesale/checkout')}
+                    className="mt-4 px-6 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors shadow"
+                >
+                    Sign In to Continue
+                </button>
+            </div>
+        );
     }
 
     return (

@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { doc, setDoc, collection } from 'firebase/firestore'; // Import collection
-import { db, auth } from '@/lib/firebase'; // Import db AND auth
+import { doc, setDoc, collection } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
 
-export default function RegisterPage() {
+function RegisterForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectPath = searchParams.get('redirect');
     const { signUp } = useAuthStore();
     const [formData, setFormData] = useState({
         name: '',
@@ -54,8 +56,6 @@ export default function RegisterPage() {
                 throw new Error('Firestore database instance is not initialized. Check your firebase.ts configuration.');
             }
 
-            // Use collection() reference explicitly to prevent "Expected first argument..." errors
-            // This ensures we are strictly following the modular SDK pattern
             const userRef = doc(collection(db, 'users'), user.uid);
 
             await setDoc(userRef, {
@@ -67,10 +67,28 @@ export default function RegisterPage() {
                 updatedAt: new Date(),
             });
 
-            // 4. Success! Redirect to home
-            router.push('/');
+            // 4. Synchronize server session cookie
+            try {
+                const idToken = await user.getIdToken(true);
+                if (idToken) {
+                    await fetch('/api/auth/session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken }),
+                    });
+                }
+            } catch (sessionErr) {
+                console.warn('Session cookie sync failed (non-fatal):', sessionErr);
+            }
+
+            // 5. Success! Redirect to intended destination or home
+            if (redirectPath) {
+                window.location.href = redirectPath;
+            } else {
+                router.push('/');
+            }
         } catch (err: any) {
-            console.error("Registration Error:", err);
+            console.error('Registration Error:', err);
             setError(err.message || 'Failed to create account. Please try again.');
         } finally {
             setLoading(false);
@@ -141,12 +159,27 @@ export default function RegisterPage() {
 
                     <div className="mt-6 text-center text-sm">
                         <span className="text-slate-500">Already have an account? </span>
-                        <Link href="/auth/login" className="text-primary hover:underline font-medium">
+                        <Link
+                            href={redirectPath ? `/auth/login?redirect=${encodeURIComponent(redirectPath)}` : '/auth/login'}
+                            className="text-primary hover:underline font-medium"
+                        >
                             Sign in
                         </Link>
                     </div>
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <RegisterForm />
+        </Suspense>
     );
 }

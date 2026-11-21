@@ -147,7 +147,7 @@ function LoginForm() {
 
                     <div className="mt-6 text-center text-sm">
                         <span>Don't have an account? </span>
-                        <Link href="/auth/register" className="text-primary hover:underline">
+                        <Link href={redirectPath ? `/auth/register?redirect=${encodeURIComponent(redirectPath)}` : '/auth/register'} className="text-primary hover:underline">
                             Sign up
                         </Link>
                     </div>

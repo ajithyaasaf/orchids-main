@@ -6,6 +6,7 @@ import { PromotionalBanner } from '@/components/layout/PromotionalBanner';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ToastProvider } from '@/context/ToastContext';
 import { GoogleTagManager } from '@/components/analytics/GoogleTagManager';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
 import Script from 'next/script';
 
 const inter = Inter({
@@ -90,6 +91,7 @@ export default function RootLayout({
             <body className="font-body antialiased bg-white text-text-primary overflow-x-hidden w-full relative">
                 <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
                 <GoogleTagManager />
+                <MetaPixel />
                 <ToastProvider>
                     <AuthProvider>
                         <ConditionalLayout>{children}</ConditionalLayout>

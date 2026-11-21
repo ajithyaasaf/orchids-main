@@ -13,6 +13,17 @@ const pushToDataLayer = (data: any) => {
     }
 };
 
+// Helper to safely trigger Meta Pixel events
+const trackMetaEvent = (eventName: string, data?: any) => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+        if (data) {
+            (window as any).fbq('track', eventName, data);
+        } else {
+            (window as any).fbq('track', eventName);
+        }
+    }
+};
+
 // Helper to format product for GA4
 const formatProduct = (product: WholesaleProduct, quantity: number = 1, size?: string) => ({
     item_id: product.id,
@@ -46,6 +57,14 @@ export const trackViewItem = (product: WholesaleProduct, selectedSize?: string) 
             items: [formatProduct(product, 1, selectedSize)],
         },
     });
+
+    trackMetaEvent('ViewContent', {
+        content_name: product.title,
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.bundlePrice,
+        currency: 'INR',
+    });
 };
 
 /**
@@ -78,6 +97,14 @@ export const trackAddToCart = (product: WholesaleProduct, size: string, quantity
             items: [formatProduct(product, quantity, size)],
         },
     });
+
+    trackMetaEvent('AddToCart', {
+        content_name: product.title,
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.bundlePrice * quantity,
+        currency: 'INR',
+    });
 };
 
 /**
@@ -107,6 +134,12 @@ export const trackBeginCheckout = (items: any[], totalValue: number) => {
             value: totalValue,
             items: items.map(formatCartItem),
         },
+    });
+
+    trackMetaEvent('InitiateCheckout', {
+        value: totalValue,
+        currency: 'INR',
+        num_items: items.reduce((sum, item) => sum + (item.bundlesOrdered || 1), 0),
     });
 };
 
@@ -154,6 +187,13 @@ export const trackPurchase = (
     if (typeof window !== 'undefined') {
         sessionStorage.setItem(`purchase_tracked_${orderId}`, 'true');
     }
+
+    trackMetaEvent('Purchase', {
+        value: totalValue,
+        currency: 'INR',
+        content_type: 'product',
+        order_id: orderId,
+    });
 };
 
 /**

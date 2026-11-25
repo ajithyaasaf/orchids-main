@@ -275,6 +275,45 @@ export const getAllCustomersWithInsights = async (
         query = query.where('totalSpent', '>=', filters.minSpent);
     }
 
+    const toCustomerInsight = (user: User): CustomerInsight => {
+        const firstOrderDate = parseDate(user.firstOrderDate) || new Date();
+        return {
+            ...user,
+            metadata: {
+                totalOrders: user.totalOrders || 0,
+                totalSpent: user.totalSpent || 0,
+                averageOrderValue: user.averageOrderValue || 0,
+                firstOrderDate,
+                lastOrderDate: user.lastOrderDate,
+                lifetime: user.firstOrderDate
+                    ? Math.floor((Date.now() - firstOrderDate.getTime()) / (1000 * 60 * 60 * 24))
+                    : 0,
+                favoriteCategory: undefined,
+                favoriteProducts: [],
+            },
+            orderHistory: [], // Don't load orders for list view (performance)
+            segment: user.segment || 'inactive',
+        };
+    };
+
+    // Search filter: Firestore doesn't support case-insensitive substring queries natively
+    if (filters?.search && filters.search.trim()) {
+        const searchLower = filters.search.trim().toLowerCase();
+        const allSnap = await query.get();
+        const matched = allSnap.docs
+            .map(d => d.data() as User)
+            .filter(u =>
+                (u.name || '').toLowerCase().includes(searchLower) ||
+                (u.email || '').toLowerCase().includes(searchLower) ||
+                (u.phone || '').toLowerCase().includes(searchLower)
+            );
+        return {
+            customers: matched.slice(0, limit).map(toCustomerInsight),
+            total: matched.length,
+            lastDocId: undefined,
+        };
+    }
+
     // Get total count using optimized aggregation
     const totalSnapshot = await query.count().get();
     const total = totalSnapshot.data().count;
@@ -289,26 +328,7 @@ export const getAllCustomersWithInsights = async (
 
     const snapshot = await query.limit(limit).get();
 
-    const customers = snapshot.docs.map(doc => {
-        const user = doc.data() as User;
-        return {
-            ...user,
-            metadata: {
-                totalOrders: user.totalOrders || 0,
-                totalSpent: user.totalSpent || 0,
-                averageOrderValue: user.averageOrderValue || 0,
-                firstOrderDate: user.firstOrderDate || new Date(),
-                lastOrderDate: user.lastOrderDate,
-                lifetime: user.firstOrderDate
-                    ? Math.floor((Date.now() - user.firstOrderDate.getTime()) / (1000 * 60 * 60 * 24))
-                    : 0,
-                favoriteCategory: undefined,
-                favoriteProducts: [],
-            },
-            orderHistory: [], // Don't load orders for list view (performance)
-            segment: user.segment || 'inactive',
-        };
-    });
+    const customers = snapshot.docs.map(doc => toCustomerInsight(doc.data() as User));
 
     const newLastDocId = snapshot.docs.length > 0
         ? snapshot.docs[snapshot.docs.length - 1].id
@@ -425,21 +445,22 @@ export const exportCustomersToCSV = async (filters?: CustomerFilters): Promise<s
     if (filters?.search) {
         const searchLower = filters.search.toLowerCase();
         filtered = filtered.filter(u =>
-            u.name.toLowerCase().includes(searchLower) ||
-            u.email.toLowerCase().includes(searchLower)
+            (u.name || '').toLowerCase().includes(searchLower) ||
+            (u.email || '').toLowerCase().includes(searchLower)
         );
     }
 
-    // Safe date formatter
+    // Safe date formatter & CSV escaping
     const fmtDate = (d: any) => {
         if (!d) return '';
-        const dt = d instanceof Date ? d : d.toDate ? d.toDate() : new Date(d);
-        return dt.toISOString();
+        const dt = parseDate(d);
+        return dt ? dt.toISOString() : '';
     };
+    const csvEscape = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
 
     const headers = 'Email,Name,Phone,Total Orders,Total Spent (₹),Segment,Last Order,First Order\n';
     const rows = filtered.map(u =>
-        `${u.email},"${u.name}",${u.phone || ''},${u.totalOrders || 0},${u.totalSpent || 0},${u.segment || 'inactive'},${fmtDate(u.lastOrderDate)},${fmtDate(u.firstOrderDate)}`
+        `${csvEscape(u.email)},${csvEscape(u.name)},${csvEscape(u.phone)},${u.totalOrders || 0},${u.totalSpent || 0},${u.segment || 'inactive'},${fmtDate(u.lastOrderDate)},${fmtDate(u.firstOrderDate)}`
     ).join('\n');
 
     return headers + rows;

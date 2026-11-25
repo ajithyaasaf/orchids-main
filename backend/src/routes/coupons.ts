@@ -237,6 +237,7 @@ router.put(
             delete updateData.createdBy;
             delete updateData.usedCount;
             delete updateData.usedBy;
+            delete updateData.userUsage;
 
             // Convert date strings to Date objects if they're being updated
             if (updateData.validFrom) {

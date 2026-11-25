@@ -29,6 +29,7 @@ export default function OrderStatusPage() {
 
     const [order, setOrder] = useState<WholesaleOrder | null>(null);
     const [loading, setLoading] = useState(true);
+    const [downloadingInvoice, setDownloadingInvoice] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -296,6 +297,18 @@ export default function OrderStatusPage() {
                         <span className="text-gray-700">GST ({(order.gstRate * 100).toFixed(0)}%):</span>
                         <span className="font-semibold">₹{order.gst.toFixed(2)}</span>
                     </div>
+                    {(order as any).shipping > 0 && (
+                        <div className="flex justify-between">
+                            <span className="text-gray-700">Delivery Charges:</span>
+                            <span className="font-semibold">₹{(order as any).shipping.toFixed(2)}</span>
+                        </div>
+                    )}
+                    {order.appliedCoupon?.discount && order.appliedCoupon.discount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                            <span>Coupon ({order.appliedCoupon.code}):</span>
+                            <span className="font-semibold">-₹{order.appliedCoupon.discount.toFixed(2)}</span>
+                        </div>
+                    )}
                     {order.adminDiscount > 0 && (
                         <div className="flex justify-between text-green-600">
                             <span>Discount:</span>
@@ -352,17 +365,40 @@ export default function OrderStatusPage() {
                 >
                     Continue Shopping
                 </Link>
-                <button
-                    onClick={() => {
-                        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-                        const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-                        window.open(`${apiUrl}/invoices/${order.id}?download=false`, '_blank');
-                    }}
-                    className="px-6 py-3 border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
-                >
-                    <FileText className="w-5 h-5" />
-                    Download Tax Invoice
-                </button>
+                {order.paymentStatus === 'paid' && order.orderStatus !== 'cancelled' && (
+                    <button
+                        disabled={downloadingInvoice}
+                        onClick={async () => {
+                            try {
+                                setDownloadingInvoice(true);
+                                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                                const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+                                const res = await authenticatedFetch(`${apiUrl}/invoices/${order.id}?download=true`);
+                                if (!res.ok) {
+                                    const errJson = await res.json().catch(() => null);
+                                    throw new Error(errJson?.error || 'Failed to download tax invoice');
+                                }
+                                const blob = await res.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `invoice-${order.invoiceNumber || order.id.slice(0, 8)}.pdf`;
+                                document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                                window.URL.revokeObjectURL(url);
+                            } catch (err: any) {
+                                alert(err.message || 'Unable to download tax invoice');
+                            } finally {
+                                setDownloadingInvoice(false);
+                            }
+                        }}
+                        className="px-6 py-3 border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        <FileText className="w-5 h-5" />
+                        {downloadingInvoice ? 'Generating PDF...' : 'Download Tax Invoice'}
+                    </button>
+                )}
             </div>
 
             {/* Customer Support Note */}

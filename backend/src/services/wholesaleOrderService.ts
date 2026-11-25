@@ -110,10 +110,26 @@ export async function createWholesaleOrder(
         return { orderId: existingOrder.id, order: existingOrder };
     }
 
-    // ── 2. Validate Request Shape ─────────────────────────────────────────
-    if (!cartItems || cartItems.length === 0) {
+    // ── 2. Validate Request Shape & Normalize Duplicate Items ─────────────
+    if (!Array.isArray(cartItems) || cartItems.length === 0) {
         throw new AppError('Cart is empty', 400);
     }
+
+    const aggregatedMap = new Map<string, number>();
+    for (const item of cartItems) {
+        if (!item || typeof item.productId !== 'string' || !item.productId.trim()) {
+            throw new AppError('Invalid product ID in cart', 400);
+        }
+        if (!Number.isInteger(item.bundlesOrdered) || item.bundlesOrdered < 1) {
+            throw new AppError(`Invalid bundle quantity for product "${item.productId}". Must be a positive whole number.`, 400);
+        }
+        const pid = item.productId.trim();
+        aggregatedMap.set(pid, (aggregatedMap.get(pid) || 0) + item.bundlesOrdered);
+    }
+    const normalizedCartItems = Array.from(aggregatedMap.entries()).map(([productId, bundlesOrdered]) => ({
+        productId,
+        bundlesOrdered,
+    }));
 
     // ── 3. Validate Delivery Address ──────────────────────────────────────
     const addressValidation = logisticsService.validateAddress(address);
@@ -127,7 +143,7 @@ export async function createWholesaleOrder(
     //   b) Stock decrement and order creation are a single atomic operation
     //   c) If two users buy the last bundle simultaneously, only one succeeds
 
-    const productRefs = cartItems.map((item) =>
+    const productRefs = normalizedCartItems.map((item) =>
         collections.wholesaleProducts.doc(item.productId)
     );
     const userRef = collections.users.doc(userId);
@@ -195,8 +211,8 @@ export async function createWholesaleOrder(
         serverCalculatedItems = [];
         const stockUpdates: Array<{ ref: admin.firestore.DocumentReference; newStock: number; newReserved: number; newTotal: number }> = [];
 
-        for (let i = 0; i < cartItems.length; i++) {
-            const cartItem = cartItems[i];
+        for (let i = 0; i < normalizedCartItems.length; i++) {
+            const cartItem = normalizedCartItems[i];
             const snap = productSnapshots[i];
 
             if (!snap.exists) {
@@ -493,7 +509,10 @@ export async function updateWholesalePaymentStatus(
     try {
         const orderRef = collections.wholesaleOrders.doc(orderId);
         
-        let shouldLockPrices = false;
+        let didTransitionToPaid = false;
+        let didTransitionToFailed = false;
+        let failedOrderAmount = 0;
+        let couponToRevert: { couponId: string; userId: string } | null = null;
         let orderItems: WholesaleBundleItem[] = [];
 
         await db.runTransaction(async (transaction) => {
@@ -504,6 +523,12 @@ export async function updateWholesalePaymentStatus(
             if (order.paymentStatus === status) {
                 logger.info(`Idempotency: Order ${orderId} already marked as ${status}. Skipping update.`);
                 return;
+            }
+
+            // Guard: Prevent fulfilling a cancelled order
+            if (status === 'paid' && order.orderStatus === 'cancelled') {
+                logger.security(`CRITICAL: Payment received for cancelled order ${orderId}. Manual refund required.`, { orderId, paymentId });
+                throw new AppError('Cannot mark a cancelled order as paid. Please issue a refund.', 409);
             }
 
             const updateData: any = {
@@ -526,26 +551,49 @@ export async function updateWholesalePaymentStatus(
                 }
             }
 
-            if (status === 'failed' && order.appliedCoupon?.couponId) {
-                const couponRef = collections.coupons.doc(order.appliedCoupon.couponId);
-                transaction.update(couponRef, {
-                    usedCount: admin.firestore.FieldValue.increment(-1),
-                    usedBy: admin.firestore.FieldValue.arrayRemove(order.userId),
-                    [`userUsage.${order.userId}`]: admin.firestore.FieldValue.increment(-1),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
+            if (status === 'failed' && order.paymentStatus === 'pending') {
+                didTransitionToFailed = true;
+                failedOrderAmount = order.totalAmount || 0;
+                if (order.appliedCoupon?.couponId) {
+                    couponToRevert = {
+                        couponId: order.appliedCoupon.couponId,
+                        userId: order.userId,
+                    };
+                }
             }
 
             transaction.update(orderRef, updateData);
 
             if (status === 'paid') {
-                shouldLockPrices = true;
+                didTransitionToPaid = true;
                 orderItems = order.items;
             }
         });
 
-        // Lock product prices after the transaction completes successfully
-        if (shouldLockPrices && orderItems.length > 0) {
+        // Revert coupon usage safely outside transaction if transitioned to failed
+        if (didTransitionToFailed && couponToRevert) {
+            try {
+                const { revertCouponUsage } = await import('./couponService');
+                await revertCouponUsage((couponToRevert as any).couponId, (couponToRevert as any).userId);
+            } catch (err) {
+                logger.error(`Failed to revert coupon on payment failure for order ${orderId}:`, err);
+            }
+        }
+
+        // Decrement unpaidAmount in analytics cache if transitioned from pending -> failed
+        if (didTransitionToFailed && failedOrderAmount > 0) {
+            try {
+                await collections.analytics.doc('wholesale_dashboard_cache').update({
+                    unpaidAmount: admin.firestore.FieldValue.increment(-failedOrderAmount),
+                    lastUpdated: new Date(),
+                });
+            } catch (err) {
+                logger.error(`Failed to decrement unpaidAmount on payment failure for order ${orderId}:`, err);
+            }
+        }
+
+        // Lock product prices ONLY when order actually transitioned to paid
+        if (didTransitionToPaid && orderItems.length > 0) {
             try {
                 const { lockProductPrices } = await import('./wholesaleStockService');
                 await lockProductPrices(orderId, orderItems);
@@ -557,7 +605,8 @@ export async function updateWholesalePaymentStatus(
         const updated = await getWholesaleOrderById(orderId);
         if (!updated) throw new AppError('Order not found after update', 404);
 
-        if (status === 'paid') {
+        // Update analytics & customer cache ONLY on the exact transition to paid (prevents double-counting)
+        if (didTransitionToPaid) {
             try {
                 const { updateAnalyticsCache } = await import('./dashboardService');
                 await updateAnalyticsCache(updated);

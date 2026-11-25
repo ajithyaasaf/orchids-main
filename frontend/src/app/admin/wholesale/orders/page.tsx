@@ -707,7 +707,13 @@ export default function AdminOrdersPage() {
                                         </p>
                                     )}
                                     <p className="text-gray-600">
-                                        {[selectedOrder.address?.line1, selectedOrder.address?.line2, selectedOrder.address?.city, selectedOrder.address?.state, selectedOrder.address?.pincode].filter(Boolean).join(', ')}
+                                        {[
+                                            selectedOrder.address?.addressLine1 || selectedOrder.address?.line1,
+                                            selectedOrder.address?.addressLine2 || selectedOrder.address?.line2,
+                                            selectedOrder.address?.city,
+                                            selectedOrder.address?.state,
+                                            selectedOrder.address?.pincode
+                                        ].filter(Boolean).join(', ')}
                                     </p>
                                     {/* WhatsApp Link */}
                                     {selectedOrder.address?.phone && (
@@ -766,6 +772,12 @@ export default function AdminOrdersPage() {
                                     {selectedOrder.shipping > 0 && (
                                         <div className="flex justify-between"><span className="text-gray-600">Shipping</span><span>₹{selectedOrder.shipping?.toFixed(2)}</span></div>
                                     )}
+                                    {selectedOrder.appliedCoupon?.discount > 0 && (
+                                        <div className="flex justify-between text-green-600">
+                                            <span>Coupon ({selectedOrder.appliedCoupon.code})</span>
+                                            <span>-₹{selectedOrder.appliedCoupon.discount?.toFixed(2)}</span>
+                                        </div>
+                                    )}
                                     {selectedOrder.adminDiscount > 0 && (
                                         <div className="flex justify-between text-green-600"><span>Admin Discount</span><span>-₹{selectedOrder.adminDiscount?.toFixed(2)}</span></div>
                                     )}
@@ -774,8 +786,8 @@ export default function AdminOrdersPage() {
                                         <span>₹{selectedOrder.totalAmount?.toFixed(2)}</span>
                                     </div>
                                 </div>
-                                {/* Discount button */}
-                                {selectedOrder.paymentStatus === 'paid' && selectedOrder.orderStatus !== 'cancelled' && (
+                                {/* Discount button (Backend allows manual discounts only before payment) */}
+                                {selectedOrder.paymentStatus === 'pending' && selectedOrder.orderStatus !== 'cancelled' && (
                                     <button
                                         onClick={() => setDiscountModal(true)}
                                         className="mt-2 text-xs text-primary hover:underline"

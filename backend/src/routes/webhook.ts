@@ -93,17 +93,17 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
                 return res.status(200).send('OK');
             }
 
+            // Guard: Do not fulfill or count revenue for an already-cancelled order
+            if (order.orderStatus === 'cancelled') {
+                logger.security(`Webhook: Late payment ${razorpayPaymentId} captured for CANCELLED order ${orderId}. Manual refund required.`, {
+                    orderId,
+                    razorpayPaymentId,
+                });
+                return res.status(200).send('OK - order cancelled, manual refund required');
+            }
+
             const updatedOrder = await updateWholesalePaymentStatus(orderId, 'paid', razorpayPaymentId);
             logger.info(`Webhook: Order ${orderId} marked as PAID (payment: ${razorpayPaymentId})`);
-
-            // Update customer analytics cache
-            try {
-                await updateCustomerCacheOnOrder(updatedOrder);
-                logger.info(`Webhook: Customer cache updated for order ${orderId}`);
-            } catch (error) {
-                logger.error('Webhook: Failed to update customer cache', error);
-                // Non-fatal: cache can be rebuilt via /api/customers/resync
-            }
 
             // Auto-generate invoice
             try {

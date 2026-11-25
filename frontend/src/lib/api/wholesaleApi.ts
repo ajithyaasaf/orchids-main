@@ -434,7 +434,7 @@ export const couponApi = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ code, subtotal }),
+            body: JSON.stringify({ code, cartValue: subtotal }),
         });
         
         const data = await response.json();

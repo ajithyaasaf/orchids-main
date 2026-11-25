@@ -151,15 +151,8 @@ router.post('/verify', paymentLimiter, verifyToken, async (req: AuthRequest, res
             return;
         }
 
-        // ✅ Signature verified — mark order as paid
+        // ✅ Signature verified — mark order as paid (handles analytics, customer cache, and price locking atomically)
         const updatedOrder = await updateWholesalePaymentStatus(orderId, 'paid', razorpayPaymentId);
-
-        // Update customer analytics cache (non-fatal)
-        try {
-            await updateCustomerCacheOnOrder(updatedOrder);
-        } catch (error) {
-            logger.error('Failed to update customer cache after payment verify', error);
-        }
 
         // Auto-generate invoice
         try {

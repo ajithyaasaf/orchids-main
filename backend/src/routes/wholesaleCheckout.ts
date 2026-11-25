@@ -38,8 +38,37 @@ router.post('/calculate', verifyToken, async (req, res, next) => {
             });
         }
 
-        // ── 4. Fetch All Products in Bulk (Optimization) ─────────────────────
-        const productIds = items.map(i => i.productId);
+        // ── 4. Normalize & Aggregate Cart Items (Prevent duplicate ID stock bypass) ──
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Cart items are required',
+            });
+        }
+
+        const aggregatedMap = new Map<string, number>();
+        for (const item of items) {
+            if (!item || typeof item.productId !== 'string' || !item.productId.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid product ID in cart',
+                });
+            }
+            if (!Number.isInteger(item.bundlesOrdered) || item.bundlesOrdered < 1) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Bundle quantity must be a positive whole number',
+                });
+            }
+            const pid = item.productId.trim();
+            aggregatedMap.set(pid, (aggregatedMap.get(pid) || 0) + item.bundlesOrdered);
+        }
+
+        const normalizedItems: CheckoutItem[] = Array.from(aggregatedMap.entries()).map(
+            ([productId, bundlesOrdered]) => ({ productId, bundlesOrdered })
+        );
+
+        const productIds = normalizedItems.map(i => i.productId);
         const productSnapshots = await Promise.all(
             productIds.map(id => getWholesaleProductById(id))
         );
@@ -47,8 +76,8 @@ router.post('/calculate', verifyToken, async (req, res, next) => {
         const calculatedItems = [];
         const errors: string[] = [];
 
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
+        for (let i = 0; i < normalizedItems.length; i++) {
+            const item = normalizedItems[i];
             const product = productSnapshots[i];
 
             if (!product) {

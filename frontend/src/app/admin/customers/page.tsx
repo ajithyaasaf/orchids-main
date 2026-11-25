@@ -6,6 +6,7 @@ import type { CustomerInsight } from '@orchids/shared';
 import { TableRowSkeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/context/ToastContext';
 import { RefreshCw } from 'lucide-react';
+import { toDate } from '@/lib/dateUtils';
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<CustomerInsight[]>([]);
@@ -105,8 +106,9 @@ export default function CustomersPage() {
     };
 
     const fmtDate = (d: any) => {
-        if (!d) return 'N/A';
-        return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const date = toDate(d);
+        if (!date) return 'N/A';
+        return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     };
 
     return (

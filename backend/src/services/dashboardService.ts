@@ -429,7 +429,7 @@ export const rebuildAnalyticsCache = async (): Promise<DashboardAnalytics> => {
         deliveredCount: allOrders.filter(o => o.orderStatus === 'delivered').length,
         cancelledCount: allOrders.filter(o => o.orderStatus === 'cancelled').length,
         unpaidAmount: allOrders
-            .filter(o => o.paymentStatus !== 'paid' && o.orderStatus !== 'cancelled')
+            .filter(o => o.paymentStatus === 'pending' && o.orderStatus !== 'cancelled')
             .reduce((sum, o) => sum + o.totalAmount, 0),
     };
 

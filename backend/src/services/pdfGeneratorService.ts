@@ -35,14 +35,29 @@ const BUSINESS_CONFIG = {
  * @param options - Generation options
  * @param res - Express response object
  */
+const parseFirestoreDate = (value: any): Date => {
+    if (!value) return new Date();
+    if (value instanceof Date) return isNaN(value.getTime()) ? new Date() : value;
+    if (typeof value.toDate === 'function') {
+        const d = value.toDate();
+        return isNaN(d.getTime()) ? new Date() : d;
+    }
+    if (typeof value === 'object') {
+        if ('seconds' in value) return new Date(value.seconds * 1000);
+        if ('_seconds' in value) return new Date(value._seconds * 1000);
+    }
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+};
+
 const buildInvoiceDocument = (doc: any, invoice: InvoiceData): void => {
     // === HEADER ===
     doc.fontSize(20).text('TAX INVOICE', { align: 'center' });
     doc.moveDown();
 
     // Invoice metadata
-    const safeDate = invoice.invoiceDate ? new Date(invoice.invoiceDate) : new Date();
-    const formattedDate = isNaN(safeDate.getTime()) ? new Date().toLocaleDateString('en-IN') : safeDate.toLocaleDateString('en-IN');
+    const safeDate = parseFirestoreDate(invoice.invoiceDate);
+    const formattedDate = safeDate.toLocaleDateString('en-IN');
 
     doc.fontSize(10);
     doc.text(`Invoice No: ${invoice.invoiceNumber}`, 50, 100);
@@ -498,7 +513,7 @@ export const generateCreditNotePDF = (
     doc.fontSize(10);
     doc.text(`Credit Note No: ${creditNote.creditNoteNumber}`, 50, 100);
     doc.text(
-        `Date: ${new Date(creditNote.refundDate).toLocaleDateString('en-IN')}`,
+        `Date: ${parseFirestoreDate(creditNote.refundDate).toLocaleDateString('en-IN')}`,
         400,
         100
     );
@@ -541,7 +556,7 @@ export const generateCreditNotePDF = (
     doc.moveDown();
 
     doc.fontSize(14).font('Helvetica-Bold');
-    doc.text(`Refund Amount: ₹${creditNote.refundAmount}`);
+    doc.text(`Refund Amount: Rs.${creditNote.refundAmount}`);
     doc.font('Helvetica');
 
     // === FOOTER ===
